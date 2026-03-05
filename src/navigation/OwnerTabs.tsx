@@ -1,0 +1,120 @@
+import React from 'react';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { Text } from 'react-native';
+import {
+  VenueListScreen,
+  VenueDetailScreen,
+  BookingFormScreen,
+  PaymentScreen,
+  SportsInsightsScreen
+} from '../screens/customer';
+import MyVenuesScreen from '../screens/owner/MyVenuesScreen';
+import AddVenueScreen from '../screens/owner/AddVenueScreen';
+import OwnerProfileScreen from '../screens/owner/OwnerProfileScreen';
+import VenueBookingsScreen from '../screens/owner/VenueBookingsScreen';
+import RevenueDetailScreen from '../screens/owner/RevenueDetailScreen';
+import { OwnerStackParamList } from './types';
+
+const Tab = createBottomTabNavigator();
+const Stack = createNativeStackNavigator<OwnerStackParamList>();
+
+function PublicVenueStack() {
+  return (
+    <Stack.Navigator
+      screenOptions={{
+        headerStyle: { backgroundColor: '#1a5f2a' },
+        headerTintColor: '#fff',
+      }}
+    >
+      <Stack.Screen
+        name="VenueList"
+        component={VenueListScreen}
+        options={{ title: 'หน้าหลัก' }}
+      />
+      <Stack.Screen name="VenueDetail" component={VenueDetailScreen} options={{ title: 'รายละเอียดสนาม' }} />
+      <Stack.Screen name="BookingForm" component={BookingFormScreen} options={{ title: 'จองสนาม' }} />
+      <Stack.Screen name="Payment" component={PaymentScreen} options={{ title: 'ชำระเงิน' }} />
+      <Stack.Screen name="SportsInsights" component={SportsInsightsScreen} options={{ title: 'สาระน่ารู้ & เทคนิคกีฬา' }} />
+    </Stack.Navigator>
+  );
+}
+
+function ManagementStack() {
+  return (
+    <Stack.Navigator
+      screenOptions={{
+        headerStyle: { backgroundColor: '#1a5f2a' },
+        headerTintColor: '#fff',
+      }}
+    >
+      <Stack.Screen name="MyVenues" component={MyVenuesScreen} options={{ title: 'สนามของฉัน' }} />
+      <Stack.Screen name="VenueBookings" component={VenueBookingsScreen} options={{ title: 'การจอง' }} />
+      <Stack.Screen name="AddVenue" component={AddVenueScreen} options={{ title: 'เพิ่มสนาม' }} />
+    </Stack.Navigator>
+  );
+}
+
+function ProfileStack() {
+  return (
+    <Stack.Navigator
+      screenOptions={{
+        headerStyle: { backgroundColor: '#1a5f2a' },
+        headerTintColor: '#fff',
+      }}
+    >
+      <Stack.Screen name="Profile" component={OwnerProfileScreen} options={{ title: 'โปรไฟล์ของฉัน' }} />
+      <Stack.Screen name="RevenueDetail" component={RevenueDetailScreen} options={{ title: 'รายละเอียดรายได้' }} />
+    </Stack.Navigator>
+  );
+}
+
+export default function OwnerTabs() {
+  return (
+    <Tab.Navigator
+      screenOptions={{
+        tabBarActiveTintColor: '#1a5f2a',
+        tabBarInactiveTintColor: '#666',
+        headerShown: false,
+      }}
+    >
+      <Tab.Screen
+        name="PublicHome"
+        component={PublicVenueStack}
+        options={{
+          tabBarLabel: 'สนาม',
+          tabBarIcon: () => <Text style={{ fontSize: 20 }}>🏟️</Text>,
+        }}
+      />
+      <Tab.Screen
+        name="ManagementTab"
+        component={ManagementStack}
+        options={{
+          tabBarLabel: 'สนามของฉัน',
+          tabBarIcon: () => <Text style={{ fontSize: 20 }}>📋</Text>,
+        }}
+      />
+      <Tab.Screen
+        name="AddVenueTab"
+        component={AddVenueScreen}
+        options={{
+          tabBarLabel: 'เพิ่มสนาม',
+          tabBarIcon: () => <Text style={{ fontSize: 20 }}>➕</Text>,
+          headerShown: true,
+          headerTitle: 'เพิ่มสนาม',
+          headerStyle: { backgroundColor: '#1a5f2a' },
+          headerTintColor: '#fff',
+        }}
+      />
+      <Tab.Screen
+        name="ProfileTab"
+        component={ProfileStack}
+        options={{
+          tabBarLabel: 'โปรไฟล์',
+          tabBarIcon: () => <Text style={{ fontSize: 20 }}>👤</Text>,
+          headerShown: false,
+        }}
+      />
+    </Tab.Navigator>
+  );
+}

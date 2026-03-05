@@ -1,0 +1,40 @@
+import { Venue } from '../types';
+
+export const MOCK_VENUES: Venue[] = [
+  {
+    id: '1',
+    name: 'สนามฟุตบอล สวนลุมพินี',
+    description: 'สนามหญ้าเทียม ขนาดมาตรฐาน เปิดทุกวัน 08:00-22:00',
+    address: 'ถ.พระราม 4 แขวงพระโขนง เขตคลองเตย กทม.',
+    sportType: 'ฟุตบอล',
+    pricePerHour: 1200,
+    ownerId: 'owner1',
+    openingTime: '08:00',
+    closingTime: '22:00',
+    imageUrl: 'https://images.unsplash.com/photo-1574629810360-7efbbe195018?auto=format&fit=crop&q=80&w=800',
+  },
+  {
+    id: '2',
+    name: 'คอร์ทเทนนิส สยามสปอร์ต',
+    description: 'คอร์ทฮาร์ดคอร์ท 2 คอร์ท มีไฟส่องสว่าง',
+    address: 'สยามสแควร์ ซอย 5 กทม.',
+    sportType: 'เทนนิส',
+    pricePerHour: 800,
+    ownerId: 'owner1',
+    openingTime: '07:00',
+    closingTime: '21:00',
+    imageUrl: 'https://images.unsplash.com/photo-1543326727-cf6c39e8f84c?auto=format&fit=crop&q=80&w=800',
+  },
+  {
+    id: '3',
+    name: 'สนามบาสเกตบอล ลาดพร้าว',
+    description: 'สนามกลางแจ้ง มีหลังคา ครึ่งคอร์ทและเต็มคอร์ท',
+    address: 'ถ.ลาดพร้าว แขวงจอมพล เขตจตุจักร กทม.',
+    sportType: 'บาสเกตบอล',
+    pricePerHour: 500,
+    ownerId: 'owner2',
+    openingTime: '06:00',
+    closingTime: '22:00',
+    imageUrl: 'https://images.unsplash.com/photo-1517466787929-bc90951d0974?auto=format&fit=crop&q=80&w=800',
+  },
+];
