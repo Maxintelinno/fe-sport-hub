@@ -45,18 +45,27 @@ export default function LoginScreen({ navigation, route }: Props) {
 
     try {
       setLoading(true);
-      const data = await loginUser({
+      const response = await loginUser({
         username: username.trim(),
         password: password.trim(),
       });
 
-      // Assuming data contains user info or we just use the username
-      login({
-        id: data?.id || '1',
-        phone: username.trim(),
-        name: data?.name || username.trim(),
-        role,
-      });
+      const userData = response?.data;
+      const userRole = (userData?.role || role) as any;
+
+      Alert.alert('สำเร็จ', 'เข้าสู่ระบบเรียบร้อยแล้ว', [
+        {
+          text: 'ตกลง',
+          onPress: () => {
+            login({
+              id: userData?.id || '1',
+              phone: userData?.phone || username.trim(),
+              name: userData?.fullname || userData?.username || username.trim(),
+              role: userRole,
+            });
+          }
+        }
+      ]);
     } catch (error) {
       Alert.alert('เข้าสู่ระบบไม่สำเร็จ', error instanceof Error ? error.message : 'กรุณาลองใหม่อีกครั้ง');
     } finally {

@@ -73,9 +73,22 @@ export default function OwnerTabs() {
   return (
     <Tab.Navigator
       screenOptions={{
-        tabBarActiveTintColor: '#1a5f2a',
+        tabBarActiveTintColor: '#1A5F2A',
         tabBarInactiveTintColor: '#666',
         headerShown: false,
+        tabBarStyle: {
+          backgroundColor: '#FFFFFF',
+          borderTopWidth: 1,
+          borderTopColor: '#EEEEEE',
+          height: 90,
+          paddingBottom: 15,
+          paddingTop: 10,
+        },
+        tabBarLabelStyle: {
+          fontSize: 12,
+          fontWeight: '700',
+          marginTop: 2,
+        },
       }}
     >
       <Tab.Screen
@@ -83,7 +96,7 @@ export default function OwnerTabs() {
         component={PublicVenueStack}
         options={{
           tabBarLabel: 'สนาม',
-          tabBarIcon: () => <Text style={{ fontSize: 20 }}>🏟️</Text>,
+          tabBarIcon: () => <Text style={{ fontSize: 24 }}>🏟️</Text>,
         }}
       />
       <Tab.Screen
@@ -91,7 +104,7 @@ export default function OwnerTabs() {
         component={ManagementStack}
         options={{
           tabBarLabel: 'สนามของฉัน',
-          tabBarIcon: () => <Text style={{ fontSize: 20 }}>📋</Text>,
+          tabBarIcon: () => <Text style={{ fontSize: 24 }}>📋</Text>,
         }}
       />
       <Tab.Screen
@@ -99,11 +112,13 @@ export default function OwnerTabs() {
         component={AddVenueScreen}
         options={{
           tabBarLabel: 'เพิ่มสนาม',
-          tabBarIcon: () => <Text style={{ fontSize: 20 }}>➕</Text>,
+          tabBarIcon: () => <Text style={{ fontSize: 24 }}>➕</Text>,
           headerShown: true,
           headerTitle: 'เพิ่มสนาม',
-          headerStyle: { backgroundColor: '#1a5f2a' },
-          headerTintColor: '#fff',
+          headerTitleStyle: { fontWeight: '900', color: '#FFFFFF' },
+          headerStyle: { backgroundColor: '#1A5F2A' },
+          headerTintColor: '#FFFFFF',
+          headerTitleAlign: 'center',
         }}
       />
       <Tab.Screen
@@ -111,7 +126,7 @@ export default function OwnerTabs() {
         component={ProfileStack}
         options={{
           tabBarLabel: 'โปรไฟล์',
-          tabBarIcon: () => <Text style={{ fontSize: 20 }}>👤</Text>,
+          tabBarIcon: () => <Text style={{ fontSize: 24 }}>👤</Text>,
           headerShown: false,
         }}
       />
