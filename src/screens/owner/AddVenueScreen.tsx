@@ -93,11 +93,23 @@ export default function AddVenueScreen({ navigation }: Props) {
     const [sportModal, setSportModal] = useState(false);
     const [provinceModal, setProvinceModal] = useState(false);
     const [districtModal, setDistrictModal] = useState(false);
+    const [openTimeModal, setOpenTimeModal] = useState(false);
+    const [closeTimeModal, setCloseTimeModal] = useState(false);
 
     // Derived Data
     const availableDistricts = useMemo(() => {
         return province ? province.districts : [];
     }, [province]);
+
+    const TIME_OPTIONS = useMemo(() => {
+        const options = [];
+        for (let h = 0; h < 24; h++) {
+            const hour = h.toString().padStart(2, '0');
+            options.push(`${hour}:00`);
+            options.push(`${hour}:30`);
+        }
+        return options;
+    }, []);
 
     const handleAddImage = async () => {
         if (images.length >= 10) {
@@ -257,19 +269,21 @@ export default function AddVenueScreen({ navigation }: Props) {
 
                     <View style={styles.row}>
                         <View style={{ flex: 1, marginRight: 8 }}>
-                            <InputField
+                            <RoyaltyPicker
                                 label="เวลาเปิด"
                                 value={openingTime}
-                                onChangeText={setOpeningTime}
                                 placeholder="08:00"
+                                onPress={() => setOpenTimeModal(true)}
+                                icon="🕒"
                             />
                         </View>
                         <View style={{ flex: 1, marginLeft: 8 }}>
-                            <InputField
+                            <RoyaltyPicker
                                 label="เวลาปิด"
                                 value={closingTime}
-                                onChangeText={setClosingTime}
                                 placeholder="22:00"
+                                onPress={() => setCloseTimeModal(true)}
+                                icon="🕒"
                             />
                         </View>
                     </View>
@@ -343,6 +357,20 @@ export default function AddVenueScreen({ navigation }: Props) {
                     data={availableDistricts}
                     onSelect={(item: District) => setDistrict(item)}
                     onClose={() => setDistrictModal(false)}
+                />
+                <SelectionModal
+                    visible={openTimeModal}
+                    title="เลือกเวลาเปิด"
+                    data={TIME_OPTIONS}
+                    onSelect={(item: string) => setOpeningTime(item)}
+                    onClose={() => setOpenTimeModal(false)}
+                />
+                <SelectionModal
+                    visible={closeTimeModal}
+                    title="เลือกเวลาปิด"
+                    data={TIME_OPTIONS}
+                    onSelect={(item: string) => setClosingTime(item)}
+                    onClose={() => setCloseTimeModal(false)}
                 />
             </ScrollView>
         </KeyboardAvoidingView>
