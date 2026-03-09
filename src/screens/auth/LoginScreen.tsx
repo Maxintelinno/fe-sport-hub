@@ -4,7 +4,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RouteProp } from '@react-navigation/native';
 import { AuthStackParamList } from '../../navigation/AuthStack';
 import { useAuth } from '../../context/AuthContext';
-import { loginUser } from '../../services/authService';
+import { loginUser, getAuthToken } from '../../services/authService';
 
 const { width } = Dimensions.get('window');
 
@@ -53,11 +53,26 @@ export default function LoginScreen({ navigation, route }: Props) {
       const userData = response?.data;
       const userRole = (userData?.role || role) as any;
 
+      // Fetch JWT Token from middleware
+      let accessToken = '';
+      try {
+        const tokenResponse = await getAuthToken({
+          id: userData?.id,
+          phone: userData?.phone,
+          username: userData?.username
+        });
+        accessToken = tokenResponse?.access_token;
+      } catch (tokenError) {
+        console.error('Token fetch failed:', tokenError);
+        // We continue for now, but in a real app we might want to block login
+      }
+
       login({
         id: userData?.id || '1',
         phone: userData?.phone || username.trim(),
         name: userData?.fullname || userData?.username || username.trim(),
         role: userRole,
+        accessToken: accessToken,
       });
     } catch (error) {
       Alert.alert('เข้าสู่ระบบไม่สำเร็จ', error instanceof Error ? error.message : 'กรุณาลองใหม่อีกครั้ง');

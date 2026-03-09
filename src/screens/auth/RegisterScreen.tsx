@@ -4,7 +4,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RouteProp } from '@react-navigation/native';
 import { AuthStackParamList } from '../../navigation/AuthStack';
 import { useAuth } from '../../context/AuthContext';
-import { registerUser } from '../../services/authService';
+import { registerUser, getAuthToken } from '../../services/authService';
 
 const { width } = Dimensions.get('window');
 
@@ -46,12 +46,26 @@ export default function RegisterScreen({ navigation, route }: Props) {
         {
           text: 'ตกลง',
           onPress: async () => {
+            // Fetch JWT Token from middleware
+            let accessToken = '';
+            try {
+              const tokenResponse = await getAuthToken({
+                id: response?.id || `user-${Date.now()}`,
+                phone: phoneNumber,
+                username: username.trim()
+              });
+              accessToken = tokenResponse?.access_token;
+            } catch (tokenError) {
+              console.error('Token fetch failed:', tokenError);
+            }
+
             // Auto-login and let AppNavigator handle redirection to Home
             await register({
               id: response?.id || `user-${Date.now()}`,
               phone: phoneNumber,
               name: name.trim(),
               role: role,
+              accessToken: accessToken,
             });
           }
         }

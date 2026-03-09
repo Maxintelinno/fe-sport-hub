@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useCallback, ReactNode } from 'react';
 import { User, UserRole } from '../types';
+import { setAuthToken } from '../services/api';
 
 interface AuthContextType {
   user: User | null;
@@ -16,14 +17,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = useCallback((userData: User) => {
     setUser(userData);
+    if (userData.accessToken) {
+      setAuthToken(userData.accessToken);
+    }
   }, []);
 
   const register = useCallback((userData: User) => {
     setUser(userData);
+    if (userData.accessToken) {
+      setAuthToken(userData.accessToken);
+    }
   }, []);
 
   const logout = useCallback(() => {
     setUser(null);
+    setAuthToken(null);
   }, []);
 
   return (

@@ -6,6 +6,7 @@ export interface User {
   phone?: string;
   name: string;
   role: UserRole;
+  accessToken?: string;
 }
 
 export interface Venue {

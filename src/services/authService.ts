@@ -1,6 +1,4 @@
-import axios from 'axios';
-
-const API_URL = 'https://sport-hub-register-staging.up.railway.app';
+const API_URL = 'https://sport-hub-register-staging.up.railway.app/api/v1';
 
 export class RateLimitError extends Error {
   constructor(message: string = 'กรุณารอสักครู่ก่อนขอ OTP ใหม่') {
@@ -10,52 +8,95 @@ export class RateLimitError extends Error {
 }
 
 export async function requestOTP(phone: string) {
-  const response = await axios.post(`${API_URL}/otp/request`, { phone }, {
-    headers: { 'Content-Type': 'application/json' },
-    validateStatus: () => true,
+  const response = await fetch(`${API_URL}/otp/request`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ phone }),
   });
 
-  if (response.status === 429 || response.data?.message?.toLowerCase?.().includes('rate limit')) {
-    throw new RateLimitError(response.data?.message || 'กรุณารอสักครู่ก่อนขอ OTP ใหม่');
+  const responseData = await response.json();
+
+  if (response.status === 429 || responseData?.message?.toLowerCase?.().includes('rate limit')) {
+    throw new RateLimitError(responseData?.message || 'กรุณารอสักครู่ก่อนขอ OTP ใหม่');
   }
-  if (response.status >= 400) {
-    throw new Error(response.data?.message || 'เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง');
+  if (!response.ok) {
+    throw new Error(responseData?.message || 'เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง');
   }
-  return response.data;
+  return responseData;
 }
 
 export async function verifyOTP(phone: string, otp: string) {
-  const response = await axios.post(`${API_URL}/otp/verify`, { phone, otp }, {
-    headers: { 'Content-Type': 'application/json' },
-    validateStatus: () => true,
+  const response = await fetch(`${API_URL}/otp/verify`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ phone, otp }),
   });
 
-  if (response.status >= 400) {
-    throw new Error(response.data?.message || 'รหัส OTP ไม่ถูกต้อง กรุณาลองใหม่อีกครั้ง');
+  const responseData = await response.json();
+
+  if (!response.ok) {
+    throw new Error(responseData?.message || 'รหัส OTP ไม่ถูกต้อง กรุณาลองใหม่อีกครั้ง');
   }
-  return response.data;
+  return responseData;
 }
 
 export async function registerUser(data: { phone: string; username: string; fullname: string; password: string; role: 'cust' | 'owner' }) {
-  const response = await axios.post(`${API_URL}/register`, data, {
-    headers: { 'Content-Type': 'application/json' },
-    validateStatus: () => true,
+  const response = await fetch(`${API_URL}/register`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(data),
   });
 
-  if (response.status >= 400) {
-    throw new Error(response.data?.message || 'เกิดข้อผิดพลาดในการสมัครสมาชิก กรุณาลองใหม่อีกครั้ง');
+  const responseData = await response.json();
+
+  if (!response.ok) {
+    throw new Error(responseData?.message || 'เกิดข้อผิดพลาดในการสมัครสมาชิก กรุณาลองใหม่อีกครั้ง');
   }
-  return response.data;
+  return responseData;
 }
 
 export async function loginUser(data: { username: string; password: string }) {
-  const response = await axios.post(`${API_URL}/login`, data, {
-    headers: { 'Content-Type': 'application/json' },
-    validateStatus: () => true,
+  const response = await fetch(`${API_URL}/login`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(data),
   });
 
-  if (response.status >= 400) {
-    throw new Error(response.data?.message || 'ชื่อผู้ใช้งานหรือรหัสผ่านไม่ถูกต้อง');
+  const responseData = await response.json();
+
+  if (!response.ok) {
+    throw new Error(responseData?.message || 'ชื่อผู้ใช้งานหรือรหัสผ่านไม่ถูกต้อง');
   }
-  return response.data;
+  return responseData;
+}
+
+const MIDDLEWARE_URL = 'https://sport-hub-middleware-staging.up.railway.app/api/v1';
+
+export async function getAuthToken(data: { id: string; phone: string; username: string }) {
+  const response = await fetch(`${MIDDLEWARE_URL}/auth/token`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      username: data.id,
+      phone: data.phone,
+      userid: data.username
+    }),
+  });
+
+  const responseData = await response.json();
+
+  if (!response.ok) {
+    throw new Error(responseData?.message || 'ไม่สามารถรับ Access Token ได้');
+  }
+  return responseData;
 }

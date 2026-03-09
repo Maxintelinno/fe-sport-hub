@@ -20,6 +20,7 @@ import { useAuth } from '../../context/AuthContext';
 import { addVenue } from '../../data/venueStore';
 import { THAI_LOCATIONS, SPORT_TYPES, Province, District } from '../../data/locationData';
 import * as ImagePicker from 'expo-image-picker';
+import { getPresignedUrls, uploadToPresignedUrl } from '../../services/venueService';
 
 const { width, height } = Dimensions.get('window');
 
@@ -85,7 +86,9 @@ export default function AddVenueScreen({ navigation }: Props) {
     const [address, setAddress] = useState('');
 
     // New Enhanced State
-    const [images, setImages] = useState<string[]>([]);
+    const [images, setImages] = useState<string[]>([]); // These will be public_urls
+    const [localImages, setLocalImages] = useState<string[]>([]); // These are for instant preview
+    const [uploadingImages, setUploadingImages] = useState<boolean>(false);
     const [province, setProvince] = useState<Province | null>(null);
     const [district, setDistrict] = useState<District | null>(null);
 
@@ -112,7 +115,7 @@ export default function AddVenueScreen({ navigation }: Props) {
     }, []);
 
     const handleAddImage = async () => {
-        if (images.length >= 10) {
+        if (localImages.length >= 10) {
             Alert.alert('จำกัดจำนวนรูป', 'คุณสามารถเพิ่มรูปภาพได้สูงสุด 10 รูป');
             return;
         }
@@ -120,20 +123,59 @@ export default function AddVenueScreen({ navigation }: Props) {
         const result = await ImagePicker.launchImageLibraryAsync({
             mediaTypes: ['images'],
             allowsMultipleSelection: true,
-            selectionLimit: 10 - images.length,
+            selectionLimit: 10 - localImages.length,
             quality: 0.8,
         });
 
         if (!result.canceled) {
-            const newUris = result.assets.map(asset => asset.uri);
-            setImages(prev => [...prev, ...newUris].slice(0, 10));
+            const selectedAssets = result.assets;
+            const newLocalUris = selectedAssets.map(asset => asset.uri);
+
+            // Show local preview immediately
+            setLocalImages(prev => [...prev, ...newLocalUris].slice(0, 10));
+            setUploadingImages(true);
+
+            try {
+                // 1. Get Presigned URLs
+                const presignFiles = selectedAssets.map(asset => ({
+                    file_name: asset.fileName || `field_${Date.now()}_${Math.random().toString(36).substring(7)}.jpg`,
+                    content_type: asset.mimeType || 'image/jpeg'
+                }));
+
+                const { files: presignedData } = await getPresignedUrls(presignFiles);
+
+                // 2. Upload to Cloud
+                const uploadPromises = presignedData.map((p, idx) =>
+                    uploadToPresignedUrl(p.upload_url, selectedAssets[idx].uri, presignFiles[idx].content_type)
+                );
+
+                await Promise.all(uploadPromises);
+
+                // 3. Store Public URLs
+                const publicUrls = presignedData.map(p => p.public_url);
+                setImages(prev => [...prev, ...publicUrls].slice(0, 10));
+
+                console.log('Successfully uploaded images:', publicUrls);
+            } catch (error) {
+                console.error('Upload error:', error);
+                Alert.alert('อัปโหลดรูปภาพไม่สำเร็จ', 'กรุณาลองใหม่อีกครั้ง');
+                // Remove the failed local images if desired, or let user retry
+            } finally {
+                setUploadingImages(false);
+            }
         }
     };
 
     const removeImage = (index: number) => {
-        const updated = [...images];
-        updated.splice(index, 1);
-        setImages(updated);
+        const updatedLocal = [...localImages];
+        updatedLocal.splice(index, 1);
+        setLocalImages(updatedLocal);
+
+        const updatedRemote = [...images];
+        if (updatedRemote[index]) {
+            updatedRemote.splice(index, 1);
+            setImages(updatedRemote);
+        }
     };
 
     const handleAddVenue = () => {
@@ -201,11 +243,11 @@ export default function AddVenueScreen({ navigation }: Props) {
                     <Text style={styles.cardSubtitle}>ยกระดับสนามของคุณด้วยข้อมูลที่ครบถ้วน</Text>
 
                     {/* Premium Image Selection Section */}
-                    <Text style={styles.label}>รูปภาพสนาม (แนะนำ 3-5 รูป) *</Text>
+                    <Text style={styles.label}>รูปภาพสนาม (แนะนำ 3-5 รูป) * {uploadingImages && '(กำลังอัปโหลด...)'}</Text>
 
-                    {images.length > 0 ? (
+                    {localImages.length > 0 ? (
                         <View style={styles.heroImageContainer}>
-                            <Image source={{ uri: images[0] }} style={styles.heroImage} />
+                            <Image source={{ uri: localImages[0] }} style={styles.heroImage} />
                             <TouchableOpacity
                                 style={styles.changeHeroBtn}
                                 onPress={() => removeImage(0)}
@@ -221,13 +263,17 @@ export default function AddVenueScreen({ navigation }: Props) {
                     )}
 
                     <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.imageScroll}>
-                        {images.length > 0 && (
-                            <TouchableOpacity style={styles.smallAddBtn} onPress={handleAddImage}>
-                                <Text style={styles.smallAddIcon}>+</Text>
+                        {localImages.length > 0 && (
+                            <TouchableOpacity
+                                style={[styles.smallAddBtn, uploadingImages && styles.smallAddBtnDisabled]}
+                                onPress={handleAddImage}
+                                disabled={uploadingImages}
+                            >
+                                <Text style={styles.smallAddIcon}>{uploadingImages ? '⏳' : '+'}</Text>
                             </TouchableOpacity>
                         )}
 
-                        {images.slice(1).map((img, index) => (
+                        {localImages.slice(1).map((img, index) => (
                             <View key={index + 1} style={styles.imageWrapper}>
                                 <Image source={{ uri: img }} style={styles.previewImage} />
                                 <TouchableOpacity
@@ -588,6 +634,10 @@ const styles = StyleSheet.create({
         fontSize: 32,
         color: '#1A5F2A',
         fontWeight: '300',
+    },
+    smallAddBtnDisabled: {
+        opacity: 0.5,
+        borderColor: '#999',
     },
     submitBtn: {
         backgroundColor: '#C5A021',
