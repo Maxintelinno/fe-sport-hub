@@ -87,7 +87,7 @@ export default function CustomerTabs() {
               e.preventDefault();
               navigation.navigate('Auth', {
                 screen: 'Login',
-                params: { role: 'customer' }
+                params: { role: 'cust' }
               });
             }
           },

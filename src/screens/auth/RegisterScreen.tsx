@@ -4,6 +4,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RouteProp } from '@react-navigation/native';
 import { AuthStackParamList } from '../../navigation/AuthStack';
 import { useAuth } from '../../context/AuthContext';
+import { registerUser } from '../../services/authService';
 
 const { width } = Dimensions.get('window');
 
@@ -19,8 +20,9 @@ export default function RegisterScreen({ navigation, route }: Props) {
   const [name, setName] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const handleRegister = () => {
+  const handleRegister = async () => {
     if (!username.trim() || !name.trim() || !password.trim() || !confirmPassword.trim()) {
       Alert.alert('กรุณากรอกข้อมูลให้ครบถ้วน');
       return;
@@ -30,8 +32,35 @@ export default function RegisterScreen({ navigation, route }: Props) {
       return;
     }
 
-    // Final registration call
-    register(`${username}@example.com`, password.trim(), name.trim(), role);
+    try {
+      setLoading(true);
+      const response = await registerUser({
+        phone: phoneNumber,
+        username: username.trim(),
+        fullname: name.trim(),
+        password: password.trim(),
+        role: role,
+      });
+
+      Alert.alert('สำเร็จ', 'สมัครสมาชิกเรียบร้อยแล้ว', [
+        {
+          text: 'ตกลง',
+          onPress: async () => {
+            // Auto-login and let AppNavigator handle redirection to Home
+            await register({
+              id: response?.id || `user-${Date.now()}`,
+              phoneNumber,
+              name: name.trim(),
+              role: role,
+            });
+          }
+        }
+      ]);
+    } catch (error) {
+      Alert.alert('เกิดข้อผิดพลาด', error instanceof Error ? error.message : 'กรุณาลองใหม่อีกครั้ง');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const SocialButton = ({ title, icon, color }: { title: string, icon: string, color: string }) => (
@@ -101,8 +130,14 @@ export default function RegisterScreen({ navigation, route }: Props) {
             />
           </View>
 
-          <TouchableOpacity style={styles.registerButton} onPress={handleRegister}>
-            <Text style={styles.registerButtonText}>สมัครสมาชิก</Text>
+          <TouchableOpacity
+            style={[styles.registerButton, loading && styles.registerButtonDisabled]}
+            onPress={handleRegister}
+            disabled={loading}
+          >
+            <Text style={styles.registerButtonText}>
+              {loading ? 'กำลังสมัครสมาชิก...' : 'สมัครสมาชิก'}
+            </Text>
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -156,6 +191,9 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     marginBottom: 8,
     marginLeft: 4,
+  },
+  registerButtonDisabled: {
+    opacity: 0.6,
   },
   input: {
     backgroundColor: '#FFFFFF',

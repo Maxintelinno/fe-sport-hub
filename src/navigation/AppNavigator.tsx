@@ -31,7 +31,7 @@ export default function AppNavigator() {
   return (
     <NavigationContainer>
       <Stack.Navigator screenOptions={{ headerShown: false }}>
-        {(!isLoggedIn || (user && user.role === 'customer')) ? (
+        {(!isLoggedIn || (user && user.role === 'cust')) ? (
           <Stack.Screen name="CustomerMain" component={CustomerTabs} />
         ) : (
           <Stack.Screen name="OwnerMain" component={OwnerTabs} />

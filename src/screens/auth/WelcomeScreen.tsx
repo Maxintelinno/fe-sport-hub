@@ -16,13 +16,13 @@ export default function WelcomeScreen({ navigation }: Props) {
       <View style={styles.buttons}>
         <TouchableOpacity
           style={styles.primaryButton}
-          onPress={() => navigation.navigate('RoleSelect')}
+          onPress={() => navigation.navigate('PhoneVerify')}
         >
           <Text style={styles.primaryButtonText}>เริ่มต้นใช้งาน</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.secondaryButton}
-          onPress={() => navigation.navigate('Login', { role: 'customer' })}
+          onPress={() => navigation.navigate('Login', { role: 'cust' })}
         >
           <Text style={styles.secondaryButtonText}>เข้าสู่ระบบ</Text>
         </TouchableOpacity>

@@ -1,8 +1,9 @@
-export type UserRole = 'customer' | 'owner';
+export type UserRole = 'cust' | 'owner';
 
 export interface User {
   id: string;
-  email: string;
+  email?: string;
+  phone?: string;
   name: string;
   role: UserRole;
 }

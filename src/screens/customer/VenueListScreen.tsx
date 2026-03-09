@@ -83,18 +83,19 @@ const MOCK_INSIGHTS = [
 
 export default function VenueListScreen({ navigation }: Props) {
   const venues = useMemo(() => getAllVenues(), []);
-  const { isLoggedIn } = useAuth();
+  const { isLoggedIn, user } = useAuth();
 
   const handleProfilePress = () => {
     if (!isLoggedIn) {
       navigation.navigate('Auth' as any, {
         screen: 'Login',
-        params: { role: 'customer' }
+        params: { role: 'cust' }
       });
     } else {
       // Future: Navigate to Customer Profile
     }
   };
+
 
   const renderSliderItem = ({ item }: { item: typeof MOCK_ADS[0] }) => (
     <TouchableOpacity style={[styles.adContainer, { backgroundColor: item.bg }]}>
@@ -111,7 +112,12 @@ export default function VenueListScreen({ navigation }: Props) {
     <View>
       <View style={styles.header}>
         <View style={styles.headerTop}>
-          <Text style={styles.welcomeText}>ROYAL SPORTS</Text>
+          <View>
+            {isLoggedIn && user && (
+              <Text style={styles.userGreeting}>สวัสดี, {user.name}</Text>
+            )}
+            <Text style={styles.welcomeText}>ROYAL SPORTS</Text>
+          </View>
           <TouchableOpacity
             style={styles.profileCircle}
             onPress={handleProfilePress}
@@ -219,6 +225,12 @@ const styles = StyleSheet.create({
     color: '#C5A021', // Rich Gold
     fontWeight: '900',
     letterSpacing: 3,
+  },
+  userGreeting: {
+    fontSize: 16,
+    color: '#FFFFFF',
+    fontWeight: '700',
+    marginBottom: 4,
   },
   profileCircle: {
     width: 40,

@@ -4,6 +4,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RouteProp } from '@react-navigation/native';
 import { AuthStackParamList } from '../../navigation/AuthStack';
 import { useAuth } from '../../context/AuthContext';
+import { verifyOTP } from '../../services/authService';
 
 const { width } = Dimensions.get('window');
 
@@ -13,9 +14,10 @@ type Props = {
 };
 
 export default function OTPVerifyScreen({ navigation, route }: Props) {
-    const { role, phoneNumber } = route.params;
+    const { phoneNumber } = route.params;
     const [otp, setOtp] = useState('');
     const [timer, setTimer] = useState(60);
+    const [loading, setLoading] = useState(false);
 
     useEffect(() => {
         let interval: any;
@@ -27,16 +29,23 @@ export default function OTPVerifyScreen({ navigation, route }: Props) {
         return () => clearInterval(interval);
     }, [timer]);
 
-    const handleVerify = () => {
+    const handleVerify = async () => {
         if (otp.length < 6) {
             Alert.alert('กรุณากรอกรหัส OTP ให้ครบถ้วน');
             return;
         }
-        // จำลองการตรวจสอบ
-        navigation.navigate('Register', {
-            role,
-            phoneNumber,
-        });
+
+        try {
+            setLoading(true);
+            await verifyOTP(phoneNumber, otp);
+            navigation.navigate('RoleSelect', {
+                phoneNumber,
+            });
+        } catch (error) {
+            Alert.alert('เกิดข้อผิดพลาด', error instanceof Error ? error.message : 'กรุณาลองใหม่อีกครั้ง');
+        } finally {
+            setLoading(false);
+        }
     };
 
     const handleResend = () => {
@@ -66,8 +75,14 @@ export default function OTPVerifyScreen({ navigation, route }: Props) {
                         maxLength={6}
                     />
 
-                    <TouchableOpacity style={styles.actionButton} onPress={handleVerify}>
-                        <Text style={styles.actionButtonText}>ยืนยันรหัส OTP</Text>
+                    <TouchableOpacity
+                        style={[styles.actionButton, loading && styles.actionButtonDisabled]}
+                        onPress={handleVerify}
+                        disabled={loading}
+                    >
+                        <Text style={styles.actionButtonText}>
+                            {loading ? 'กำลังตรวจสอบ...' : 'ยืนยันรหัส OTP'}
+                        </Text>
                     </TouchableOpacity>
 
                     <View style={styles.resendContainer}>
@@ -145,6 +160,9 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.2,
         shadowRadius: 8,
         elevation: 8,
+    },
+    actionButtonDisabled: {
+        opacity: 0.6,
     },
     actionButtonText: {
         color: '#FFFFFF',

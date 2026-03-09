@@ -23,3 +23,39 @@ export async function requestOTP(phone: string) {
   }
   return response.data;
 }
+
+export async function verifyOTP(phone: string, otp: string) {
+  const response = await axios.post(`${API_URL}/otp/verify`, { phone, otp }, {
+    headers: { 'Content-Type': 'application/json' },
+    validateStatus: () => true,
+  });
+
+  if (response.status >= 400) {
+    throw new Error(response.data?.message || 'รหัส OTP ไม่ถูกต้อง กรุณาลองใหม่อีกครั้ง');
+  }
+  return response.data;
+}
+
+export async function registerUser(data: { phone: string; username: string; fullname: string; password: string; role: 'cust' | 'owner' }) {
+  const response = await axios.post(`${API_URL}/register`, data, {
+    headers: { 'Content-Type': 'application/json' },
+    validateStatus: () => true,
+  });
+
+  if (response.status >= 400) {
+    throw new Error(response.data?.message || 'เกิดข้อผิดพลาดในการสมัครสมาชิก กรุณาลองใหม่อีกครั้ง');
+  }
+  return response.data;
+}
+
+export async function loginUser(data: { username: string; password: string }) {
+  const response = await axios.post(`${API_URL}/login`, data, {
+    headers: { 'Content-Type': 'application/json' },
+    validateStatus: () => true,
+  });
+
+  if (response.status >= 400) {
+    throw new Error(response.data?.message || 'ชื่อผู้ใช้งานหรือรหัสผ่านไม่ถูกต้อง');
+  }
+  return response.data;
+}

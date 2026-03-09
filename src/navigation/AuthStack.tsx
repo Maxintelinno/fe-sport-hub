@@ -9,11 +9,11 @@ import OTPVerifyScreen from '../screens/auth/OTPVerifyScreen';
 
 export type AuthStackParamList = {
   Welcome: undefined;
-  RoleSelect: undefined;
-  Login: { role: 'customer' | 'owner' };
-  Register: { role: 'customer' | 'owner'; phoneNumber: string };
-  PhoneVerify: { role: 'customer' | 'owner' };
-  OTPVerify: { role: 'customer' | 'owner'; phoneNumber: string };
+  RoleSelect: { phoneNumber: string };
+  Login: { role: 'cust' | 'owner' };
+  Register: { role: 'cust' | 'owner'; phoneNumber: string };
+  PhoneVerify: undefined;
+  OTPVerify: { phoneNumber: string };
 };
 
 const Stack = createNativeStackNavigator<AuthStackParamList>();

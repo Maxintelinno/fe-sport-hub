@@ -4,6 +4,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RouteProp } from '@react-navigation/native';
 import { AuthStackParamList } from '../../navigation/AuthStack';
 import { useAuth } from '../../context/AuthContext';
+import { loginUser } from '../../services/authService';
 
 const { width } = Dimensions.get('window');
 
@@ -17,6 +18,7 @@ export default function LoginScreen({ navigation, route }: Props) {
   const { login } = useAuth();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
   const [fadeAnim] = useState(new Animated.Value(0));
   const [slideAnim] = useState(new Animated.Value(20));
 
@@ -35,13 +37,31 @@ export default function LoginScreen({ navigation, route }: Props) {
     ]).start();
   }, []);
 
-  const handleLogin = () => {
+  const handleLogin = async () => {
     if (!username.trim() || !password.trim()) {
       Alert.alert('กรุณากรอกข้อมูลให้ครบถ้วน');
       return;
     }
-    // Mock login logic with username
-    login(`${username.trim()}@example.com`, password, role);
+
+    try {
+      setLoading(true);
+      const data = await loginUser({
+        username: username.trim(),
+        password: password.trim(),
+      });
+
+      // Assuming data contains user info or we just use the username
+      login({
+        id: data?.id || '1',
+        phone: username.trim(),
+        name: data?.name || username.trim(),
+        role,
+      });
+    } catch (error) {
+      Alert.alert('เข้าสู่ระบบไม่สำเร็จ', error instanceof Error ? error.message : 'กรุณาลองใหม่อีกครั้ง');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -83,13 +103,19 @@ export default function LoginScreen({ navigation, route }: Props) {
               />
             </View>
 
-            <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
-              <Text style={styles.loginButtonText}>เข้าสู่ระบบ</Text>
+            <TouchableOpacity
+              style={[styles.loginButton, loading && styles.loginButtonDisabled]}
+              onPress={handleLogin}
+              disabled={loading}
+            >
+              <Text style={styles.loginButtonText}>
+                {loading ? 'กำลังเข้าสู่ระบบ...' : 'เข้าสู่ระบบ'}
+              </Text>
             </TouchableOpacity>
 
             <TouchableOpacity
               style={styles.registerLink}
-              onPress={() => navigation.navigate('PhoneVerify', { role })}
+              onPress={() => navigation.navigate('PhoneVerify')}
             >
               <Text style={styles.registerLinkText}>
                 ยังไม่มีบัญชี? <Text style={styles.registerLinkHighlight}>สมัครสมาชิก</Text>
@@ -170,6 +196,9 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.05,
     shadowRadius: 8,
     elevation: 2,
+  },
+  loginButtonDisabled: {
+    opacity: 0.6,
   },
   loginButton: {
     backgroundColor: '#1A5F2A', // Deep Royal Emerald

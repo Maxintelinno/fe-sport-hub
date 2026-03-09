@@ -23,7 +23,6 @@ type Props = {
 };
 
 export default function PhoneVerifyScreen({ navigation, route }: Props) {
-  const { role } = route.params;
   const [phoneNumber, setPhoneNumber] = useState('');
   const [loading, setLoading] = useState(false);
   const [countdown, setCountdown] = useState(0);
@@ -69,7 +68,7 @@ export default function PhoneVerifyScreen({ navigation, route }: Props) {
       setLoading(true);
       await requestOTP(phone);
       startCountdown();
-      navigation.navigate('OTPVerify', { role, phoneNumber: phone });
+      navigation.navigate('OTPVerify', { phoneNumber: phone });
     } catch (error) {
       if (error instanceof RateLimitError) {
         Alert.alert('กรุณารอสักครู่', error.message);

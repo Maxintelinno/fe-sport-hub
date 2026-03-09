@@ -4,8 +4,8 @@ import { User, UserRole } from '../types';
 interface AuthContextType {
   user: User | null;
   isLoggedIn: boolean;
-  login: (email: string, password: string, role: UserRole) => void;
-  register: (email: string, password: string, name: string, role: UserRole) => void;
+  login: (userData: User) => void;
+  register: (userData: User) => void;
   logout: () => void;
 }
 
@@ -14,23 +14,12 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
 
-  const login = useCallback((email: string, _password: string, role: UserRole) => {
-    // จำลองการล็อกอิน (ต่อไปเชื่อม backend ได้)
-    setUser({
-      id: '1',
-      email,
-      name: email.split('@')[0],
-      role,
-    });
+  const login = useCallback((userData: User) => {
+    setUser(userData);
   }, []);
 
-  const register = useCallback((email: string, _password: string, name: string, role: UserRole) => {
-    setUser({
-      id: String(Date.now()),
-      email,
-      name,
-      role,
-    });
+  const register = useCallback((userData: User) => {
+    setUser(userData);
   }, []);
 
   const logout = useCallback(() => {

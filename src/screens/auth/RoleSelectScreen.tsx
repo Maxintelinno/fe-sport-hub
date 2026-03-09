@@ -1,15 +1,18 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Dimensions, Animated } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { RouteProp } from '@react-navigation/native';
 import { AuthStackParamList } from '../../navigation/AuthStack';
 
 const { width } = Dimensions.get('window');
 
 type Props = {
   navigation: NativeStackNavigationProp<AuthStackParamList, 'RoleSelect'>;
+  route: RouteProp<AuthStackParamList, 'RoleSelect'>;
 };
 
-export default function RoleSelectScreen({ navigation }: Props) {
+export default function RoleSelectScreen({ navigation, route }: Props) {
+  const { phoneNumber } = route.params;
   const [fadeAnim] = React.useState(new Animated.Value(0));
 
   React.useEffect(() => {
@@ -33,7 +36,7 @@ export default function RoleSelectScreen({ navigation }: Props) {
         <TouchableOpacity
           activeOpacity={0.85}
           style={styles.card}
-          onPress={() => navigation.navigate('PhoneVerify', { role: 'customer' })}
+          onPress={() => navigation.navigate('Register', { role: 'cust', phoneNumber })}
         >
           <View style={styles.iconContainer}>
             <Text style={styles.cardEmoji}>👤</Text>
@@ -48,7 +51,7 @@ export default function RoleSelectScreen({ navigation }: Props) {
         <TouchableOpacity
           activeOpacity={0.85}
           style={styles.card}
-          onPress={() => navigation.navigate('PhoneVerify', { role: 'owner' })}
+          onPress={() => navigation.navigate('Register', { role: 'owner', phoneNumber })}
         >
           <View style={styles.iconContainer}>
             <Text style={styles.cardEmoji}>🏢</Text>
