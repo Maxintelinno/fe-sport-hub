@@ -224,7 +224,7 @@ export default function OwnerProfileScreen() {
                     </View>
                 </View>
                 <Text style={styles.name}>{user.name}</Text>
-                <Text style={styles.email}>{user.email}</Text>
+                <Text style={styles.email}>{user.email || user.phone || 'ไม่มีข้อมูลการติดต่อ'}</Text>
                 <View style={styles.roleBadge}>
                     <Text style={styles.roleText}>🏆 เจ้าของสนาม</Text>
                 </View>

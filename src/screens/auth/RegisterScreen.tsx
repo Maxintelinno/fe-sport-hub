@@ -49,7 +49,7 @@ export default function RegisterScreen({ navigation, route }: Props) {
             // Auto-login and let AppNavigator handle redirection to Home
             await register({
               id: response?.id || `user-${Date.now()}`,
-              phoneNumber,
+              phone: phoneNumber,
               name: name.trim(),
               role: role,
             });
