@@ -19,6 +19,7 @@ import { OwnerStackParamList } from '../../navigation/types';
 import { useAuth } from '../../context/AuthContext';
 import { addVenue } from '../../data/venueStore';
 import { THAI_LOCATIONS, SPORT_TYPES, Province, District } from '../../data/locationData';
+import * as ImagePicker from 'expo-image-picker';
 
 const { width, height } = Dimensions.get('window');
 
@@ -98,20 +99,23 @@ export default function AddVenueScreen({ navigation }: Props) {
         return province ? province.districts : [];
     }, [province]);
 
-    const handleAddImage = () => {
+    const handleAddImage = async () => {
         if (images.length >= 10) {
             Alert.alert('จำกัดจำนวนรูป', 'คุณสามารถเพิ่มรูปภาพได้สูงสุด 10 รูป');
             return;
         }
-        // Simulate image selection
-        const mockImages = [
-            'https://images.unsplash.com/photo-1574629810360-7efbbe195018?w=800',
-            'https://images.unsplash.com/photo-1543326727-cf6c39e8f84c?w=800',
-            'https://images.unsplash.com/photo-1517466787929-bc90951d0974?w=800',
-            'https://images.unsplash.com/photo-1551958219-acbc608c6377?w=800',
-        ];
-        const newImg = mockImages[images.length % mockImages.length];
-        setImages([...images, newImg]);
+
+        const result = await ImagePicker.launchImageLibraryAsync({
+            mediaTypes: ['images'],
+            allowsMultipleSelection: true,
+            selectionLimit: 10 - images.length,
+            quality: 0.8,
+        });
+
+        if (!result.canceled) {
+            const newUris = result.assets.map(asset => asset.uri);
+            setImages(prev => [...prev, ...newUris].slice(0, 10));
+        }
     };
 
     const removeImage = (index: number) => {
@@ -184,17 +188,40 @@ export default function AddVenueScreen({ navigation }: Props) {
                     <Text style={styles.cardTitle}>💎 รายละเอียดสนามพรีเมียม</Text>
                     <Text style={styles.cardSubtitle}>ยกระดับสนามของคุณด้วยข้อมูลที่ครบถ้วน</Text>
 
-                    {/* Image Upload Section */}
-                    <Text style={styles.label}>รูปภาพประกอบ (สูงสุด 10 รูป) *</Text>
-                    <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.imageScroll}>
-                        <TouchableOpacity style={styles.addImageBtn} onPress={handleAddImage}>
-                            <Text style={styles.addImageIcon}>📸</Text>
-                            <Text style={styles.addImageText}>เพิ่มรูป</Text>
+                    {/* Premium Image Selection Section */}
+                    <Text style={styles.label}>รูปภาพสนาม (แนะนำ 3-5 รูป) *</Text>
+
+                    {images.length > 0 ? (
+                        <View style={styles.heroImageContainer}>
+                            <Image source={{ uri: images[0] }} style={styles.heroImage} />
+                            <TouchableOpacity
+                                style={styles.changeHeroBtn}
+                                onPress={() => removeImage(0)}
+                            >
+                                <Text style={styles.changeHeroText}>เปลี่ยนรูปหลัก</Text>
+                            </TouchableOpacity>
+                        </View>
+                    ) : (
+                        <TouchableOpacity style={styles.emptyHeroBtn} onPress={handleAddImage}>
+                            <Text style={styles.emptyHeroIcon}>🌅</Text>
+                            <Text style={styles.emptyHeroText}>เลือกรูปภาพจากคลังรูปภาพ</Text>
                         </TouchableOpacity>
-                        {images.map((img, index) => (
-                            <View key={index} style={styles.imageWrapper}>
+                    )}
+
+                    <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.imageScroll}>
+                        {images.length > 0 && (
+                            <TouchableOpacity style={styles.smallAddBtn} onPress={handleAddImage}>
+                                <Text style={styles.smallAddIcon}>+</Text>
+                            </TouchableOpacity>
+                        )}
+
+                        {images.slice(1).map((img, index) => (
+                            <View key={index + 1} style={styles.imageWrapper}>
                                 <Image source={{ uri: img }} style={styles.previewImage} />
-                                <TouchableOpacity style={styles.removeImageBtn} onPress={() => removeImage(index)}>
+                                <TouchableOpacity
+                                    style={styles.removeImageBtn}
+                                    onPress={() => removeImage(index + 1)}
+                                >
                                     <Text style={styles.removeImageText}>✕</Text>
                                 </TouchableOpacity>
                             </View>
@@ -461,6 +488,78 @@ const styles = StyleSheet.create({
         color: '#fff',
         fontSize: 12,
         fontWeight: '900',
+    },
+    // New Premium Gallery Styles
+    heroImageContainer: {
+        width: '100%',
+        height: 220,
+        borderRadius: 24,
+        overflow: 'hidden',
+        marginBottom: 16,
+        backgroundColor: '#F0F7F0',
+        borderWidth: 1,
+        borderColor: 'rgba(26, 95, 42, 0.1)',
+        position: 'relative',
+    },
+    heroImage: {
+        width: '100%',
+        height: '100%',
+    },
+    changeHeroBtn: {
+        position: 'absolute',
+        bottom: 12,
+        right: 12,
+        backgroundColor: 'rgba(0,0,0,0.6)',
+        paddingHorizontal: 12,
+        paddingVertical: 6,
+        borderRadius: 12,
+    },
+    changeHeroText: {
+        color: '#fff',
+        fontSize: 12,
+        fontWeight: '700',
+    },
+    emptyHeroBtn: {
+        width: '100%',
+        height: 200,
+        borderRadius: 24,
+        backgroundColor: '#F9FBF9',
+        borderWidth: 2,
+        borderColor: '#1A5F2A',
+        borderStyle: 'dashed',
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginBottom: 16,
+    },
+    emptyHeroIcon: {
+        fontSize: 40,
+        marginBottom: 8,
+    },
+    emptyHeroText: {
+        fontSize: 14,
+        color: '#1A5F2A',
+        fontWeight: '700',
+    },
+    smallAddBtn: {
+        width: 80,
+        height: 80,
+        borderRadius: 20,
+        backgroundColor: '#FFFFFF',
+        borderWidth: 1.5,
+        borderColor: '#1A5F2A',
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginRight: 12,
+        shadowColor: '#1A5F2A',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.1,
+        shadowRadius: 6,
+        elevation: 3,
+    },
+    smallAddIcon: {
+        fontSize: 32,
+        color: '#1A5F2A',
+        fontWeight: '300',
     },
     submitBtn: {
         backgroundColor: '#C5A021',
