@@ -1,3 +1,5 @@
+import { Venue } from '../types';
+
 export type CustomerStackParamList = {
     VenueList: undefined;
     VenueDetail: { venueId: string };
@@ -17,6 +19,7 @@ export type OwnerStackParamList = {
     // Owner Management
     MyVenues: undefined;
     AddVenue: undefined;
+    EditVenue: { venue: Venue };
     VenueBookings: { venueId: string };
     Profile: undefined;
     RevenueDetail: undefined;

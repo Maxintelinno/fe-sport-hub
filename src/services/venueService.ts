@@ -114,3 +114,25 @@ export async function getOwnerFields(ownerId: string): Promise<Venue[]> {
     }
     return response.data.data;
 }
+
+export async function updateFieldStatus(fieldId: string, status: string) {
+    const response = await api.patch(`${API_URL}/v1/fields/${fieldId}/status`, { status }, {
+        validateStatus: () => true,
+    });
+
+    if (response.status >= 400) {
+        throw new Error(response.data?.message || 'ไม่สามารถอัปเดตสถานะสนามได้');
+    }
+    return response.data;
+}
+
+export async function updateField(fieldId: string, data: Partial<CreateFieldRequest>) {
+    const response = await api.patch(`${API_URL}/v1/fields/${fieldId}`, data, {
+        validateStatus: () => true,
+    });
+
+    if (response.status >= 400) {
+        throw new Error(response.data?.message || 'ไม่สามารถแก้ไขข้อมูลสนามได้');
+    }
+    return response.data;
+}

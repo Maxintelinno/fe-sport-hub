@@ -9,10 +9,11 @@ import {
   Dimensions,
   Switch,
   StatusBar,
+  Alert,
 } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useAuth } from '../../context/AuthContext';
-import { getOwnerFields } from '../../services/venueService';
+import { getOwnerFields, updateFieldStatus } from '../../services/venueService';
 import { getMockBookingsByVenue } from '../customer/BookingFormScreen';
 import { Venue } from '../../types';
 import { OwnerStackParamList } from '../../navigation/types';
@@ -28,13 +29,18 @@ type Props = {
 function VenueCard({
   venue,
   onPress,
+  onToggle,
+  onEdit,
   bookingCount,
 }: {
   venue: Venue;
   onPress: () => void;
+  onToggle: (id: string, currentStatus: string) => void;
+  onEdit: (venue: Venue) => void;
   bookingCount: number;
 }) {
-  const isActive = venue.status === 'active' || venue.status === 'pending_review';
+  const isActive = venue.status === 'active';
+  const isPending = venue.status === 'pending_review';
   const imageUrl = venue.images?.[0]?.image_url;
 
   return (
@@ -53,10 +59,10 @@ function VenueCard({
           </View>
         )}
 
-        <View style={[styles.statusBadge, !isActive && styles.statusBadgeInactive]}>
-          <View style={[styles.statusDot, !isActive && styles.statusDotInactive]} />
-          <Text style={[styles.statusText, !isActive && styles.statusTextInactive]}>
-            {venue.status === 'pending_review' ? 'รอกลั่นกรอง' : (isActive ? 'เปิดบริการ' : 'ปิดบริการ')}
+        <View style={[styles.statusBadge, !isActive && !isPending && styles.statusBadgeInactive]}>
+          <View style={[styles.statusDot, isPending ? styles.statusDotPending : (!isActive && styles.statusDotInactive)]} />
+          <Text style={[styles.statusText, !isActive && !isPending && styles.statusTextInactive]}>
+            {isPending ? 'รอกลั่นกรอง' : (isActive ? 'เปิดบริการ' : 'ปิดบริการ')}
           </Text>
         </View>
 
@@ -95,15 +101,34 @@ function VenueCard({
 
         {/* Footer Actions */}
         <View style={styles.cardFooter}>
-          <View style={styles.statusInfo}>
-             <Text style={[styles.statusInfoLabel, { color: isActive ? '#1A5F2A' : '#999' }]}>
-               สถานะ: {venue.status === 'pending_review' ? 'รอตรวจสอบ' : venue.status === 'active' ? 'เปิดบริการ' : 'ปิดบริการ'}
-             </Text>
+          <View style={styles.toggleContainer}>
+            <Switch
+              value={isActive}
+              onValueChange={() => onToggle(venue.id, venue.status)}
+              trackColor={{ false: '#ddd', true: '#b8e6c1' }}
+              thumbColor={isActive ? '#1A5F2A' : '#999'}
+              disabled={isPending}
+            />
+            <Text style={[styles.toggleLabel, (isPending || !isActive) && { color: '#999' }]}>
+              {isActive ? 'เปิดจอง' : (isPending ? 'รอตรวจสอบ' : 'ปิดจอง')}
+            </Text>
           </View>
 
-          <TouchableOpacity style={[styles.actionBtn, !isActive && styles.actionBtnInactive]} onPress={onPress}>
-            <Text style={styles.actionBtnText}>จัดการ</Text>
-          </TouchableOpacity>
+          <View style={styles.actionButtons}>
+            <TouchableOpacity 
+              style={styles.editBtn} 
+              onPress={() => onEdit(venue)}
+            >
+              <Text style={styles.editBtnText}>แก้ไข</Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity 
+              style={[styles.actionBtn, !isActive && !isPending && styles.actionBtnInactive]} 
+              onPress={onPress}
+            >
+              <Text style={styles.actionBtnText}>จัดการ</Text>
+            </TouchableOpacity>
+          </View>
         </View>
       </View>
 
@@ -142,6 +167,31 @@ export default function MyVenuesScreen({ navigation }: Props) {
     setRefreshing(true);
     fetchVenues();
   }, [fetchVenues]);
+
+  const handleToggleStatus = async (fieldId: string, currentStatus: string) => {
+    if (currentStatus === 'pending_review') {
+      Alert.alert('ขออภัย', 'ไม่สามารถเปลี่ยนสถานะได้ขณะรอการตรวจสอบ');
+      return;
+    }
+
+    const newStatus = currentStatus === 'active' ? 'inactive' : 'active';
+    
+    // Optimistic Update
+    const previousVenues = [...venues];
+    setVenues(venues.map(v => v.id === fieldId ? { ...v, status: newStatus } : v));
+
+    try {
+      await updateFieldStatus(fieldId, newStatus);
+    } catch (error) {
+      console.error('Error updating status:', error);
+      Alert.alert('เกิดข้อผิดพลาด', 'ไม่สามารถอัปเดตสถานะได้ กรุณาลองใหม่อีกครั้ง');
+      setVenues(previousVenues);
+    }
+  };
+
+  const handleEdit = (venue: Venue) => {
+    navigation.navigate('EditVenue', { venue });
+  };
 
   const activeCount = venues.filter(v => v.status === 'active' || v.status === 'pending_review').length;
 
@@ -214,6 +264,8 @@ export default function MyVenuesScreen({ navigation }: Props) {
           <VenueCard
             venue={item}
             onPress={() => navigation.navigate('VenueBookings', { venueId: item.id })}
+            onToggle={handleToggleStatus}
+            onEdit={handleEdit}
             bookingCount={getMockBookingsByVenue(item.id).length}
           />
         )}
@@ -462,6 +514,31 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     color: '#1A5F2A',
   },
+  toggleContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  toggleLabel: {
+    fontSize: 12,
+    fontWeight: '800',
+    color: '#1A5F2A',
+    marginLeft: 4,
+  },
+  actionButtons: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  editBtn: {
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    marginRight: 8,
+  },
+  editBtnText: {
+    color: '#1A5F2A',
+    fontSize: 13,
+    fontWeight: '800',
+    textDecorationLine: 'underline',
+  },
   actionBtn: {
     backgroundColor: '#1A5F2A',
     paddingHorizontal: 18,
@@ -481,6 +558,9 @@ const styles = StyleSheet.create({
   },
   statusDotInactive: {
     backgroundColor: '#999',
+  },
+  statusDotPending: {
+    backgroundColor: '#C5A021',
   },
   statusTextInactive: {
     color: '#666',
