@@ -115,8 +115,12 @@ export async function getOwnerFields(ownerId: string): Promise<Venue[]> {
     return response.data.data;
 }
 
-export async function updateFieldStatus(fieldId: string, status: string) {
-    const response = await api.patch(`${API_URL}/v1/fields/${fieldId}/status`, { status }, {
+export async function updateFieldStatus(owner_id: string, field_id: string, status: string) {
+    const response = await api.patch(`${API_URL}/v1/owner/fields/status`, { 
+        owner_id, 
+        field_id, 
+        status 
+    }, {
         validateStatus: () => true,
     });
 

@@ -169,6 +169,8 @@ export default function MyVenuesScreen({ navigation }: Props) {
   }, [fetchVenues]);
 
   const handleToggleStatus = async (fieldId: string, currentStatus: string) => {
+    if (!user?.id) return;
+    
     if (currentStatus === 'pending_review') {
       Alert.alert('ขออภัย', 'ไม่สามารถเปลี่ยนสถานะได้ขณะรอการตรวจสอบ');
       return;
@@ -176,16 +178,18 @@ export default function MyVenuesScreen({ navigation }: Props) {
 
     const newStatus = currentStatus === 'active' ? 'inactive' : 'active';
     
-    // Optimistic Update
-    const previousVenues = [...venues];
-    setVenues(venues.map(v => v.id === fieldId ? { ...v, status: newStatus } : v));
+    setLoading(true);
 
     try {
-      await updateFieldStatus(fieldId, newStatus);
+      await updateFieldStatus(user.id, fieldId, newStatus);
+      // Refresh after update as requested
+      await fetchVenues();
     } catch (error) {
       console.error('Error updating status:', error);
       Alert.alert('เกิดข้อผิดพลาด', 'ไม่สามารถอัปเดตสถานะได้ กรุณาลองใหม่อีกครั้ง');
-      setVenues(previousVenues);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
     }
   };
 
