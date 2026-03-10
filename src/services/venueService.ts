@@ -140,3 +140,35 @@ export async function updateField(fieldId: string, data: Partial<CreateFieldRequ
     }
     return response.data;
 }
+
+export interface GetFilteredFieldsParams {
+    section: 'all' | 'popular' | 'nearby' | 'province';
+    limit?: number;
+    offset?: number;
+    lat?: number;
+    lng?: number;
+    province?: string;
+}
+
+export async function getFilteredFields(params: GetFilteredFieldsParams): Promise<Venue[]> {
+    const { section, limit = 10, offset = 0, lat, lng, province } = params;
+    let url = `${API_URL}/v1/fields?section=${section}&limit=${limit}&offset=${offset}`;
+    
+    if (lat !== undefined && lng !== undefined) {
+        url += `&lat=${lat}&lng=${lng}`;
+    }
+    
+    if (province) {
+        url += `&province=${encodeURIComponent(province)}`;
+    }
+
+    const response = await api.get(url, {
+        validateStatus: () => true,
+    });
+
+    if (response.status >= 400) {
+        throw new Error(response.data?.message || 'ไม่สามารถดึงข้อมูลสนามได้');
+    }
+    
+    return response.data.data || [];
+}

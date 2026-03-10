@@ -1,11 +1,13 @@
 import React, { useMemo } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, Image, Dimensions, StatusBar, ScrollView, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, Image, Dimensions, StatusBar, ScrollView, ActivityIndicator, Alert } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useNavigation } from '@react-navigation/native';
 import { CustomerStackParamList } from '../../navigation/types';
 import { getAllVenues } from '../../data/venueStore';
 import { Venue } from '../../types';
 import { useAuth } from '../../context/AuthContext';
+import * as Location from 'expo-location';
+import { getFilteredFields } from '../../services/venueService';
 
 const { width } = Dimensions.get('window');
 
@@ -90,43 +92,125 @@ const MOCK_INSIGHTS = [
 ];
 
 export default function VenueListScreen({ navigation }: Props) {
-  const { isLoggedIn, user } = useAuth();
+  const { isLoggedIn, user, loading: authLoading } = useAuth();
   const [selectedCategory, setSelectedCategory] = React.useState('ทั้งหมด');
   const [refreshing, setRefreshing] = React.useState(false);
   const [filteredVenues, setFilteredVenues] = React.useState<Venue[]>([]);
 
   const allVenues = useMemo(() => getAllVenues(), []);
 
-  // Sync filteredVenues with allVenues initially
-  React.useEffect(() => {
-    setFilteredVenues(allVenues);
-  }, [allVenues]);
+  // No longer sync with mock data
+  // React.useEffect(() => {
+  //   setFilteredVenues(allVenues);
+  // }, [allVenues]);
 
   const CATEGORIES = ['ทั้งหมด', 'สนามยอดนิยม', 'สนามใกล้คุณ', 'สนามในจังหวัดของคุณ'];
 
-  const handleCategoryPress = (category: string) => {
-    setSelectedCategory(category);
-    setRefreshing(true); // This now represents section loading
+  const categoryToSection = (cat: string): 'all' | 'popular' | 'nearby' | 'province' => {
+    switch (cat) {
+      case 'ทั้งหมด': return 'all';
+      case 'สนามยอดนิยม': return 'popular';
+      case 'สนามใกล้คุณ': return 'nearby';
+      case 'สนามในจังหวัดของคุณ': return 'province';
+      default: return 'all';
+    }
+  };
 
-    // Simulate API refresh/filtering
-    setTimeout(() => {
-      let result = [...allVenues];
-      if (category === 'สนามยอดนิยม') {
-        result = allVenues.slice(0, 3);
-      } else if (category === 'สนามใกล้คุณ') {
-        result = allVenues.slice().reverse();
-      } else if (category === 'สนามในจังหวัดของคุณ') {
-        if (user && (user as any).province) {
-          result = allVenues.filter(v => v.province === (user as any).province);
-        } else {
-          result = allVenues.slice(1, 4);
+  const getCurrentLocation = async () => {
+    let { status } = await Location.requestForegroundPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert(
+        'ขอสิทธิ์เข้าถึงตำแหน่ง',
+        'กรุณาเปิดสิทธิ์การเข้าถึงตำแหน่งเพื่อใช้งานฟีเจอร์นี้',
+        [{ text: 'ตกลง' }]
+      );
+      return null;
+    }
+
+    let location = await Location.getCurrentPositionAsync({});
+    return {
+      lat: location.coords.latitude,
+      lng: location.coords.longitude
+    };
+  };
+
+  const handleCategoryPress = async (category: string) => {
+    // If we're still loading auth, wait
+    if (authLoading) return;
+
+    setSelectedCategory(category);
+    setRefreshing(true);
+
+    try {
+      const section = categoryToSection(category);
+      let lat, lng, provinceStr;
+
+      if (section === 'nearby' || section === 'province') {
+        const loc = await getCurrentLocation();
+        if (!loc) {
+          setRefreshing(false);
+          return;
+        }
+        lat = loc.lat;
+        lng = loc.lng;
+
+        if (section === 'province') {
+          // Reverse geocode to get province
+          const reverseGeocode = await Location.reverseGeocodeAsync({
+            latitude: lat,
+            longitude: lng
+          });
+          if (reverseGeocode.length > 0) {
+            provinceStr = reverseGeocode[0].region; // 'region' is usually the province in Thailand
+          }
+          
+          // Fallback if not detected or provided
+          if (!provinceStr) {
+            provinceStr = 'กรุงเทพมหานคร';
+          }
         }
       }
 
-      setFilteredVenues(result);
+      const results = await getFilteredFields({
+        section,
+        lat,
+        lng,
+        province: provinceStr,
+        limit: 10,
+        offset: 0
+      });
+
+      setFilteredVenues(results);
+    } catch (error: any) {
+      console.error('Error fetching venues:', error);
+      
+      // If unauthorized, show login prompt only then
+      if (error.message?.includes('Authorization') || error.message?.includes('401')) {
+        Alert.alert(
+          'กรุณาเข้าสู่ระบบ',
+          'กรุณาเข้าสู่ระบบเพื่อดูข้อมูลสนามในหมวดหมู่นี้',
+          [
+            { text: 'ภายหลัง', style: 'cancel' },
+            { 
+              text: 'เข้าสู่ระบบ', 
+              onPress: () => (navigation as any).navigate('Auth', { screen: 'Login', params: { role: 'cust' } })
+            }
+          ]
+        );
+      } else {
+        Alert.alert('เกิดข้อผิดพลาด', error.message || 'ไม่สามารถโหลดข้อมูลสนามได้');
+      }
+    } finally {
       setRefreshing(false);
-    }, 800);
+    }
   };
+
+  // Trigger initial load when auth is ready
+  React.useEffect(() => {
+    if (!authLoading) {
+      handleCategoryPress('ทั้งหมด');
+    }
+  }, [authLoading]);
 
   const handleProfilePress = () => {
     if (!isLoggedIn) {

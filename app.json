@@ -18,7 +18,9 @@
       "infoPlist": {
         "NSPhotoLibraryUsageDescription": "Allow app to access your photos to upload venue images.",
         "NSPhotoLibraryAddUsageDescription": "Allow app to save images to your photo library.",
-        "NSCameraUsageDescription": "Allow app to use camera to take venue photos."
+        "NSCameraUsageDescription": "Allow app to use camera to take venue photos.",
+        "NSLocationWhenInUseUsageDescription": "Allow app to access your location to find nearby sports venues.",
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "Allow app to access your location to find nearby sports venues."
       }
     },
     "android": {
@@ -27,7 +29,11 @@
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "permissions": [
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_FINE_LOCATION"
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -38,6 +44,12 @@
         {
           "photosPermission": "Allow app to access your photos to upload venue images.",
           "cameraPermission": "Allow app to use camera to take venue photos."
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationAlwaysPermission": "Allow app to access your location to find nearby sports venues."
         }
       ]
     ]
