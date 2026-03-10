@@ -1,4 +1,4 @@
-const API_URL = 'https://sport-hub-register-staging.up.railway.app/api/v1';
+const API_URL = 'https://sport-hub-register-staging.up.railway.app';
 
 export class RateLimitError extends Error {
   constructor(message: string = 'กรุณารอสักครู่ก่อนขอ OTP ใหม่') {

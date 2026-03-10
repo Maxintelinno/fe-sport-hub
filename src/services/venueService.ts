@@ -28,10 +28,15 @@ export async function getPresignedUrls(files: PresignRequestFile[]): Promise<Pre
     return response.data;
 }
 
-export async function uploadToPresignedUrl(uploadUrl: string, fileUri: string, contentType: string) {
+export async function uploadToPresignedUrl(uploadUrl: string, fileUri: string, contentType: string, objectKey: string) {
     try {
         const response = await fetch(fileUri);
         const blob = await response.blob();
+
+        console.log('uploadUrl =', uploadUrl);
+        console.log('fileUri =', fileUri);
+        console.log('contentType =', contentType);
+        console.log('objectKey =', objectKey);
 
         const uploadResponse = await fetch(uploadUrl, {
             method: 'PUT',
@@ -41,8 +46,12 @@ export async function uploadToPresignedUrl(uploadUrl: string, fileUri: string, c
             },
         });
 
+        const responseText = await uploadResponse.text();
+        console.log('upload status =', uploadResponse.status);
+        console.log('upload response =', responseText);
+
         if (!uploadResponse.ok) {
-            throw new Error('Upload to storage failed');
+            throw new Error(`Upload to storage failed: ${uploadResponse.status} ${responseText}`);
         }
         return true;
     } catch (error) {

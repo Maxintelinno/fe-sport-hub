@@ -146,7 +146,7 @@ export default function AddVenueScreen({ navigation }: Props) {
 
                 // 2. Upload to Cloud
                 const uploadPromises = presignedData.map((p, idx) =>
-                    uploadToPresignedUrl(p.upload_url, selectedAssets[idx].uri, presignFiles[idx].content_type)
+                    uploadToPresignedUrl(p.upload_url, selectedAssets[idx].uri, presignFiles[idx].content_type, p.object_key)
                 );
 
                 await Promise.all(uploadPromises);
