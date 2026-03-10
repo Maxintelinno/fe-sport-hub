@@ -119,6 +119,7 @@ function VenueCard({
               style={styles.editBtn} 
               onPress={() => onEdit(venue)}
             >
+              <Text style={styles.editBtnIcon}>✏️</Text>
               <Text style={styles.editBtnText}>แก้ไข</Text>
             </TouchableOpacity>
             
@@ -533,15 +534,24 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   editBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F0F7F0',
     paddingHorizontal: 12,
     paddingVertical: 8,
+    borderRadius: 12,
     marginRight: 8,
+    borderWidth: 1,
+    borderColor: '#1A5F2A',
+  },
+  editBtnIcon: {
+    fontSize: 12,
+    marginRight: 4,
   },
   editBtnText: {
     color: '#1A5F2A',
     fontSize: 13,
     fontWeight: '800',
-    textDecorationLine: 'underline',
   },
   actionBtn: {
     backgroundColor: '#1A5F2A',

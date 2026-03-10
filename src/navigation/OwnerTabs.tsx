@@ -14,6 +14,7 @@ import AddVenueScreen from '../screens/owner/AddVenueScreen';
 import OwnerProfileScreen from '../screens/owner/OwnerProfileScreen';
 import VenueBookingsScreen from '../screens/owner/VenueBookingsScreen';
 import RevenueDetailScreen from '../screens/owner/RevenueDetailScreen';
+import EditVenueScreen from '../screens/owner/EditVenueScreen';
 import { OwnerStackParamList } from './types';
 
 const Tab = createBottomTabNavigator();
@@ -51,6 +52,7 @@ function ManagementStack() {
       <Stack.Screen name="MyVenues" component={MyVenuesScreen} options={{ title: 'สนามของฉัน' }} />
       <Stack.Screen name="VenueBookings" component={VenueBookingsScreen} options={{ title: 'การจอง' }} />
       <Stack.Screen name="AddVenue" component={AddVenueScreen} options={{ title: 'เพิ่มสนาม' }} />
+      <Stack.Screen name="EditVenue" component={EditVenueScreen} options={{ title: 'แก้ไขสนาม' }} />
     </Stack.Navigator>
   );
 }

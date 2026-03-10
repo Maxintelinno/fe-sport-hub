@@ -1,7 +1,7 @@
 import api from './api';
 import { Venue } from '../types';
 
-const API_URL = 'https://sport-hub-register-staging.up.railway.app';
+const API_URL = 'http://sport-hub-register-staging.up.railway.app';
 
 export interface PresignRequestFile {
     file_name: string;
@@ -131,7 +131,7 @@ export async function updateFieldStatus(owner_id: string, field_id: string, stat
 }
 
 export async function updateField(fieldId: string, data: Partial<CreateFieldRequest>) {
-    const response = await api.patch(`${API_URL}/v1/fields/${fieldId}`, data, {
+    const response = await api.put(`${API_URL}/v1/fields/${fieldId}`, data, {
         validateStatus: () => true,
     });
 
