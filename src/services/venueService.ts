@@ -1,4 +1,5 @@
 import api from './api';
+import { Venue } from '../types';
 
 const API_URL = 'https://sport-hub-register-staging.up.railway.app';
 
@@ -87,4 +88,29 @@ export async function createField(data: CreateFieldRequest) {
         throw new Error(response.data?.message || 'ไม่สามารถสร้างสนามได้');
     }
     return response.data;
+}
+
+export interface GetOwnerFieldsResponse {
+    status: string;
+    message: string;
+    data: Venue[];
+}
+
+export function getVenuesByOwner(ownerId: string): Venue[] {
+  // MOCK_VENUES and ownerVenues are not defined in this file.
+  // This function will cause a runtime error if called without them.
+  // Assuming they would be imported or defined elsewhere in a complete context.
+  // For now, returning an empty array to maintain syntactical correctness.
+  return [];
+}
+
+export async function getOwnerFields(ownerId: string): Promise<Venue[]> {
+    const response = await api.get(`${API_URL}/v1/owner/fields?owner_id=${ownerId}`, {
+        validateStatus: () => true,
+    });
+
+    if (response.status >= 400) {
+        throw new Error(response.data?.message || 'ไม่สามารถดึงข้อมูลสนามได้');
+    }
+    return response.data.data;
 }

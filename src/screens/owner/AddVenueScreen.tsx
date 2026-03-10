@@ -224,17 +224,25 @@ export default function AddVenueScreen({ navigation }: Props) {
             // 2. Also keep local storage for now if still needed by other parts of the app
             addVenue({
                 name,
-                sportType,
-                pricePerHour: Number(price),
-                openingTime,
-                closingTime,
+                sport_type: sportType,
+                price_per_hour: Number(price),
+                open_time: openingTime,
+                close_time: closingTime,
                 description,
-                address,
+                address_line: address,
                 province: province.name,
                 district: district.name,
-                imageUrls: images.length > 0 ? images : undefined,
-                imageUrl: images.length > 0 ? images[0] : 'https://images.unsplash.com/photo-1574629810360-7efbbe195018?auto=format&fit=crop&q=80&w=800',
-                ownerId: user.id,
+                images: uploadedImages.map((img, idx) => ({
+                    id: `temp_${Date.now()}_${idx}`,
+                    field_id: 'pending',
+                    object_key: img.object_key,
+                    image_url: images[idx] || '',
+                    sort_order: img.sort_order
+                })),
+                owner_id: user.id,
+                status: 'pending_review',
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString(),
                 isActive: true,
             });
 

@@ -9,24 +9,39 @@ export interface User {
   accessToken?: string;
 }
 
+export interface FieldImage {
+  id: string;
+  field_id: string;
+  object_key: string;
+  image_url: string;
+  sort_order: number;
+  created_at?: string;
+}
+
 export interface Venue {
   id: string;
+  owner_id: string;
   name: string;
+  sport_type: string;
+  price_per_hour: number;
+  open_time: string;
+  close_time: string;
+  province: string;
+  district: string;
+  address_line: string;
   description: string;
-  address: string;
-  district?: string;
-  province?: string;
-  sportType: string;
-  pricePerHour: number;
-  ownerId: string;
-  openingTime: string; // "08:00"
-  closingTime: string; // "22:00"
-
-  // Images
-  imageUrl?: string; // legacy single image
-  imageUrls?: string[]; // multiple images (local URI or remote URL)
-
-  // Owner-only state (mock store)
+  status: string;
+  created_at: string;
+  updated_at: string;
+  images: FieldImage[];
+  // Compatibility fields for mock data/existing UI
+  address?: string; 
+  sportType?: string;
+  pricePerHour?: number;
+  openingTime?: string;
+  closingTime?: string;
+  imageUrl?: string;
+  imageUrls?: string[];
   isActive?: boolean;
 }
 

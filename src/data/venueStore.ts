@@ -8,7 +8,7 @@ export function getAllVenues(): Venue[] {
 }
 
 export function getVenuesByOwner(ownerId: string): Venue[] {
-  return [...MOCK_VENUES, ...ownerVenues].filter((v) => v.ownerId === ownerId);
+  return [...MOCK_VENUES, ...ownerVenues].filter((v) => v.owner_id === ownerId);
 }
 
 export function addVenue(venue: Omit<Venue, 'id'>): Venue {

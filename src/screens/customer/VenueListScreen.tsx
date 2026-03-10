@@ -14,8 +14,16 @@ type Props = {
 };
 
 function VenueCard({ venue, onPress }: { venue: Venue; onPress: () => void }) {
-  const thumbUri = venue.imageUrls?.[0] ?? venue.imageUrl;
-  const active = venue.isActive !== false;
+  const displayImages = Array.isArray(venue.images) && venue.images.length > 0 
+    ? [...venue.images].sort((a, b) => (Number(a.sort_order) || 0) - (Number(b.sort_order) || 0))
+    : [];
+    
+  const firstImage = displayImages[0];
+  const thumbUri = (typeof firstImage === 'string' ? firstImage : firstImage?.image_url) 
+    || venue.imageUrl 
+    || (Array.isArray(venue.imageUrls) ? venue.imageUrls[0] : null);
+    
+  const active = venue.status !== 'inactive' && venue.status !== 'pending_review';
 
   return (
     <TouchableOpacity
@@ -38,14 +46,14 @@ function VenueCard({ venue, onPress }: { venue: Venue; onPress: () => void }) {
           </View>
         )}
         <View style={styles.priceBadge}>
-          <Text style={styles.priceText}>฿{venue.pricePerHour}</Text>
+          <Text style={styles.priceText}>฿{venue.price_per_hour || venue.pricePerHour}</Text>
           <Text style={styles.priceUnit}>/ชม.</Text>
         </View>
       </View>
 
       <View style={styles.cardBody}>
         <View style={styles.sportBadge}>
-          <Text style={styles.sportTypeText}>{venue.sportType}</Text>
+          <Text style={styles.sportTypeText}>{venue.sport_type || venue.sportType}</Text>
         </View>
 
         <Text style={styles.name} numberOfLines={1}>{venue.name}</Text>
@@ -53,7 +61,7 @@ function VenueCard({ venue, onPress }: { venue: Venue; onPress: () => void }) {
         <View style={styles.locationContainer}>
           <Text style={styles.locationIcon}>📍</Text>
           <Text style={styles.address} numberOfLines={1}>
-            {venue.address}
+            {venue.address_line || venue.address}
           </Text>
         </View>
 

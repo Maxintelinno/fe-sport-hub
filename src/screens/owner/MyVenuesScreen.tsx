@@ -12,11 +12,12 @@ import {
 } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useAuth } from '../../context/AuthContext';
-import { getVenuesByOwner, toggleVenueStatus } from '../../data/venueStore';
+import { getOwnerFields } from '../../services/venueService';
 import { getMockBookingsByVenue } from '../customer/BookingFormScreen';
 import { Venue } from '../../types';
 import { OwnerStackParamList } from '../../navigation/types';
 import { useFocusEffect } from '@react-navigation/native';
+import { RefreshControl } from 'react-native';
 
 const { width } = Dimensions.get('window');
 
@@ -27,16 +28,14 @@ type Props = {
 function VenueCard({
   venue,
   onPress,
-  onToggle,
   bookingCount,
 }: {
   venue: Venue;
   onPress: () => void;
-  onToggle: (id: string) => void;
   bookingCount: number;
 }) {
-  const isActive = venue.isActive !== false;
-  const imageUrl = venue.imageUrls?.[0] ?? venue.imageUrl;
+  const isActive = venue.status === 'active' || venue.status === 'pending_review';
+  const imageUrl = venue.images?.[0]?.image_url;
 
   return (
     <TouchableOpacity
@@ -57,12 +56,12 @@ function VenueCard({
         <View style={[styles.statusBadge, !isActive && styles.statusBadgeInactive]}>
           <View style={[styles.statusDot, !isActive && styles.statusDotInactive]} />
           <Text style={[styles.statusText, !isActive && styles.statusTextInactive]}>
-            {isActive ? 'เปิดบริการ' : 'ปิดบริการ'}
+            {venue.status === 'pending_review' ? 'รอกลั่นกรอง' : (isActive ? 'เปิดบริการ' : 'ปิดบริการ')}
           </Text>
         </View>
 
         <View style={styles.priceBadge}>
-          <Text style={styles.priceText}>฿{venue.pricePerHour}</Text>
+          <Text style={styles.priceText}>฿{venue.price_per_hour}</Text>
           <Text style={styles.priceUnit}>/ชม.</Text>
         </View>
       </View>
@@ -71,7 +70,7 @@ function VenueCard({
       <View style={styles.cardContent}>
         <View style={styles.cardHeader}>
           <View style={styles.sportBadge}>
-            <Text style={styles.sportBadgeText}>{venue.sportType}</Text>
+            <Text style={styles.sportBadgeText}>{venue.sport_type}</Text>
           </View>
           <View style={styles.bookingBadge}>
             <Text style={styles.bookingBadgeText}>{bookingCount} จอง</Text>
@@ -83,29 +82,23 @@ function VenueCard({
         <View style={styles.infoRow}>
           <Text style={styles.infoIcon}>📍</Text>
           <Text style={styles.infoText} numberOfLines={1}>
-            {venue.address}
+            {venue.address_line}, {venue.district}, {venue.province}
           </Text>
         </View>
 
         <View style={styles.infoRow}>
           <Text style={styles.infoIcon}>🕐</Text>
           <Text style={styles.infoText}>
-            {venue.openingTime} - {venue.closingTime}
+            {venue.open_time} - {venue.close_time}
           </Text>
         </View>
 
         {/* Footer Actions */}
         <View style={styles.cardFooter}>
-          <View style={styles.toggleContainer}>
-            <Switch
-              value={isActive}
-              onValueChange={() => onToggle(venue.id)}
-              trackColor={{ false: '#ddd', true: '#b8e6c1' }}
-              thumbColor={isActive ? '#1A5F2A' : '#999'}
-            />
-            <Text style={[styles.toggleLabel, !isActive && { color: '#999' }]}>
-              {isActive ? 'เปิดจอง' : 'ปิดจอง'}
-            </Text>
+          <View style={styles.statusInfo}>
+             <Text style={[styles.statusInfoLabel, { color: isActive ? '#1A5F2A' : '#999' }]}>
+               สถานะ: {venue.status === 'pending_review' ? 'รอตรวจสอบ' : venue.status === 'active' ? 'เปิดบริการ' : 'ปิดบริการ'}
+             </Text>
           </View>
 
           <TouchableOpacity style={[styles.actionBtn, !isActive && styles.actionBtnInactive]} onPress={onPress}>
@@ -122,23 +115,35 @@ function VenueCard({
 export default function MyVenuesScreen({ navigation }: Props) {
   const { user } = useAuth();
   const [venues, setVenues] = React.useState<Venue[]>([]);
+  const [loading, setLoading] = React.useState(true);
+  const [refreshing, setRefreshing] = React.useState(false);
+
+  const fetchVenues = useCallback(async () => {
+    if (!user?.id) return;
+    setLoading(true);
+    try {
+      const venuesData = await getOwnerFields(user.id);
+      setVenues(venuesData || []);
+    } catch (error) {
+      console.error('Error fetching venues:', error);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  }, [user]);
 
   useFocusEffect(
     useCallback(() => {
-      if (user) {
-        setVenues(getVenuesByOwner(user.id));
-      }
-    }, [user])
+      fetchVenues();
+    }, [fetchVenues])
   );
 
-  const handleToggle = (venueId: string) => {
-    toggleVenueStatus(venueId);
-    if (user) {
-      setVenues(getVenuesByOwner(user.id));
-    }
-  };
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+    fetchVenues();
+  }, [fetchVenues]);
 
-  const activeCount = venues.filter(v => v.isActive !== false).length;
+  const activeCount = venues.filter(v => v.status === 'active' || v.status === 'pending_review').length;
 
   const renderHeader = () => (
     <View style={styles.header}>
@@ -181,21 +186,34 @@ export default function MyVenuesScreen({ navigation }: Props) {
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.list}
         ListHeaderComponent={renderHeader}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={['#1A5F2A']}
+            tintColor="#1A5F2A"
+          />
+        }
         ListEmptyComponent={
-          <View style={styles.emptyContainer}>
-            <View style={styles.emptyIconCircle}>
-              <Text style={styles.emptyIcon}>🏟️</Text>
+          loading ? (
+            <View style={styles.emptyContainer}>
+              <Text style={styles.emptySubtitle}>กำลังโหลดข้อมูล...</Text>
             </View>
-            <Text style={styles.emptyTitle}>คุณยังไม่เพิ่มสนาม</Text>
-            <Text style={styles.emptySubtitle}>เริ่มสร้างรายได้ด้วยการเพิ่มสนามแข่งของคุณ</Text>
-          </View>
+          ) : (
+            <View style={styles.emptyContainer}>
+              <View style={styles.emptyIconCircle}>
+                <Text style={styles.emptyIcon}>🏟️</Text>
+              </View>
+              <Text style={styles.emptyTitle}>คุณยังไม่เพิ่มสนาม</Text>
+              <Text style={styles.emptySubtitle}>เริ่มสร้างรายได้ด้วยการเพิ่มสนามแข่งของคุณ</Text>
+            </View>
+          )
         }
         showsVerticalScrollIndicator={false}
         renderItem={({ item }) => (
           <VenueCard
             venue={item}
             onPress={() => navigation.navigate('VenueBookings', { venueId: item.id })}
-            onToggle={handleToggle}
             bookingCount={getMockBookingsByVenue(item.id).length}
           />
         )}
@@ -313,7 +331,9 @@ const styles = StyleSheet.create({
   },
   imageContainer: {
     height: 180,
+    width: '100%',
     position: 'relative',
+    backgroundColor: '#f0f0f0', // Light gray background to see container
   },
   cardImage: {
     width: '100%',
@@ -433,15 +453,14 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: 'rgba(0,0,0,0.05)',
   },
-  toggleContainer: {
+  statusInfo: {
     flexDirection: 'row',
     alignItems: 'center',
   },
-  toggleLabel: {
+  statusInfoLabel: {
     fontSize: 12,
     fontWeight: '800',
     color: '#1A5F2A',
-    marginLeft: 6,
   },
   actionBtn: {
     backgroundColor: '#1A5F2A',
