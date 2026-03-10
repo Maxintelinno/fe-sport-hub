@@ -20,7 +20,7 @@ import { useAuth } from '../../context/AuthContext';
 import { addVenue } from '../../data/venueStore';
 import { THAI_LOCATIONS, SPORT_TYPES, Province, District } from '../../data/locationData';
 import * as ImagePicker from 'expo-image-picker';
-import { getPresignedUrls, uploadToPresignedUrl } from '../../services/venueService';
+import { getPresignedUrls, uploadToPresignedUrl, createField, FieldImage } from '../../services/venueService';
 
 const { width, height } = Dimensions.get('window');
 
@@ -91,6 +91,7 @@ export default function AddVenueScreen({ navigation }: Props) {
     const [uploadingImages, setUploadingImages] = useState<boolean>(false);
     const [province, setProvince] = useState<Province | null>(null);
     const [district, setDistrict] = useState<District | null>(null);
+    const [uploadedImages, setUploadedImages] = useState<FieldImage[]>([]);
 
     // Modal Visibility State
     const [sportModal, setSportModal] = useState(false);
@@ -151,9 +152,15 @@ export default function AddVenueScreen({ navigation }: Props) {
 
                 await Promise.all(uploadPromises);
 
-                // 3. Store Public URLs
+                // 3. Store Public URLs and Object Keys
                 const publicUrls = presignedData.map(p => p.public_url);
                 setImages(prev => [...prev, ...publicUrls].slice(0, 10));
+
+                const newUploadedImages = presignedData.map((p, idx) => ({
+                    object_key: p.object_key,
+                    sort_order: images.length + idx
+                }));
+                setUploadedImages(prev => [...prev, ...newUploadedImages].slice(0, 10));
 
                 console.log('Successfully uploaded images:', publicUrls);
             } catch (error) {
@@ -176,9 +183,20 @@ export default function AddVenueScreen({ navigation }: Props) {
             updatedRemote.splice(index, 1);
             setImages(updatedRemote);
         }
+
+        const updatedUploaded = [...uploadedImages];
+        if (updatedUploaded[index]) {
+            updatedUploaded.splice(index, 1);
+            // Re-sort orders
+            const resorted = updatedUploaded.map((img, idx) => ({
+                ...img,
+                sort_order: idx
+            }));
+            setUploadedImages(resorted);
+        }
     };
 
-    const handleAddVenue = () => {
+    const handleAddVenue = async () => {
         if (!name || !sportType || !price || !address || !province || !district) {
             Alert.alert('กรุณากรอกข้อมูลที่จำเป็นให้ครบถ้วน');
             return;
@@ -188,6 +206,22 @@ export default function AddVenueScreen({ navigation }: Props) {
 
         setLoading(true);
         try {
+            // 1. Call real API
+            await createField({
+                owner_id: user.id,
+                name,
+                sport_type: sportType,
+                price_per_hour: Number(price),
+                open_time: openingTime,
+                close_time: closingTime,
+                province: province.name,
+                district: district.name,
+                address_line: address,
+                description: description,
+                images: uploadedImages
+            });
+
+            // 2. Also keep local storage for now if still needed by other parts of the app
             addVenue({
                 name,
                 sportType,
@@ -207,8 +241,9 @@ export default function AddVenueScreen({ navigation }: Props) {
             Alert.alert('สำเร็จ', 'เพิ่มสนามเรียบร้อยแล้ว', [
                 { text: 'ตกลง', onPress: () => navigation.goBack() }
             ]);
-        } catch (error) {
-            Alert.alert('เกิดข้อผิดพลาด', 'ไม่สามารถเพิ่มสนามได้ในขณะนี้');
+        } catch (error: any) {
+            console.error('Add venue error:', error);
+            Alert.alert('เกิดข้อผิดพลาด', error.message || 'ไม่สามารถเพิ่มสนามได้ในขณะนี้');
         } finally {
             setLoading(false);
         }

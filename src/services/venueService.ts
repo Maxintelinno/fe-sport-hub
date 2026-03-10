@@ -59,3 +59,32 @@ export async function uploadToPresignedUrl(uploadUrl: string, fileUri: string, c
         throw error;
     }
 }
+export interface FieldImage {
+    object_key: string;
+    sort_order: number;
+}
+
+export interface CreateFieldRequest {
+    owner_id: string;
+    name: string;
+    sport_type: string;
+    price_per_hour: number;
+    open_time: string;
+    close_time: string;
+    province: string;
+    district: string;
+    address_line: string;
+    description: string;
+    images: FieldImage[];
+}
+
+export async function createField(data: CreateFieldRequest) {
+    const response = await api.post(`${API_URL}/v1/fields`, data, {
+        validateStatus: () => true,
+    });
+
+    if (response.status >= 400) {
+        throw new Error(response.data?.message || 'ไม่สามารถสร้างสนามได้');
+    }
+    return response.data;
+}
