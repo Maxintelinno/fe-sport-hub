@@ -4657,7 +4657,7 @@ PhaseScriptExecution [CP]\ Copy\ Pods\ Resources /Users/thakrit.ratchakote/Libra
 Transfer starting: 15 files
 EXConstants.bundle/app.config
 
-sent 2111 bytes  received 42 bytes  352950 bytes/sec
+sent 2111 bytes  received 42 bytes  694516 bytes/sec
 total size is 7715  speedup is 3.58
 
 CodeSign /Users/thakrit.ratchakote/Library/Developer/Xcode/DerivedData/sportapp-dleifjnqlgpdpwgcdxwnoiiszqgm/Build/Products/Debug-iphonesimulator/sportapp.app/sportapp.debug.dylib (in target 'sportapp' from project 'sportapp')

@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, Image, Dimensions, StatusBar } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, Image, Dimensions, StatusBar, ScrollView, ActivityIndicator } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useNavigation } from '@react-navigation/native';
 import { CustomerStackParamList } from '../../navigation/types';
@@ -14,15 +14,15 @@ type Props = {
 };
 
 function VenueCard({ venue, onPress }: { venue: Venue; onPress: () => void }) {
-  const displayImages = Array.isArray(venue.images) && venue.images.length > 0 
+  const displayImages = Array.isArray(venue.images) && venue.images.length > 0
     ? [...venue.images].sort((a, b) => (Number(a.sort_order) || 0) - (Number(b.sort_order) || 0))
     : [];
-    
+
   const firstImage = displayImages[0];
-  const thumbUri = (typeof firstImage === 'string' ? firstImage : firstImage?.image_url) 
-    || venue.imageUrl 
+  const thumbUri = (typeof firstImage === 'string' ? firstImage : firstImage?.image_url)
+    || venue.imageUrl
     || (Array.isArray(venue.imageUrls) ? venue.imageUrls[0] : null);
-    
+
   const active = venue.status !== 'inactive' && venue.status !== 'pending_review';
 
   return (
@@ -90,8 +90,43 @@ const MOCK_INSIGHTS = [
 ];
 
 export default function VenueListScreen({ navigation }: Props) {
-  const venues = useMemo(() => getAllVenues(), []);
   const { isLoggedIn, user } = useAuth();
+  const [selectedCategory, setSelectedCategory] = React.useState('ทั้งหมด');
+  const [refreshing, setRefreshing] = React.useState(false);
+  const [filteredVenues, setFilteredVenues] = React.useState<Venue[]>([]);
+
+  const allVenues = useMemo(() => getAllVenues(), []);
+
+  // Sync filteredVenues with allVenues initially
+  React.useEffect(() => {
+    setFilteredVenues(allVenues);
+  }, [allVenues]);
+
+  const CATEGORIES = ['ทั้งหมด', 'สนามยอดนิยม', 'สนามใกล้คุณ', 'สนามในจังหวัดของคุณ'];
+
+  const handleCategoryPress = (category: string) => {
+    setSelectedCategory(category);
+    setRefreshing(true); // This now represents section loading
+
+    // Simulate API refresh/filtering
+    setTimeout(() => {
+      let result = [...allVenues];
+      if (category === 'สนามยอดนิยม') {
+        result = allVenues.slice(0, 3);
+      } else if (category === 'สนามใกล้คุณ') {
+        result = allVenues.slice().reverse();
+      } else if (category === 'สนามในจังหวัดของคุณ') {
+        if (user && (user as any).province) {
+          result = allVenues.filter(v => v.province === (user as any).province);
+        } else {
+          result = allVenues.slice(1, 4);
+        }
+      }
+
+      setFilteredVenues(result);
+      setRefreshing(false);
+    }, 800);
+  };
 
   const handleProfilePress = () => {
     if (!isLoggedIn) {
@@ -104,7 +139,6 @@ export default function VenueListScreen({ navigation }: Props) {
     }
   };
 
-
   const renderSliderItem = ({ item }: { item: typeof MOCK_ADS[0] }) => (
     <TouchableOpacity style={[styles.adContainer, { backgroundColor: item.bg }]}>
       <View style={styles.adContent}>
@@ -116,89 +150,127 @@ export default function VenueListScreen({ navigation }: Props) {
     </TouchableOpacity>
   );
 
-  const renderHeader = () => (
-    <View>
-      <View style={styles.header}>
-        <View style={styles.headerTop}>
-          <View>
-            {isLoggedIn && user && (
-              <Text style={styles.userGreeting}>สวัสดี, {user.name}</Text>
-            )}
-            <Text style={styles.welcomeText}>ROYAL SPORTS</Text>
-          </View>
-          <TouchableOpacity
-            style={styles.profileCircle}
-            onPress={handleProfilePress}
-          >
-            <Text style={styles.profileIcon}>👤</Text>
-          </TouchableOpacity>
-        </View>
-        <View style={styles.goldDivider} />
-        <Text style={styles.headerTitle}>ค้นหาสนามกีฬาที่ดีที่สุด</Text>
-        <Text style={styles.headerSubtitle}>สัมผัสประสบการณ์การเล่นกีฬาระดับพรีเมียม</Text>
-      </View>
-
-      {/* Promotion Slider */}
-      <View style={styles.adsSection}>
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>โปรโมชั่นพิเศษ</Text>
-          <TouchableOpacity>
-            <Text style={styles.seeAllText}>ดูทั้งหมด</Text>
-          </TouchableOpacity>
-        </View>
-        <FlatList
-          data={MOCK_ADS}
-          keyExtractor={(item) => item.id}
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          renderItem={renderSliderItem}
-          contentContainerStyle={styles.adsList}
-          snapToAlignment="start"
-          decelerationRate="fast"
-          snapToInterval={width * 0.8 + 16}
-        />
-      </View>
-
-      <Text style={[styles.sectionTitle, { marginLeft: 24, marginBottom: 12 }]}>สนามทั้งหมด</Text>
-    </View>
-  );
-
-  const renderFooter = () => (
-    <View style={[styles.adsSection, { marginTop: 20, marginBottom: 40 }]}>
-      <View style={styles.sectionHeader}>
-        <Text style={styles.sectionTitle}>สาระน่ารู้ & เทคนิคกีฬา</Text>
-        <TouchableOpacity onPress={() => navigation.navigate('SportsInsights')}>
-          <Text style={styles.seeAllText}>ดูทั้งหมด</Text>
-        </TouchableOpacity>
-      </View>
-      <FlatList
-        data={MOCK_INSIGHTS}
-        keyExtractor={(item) => item.id}
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        renderItem={renderSliderItem}
-        contentContainerStyle={styles.adsList}
-        snapToAlignment="start"
-        decelerationRate="fast"
-        snapToInterval={width * 0.8 + 16}
-      />
-    </View>
-  );
-
   return (
     <View style={styles.container}>
       <StatusBar barStyle="light-content" />
-      <FlatList
-        data={venues}
-        keyExtractor={(item) => item.id}
-        contentContainerStyle={styles.list}
-        ListHeaderComponent={renderHeader}
-        ListFooterComponent={renderFooter}
+      <ScrollView 
         showsVerticalScrollIndicator={false}
-        renderItem={({ item }) => (
-          <VenueCard venue={item} onPress={() => navigation.navigate('VenueDetail', { venueId: item.id })} />
-        )}
-      />
+        contentContainerStyle={styles.scrollContent}
+      >
+        {/* Header */}
+        <View style={styles.header}>
+          <View style={styles.headerTop}>
+            <View>
+              {isLoggedIn && user && (
+                <Text style={styles.userGreeting}>สวัสดี, {user.name}</Text>
+              )}
+              <Text style={styles.welcomeText}>ROYAL SPORTS</Text>
+            </View>
+            <TouchableOpacity
+              style={styles.profileCircle}
+              onPress={handleProfilePress}
+            >
+              <Text style={styles.profileIcon}>👤</Text>
+            </TouchableOpacity>
+          </View>
+          <View style={styles.goldDivider} />
+          <Text style={styles.headerTitle}>ค้นหาสนามกีฬาที่ดีที่สุด</Text>
+          <Text style={styles.headerSubtitle}>สัมผัสประสบการณ์การเล่นกีฬาระดับพรีเมียม</Text>
+        </View>
+
+        {/* SECTION 1: Special Promotions */}
+        <View style={styles.adsSection}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>โปรโมชั่นพิเศษ</Text>
+            <TouchableOpacity>
+              <Text style={styles.seeAllText}>ดูทั้งหมด</Text>
+            </TouchableOpacity>
+          </View>
+          <FlatList
+            data={MOCK_ADS}
+            keyExtractor={(item) => item.id}
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            renderItem={renderSliderItem}
+            contentContainerStyle={styles.adsList}
+            snapToAlignment="start"
+            snapToInterval={width * 0.8 + 16}
+            decelerationRate="fast"
+          />
+        </View>
+
+        {/* SECTION 2: All Venues */}
+        <View style={styles.venuesSection}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>สนามทั้งหมด</Text>
+          </View>
+
+          {/* Categories Filter */}
+          <View style={styles.categoriesSection}>
+            <FlatList
+              data={CATEGORIES}
+              keyExtractor={(item) => item}
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              renderItem={({ item }) => (
+                <TouchableOpacity
+                  style={[
+                    styles.categoryBtn,
+                    selectedCategory === item && styles.categoryBtnActive
+                  ]}
+                  onPress={() => handleCategoryPress(item)}
+                >
+                  <Text style={[
+                    styles.categoryText,
+                    selectedCategory === item && styles.categoryTextActive
+                  ]}>
+                    {item}
+                  </Text>
+                </TouchableOpacity>
+              )}
+              contentContainerStyle={styles.categoriesList}
+            />
+          </View>
+
+          {refreshing ? (
+            <View style={styles.venueLoadingContainer}>
+              <ActivityIndicator size="large" color="#1A5F2A" />
+              <Text style={styles.loadingText}>กำลังค้นหาสนาม...</Text>
+            </View>
+          ) : (
+            <View style={styles.venuesList}>
+              {filteredVenues.map((item) => (
+                <VenueCard 
+                  key={item.id} 
+                  venue={item} 
+                  onPress={() => navigation.navigate('VenueDetail', { venueId: item.id })} 
+                />
+              ))}
+            </View>
+          )}
+        </View>
+
+        {/* SECTION 3: Knowledge & Sports Techniques */}
+        <View style={[styles.adsSection, { marginTop: 10, marginBottom: 40 }]}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>สาระน่ารู้ & เทคนิคกีฬา</Text>
+            <TouchableOpacity onPress={() => navigation.navigate('SportsInsights')}>
+              <Text style={styles.seeAllText}>ดูทั้งหมด</Text>
+            </TouchableOpacity>
+          </View>
+          <FlatList
+            data={MOCK_INSIGHTS}
+            keyExtractor={(item) => item.id}
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            renderItem={renderSliderItem}
+            contentContainerStyle={styles.adsList}
+            snapToAlignment="start"
+            snapToInterval={width * 0.8 + 16}
+            decelerationRate="fast"
+          />
+        </View>
+      </ScrollView>
     </View>
   );
 }
@@ -337,6 +409,53 @@ const styles = StyleSheet.create({
     right: 0,
     height: 4,
     backgroundColor: 'rgba(197, 160, 33, 0.5)',
+  },
+  categoriesSection: {
+    marginBottom: 20,
+  },
+  categoriesList: {
+    paddingHorizontal: 24,
+  },
+  categoryBtn: {
+    backgroundColor: '#FFFFFF',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 14,
+    marginRight: 10,
+    borderWidth: 1.5,
+    borderColor: '#E8EBE8',
+  },
+  categoryBtnActive: {
+    backgroundColor: '#1A5F2A',
+    borderColor: '#1A5F2A',
+  },
+  categoryText: {
+    fontSize: 14,
+    fontWeight: '800',
+    color: '#666',
+  },
+  categoryTextActive: {
+    color: '#FFFFFF',
+  },
+  scrollContent: {
+    paddingBottom: 40,
+  },
+  venuesSection: {
+    paddingTop: 10,
+  },
+  venuesList: {
+    paddingTop: 10,
+  },
+  venueLoadingContainer: {
+    height: 300,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    marginTop: 12,
+    fontSize: 14,
+    color: '#1A5F2A',
+    fontWeight: '700',
   },
 
   list: {
