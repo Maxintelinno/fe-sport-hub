@@ -76,6 +76,10 @@
     <string>Allow app to save images to your photo library.</string>
     <key>NSPhotoLibraryUsageDescription</key>
     <string>Allow app to access your photos to upload venue images.</string>
+    <key>NSLocationWhenInUseUsageDescription</key>
+    <string>เราใช้ตำแหน่งของคุณเพื่อแสดงสนามใกล้คุณและสนามในจังหวัดของคุณ</string>
+    <key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+    <string>เราใช้ตำแหน่งของคุณเพื่อแสดงสนามใกล้คุณและสนามในจังหวัดของคุณ</string>
     <key>UIViewControllerBasedStatusBarAppearance</key>
     <false/>
   </dict>

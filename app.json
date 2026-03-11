@@ -19,8 +19,8 @@
         "NSPhotoLibraryUsageDescription": "Allow app to access your photos to upload venue images.",
         "NSPhotoLibraryAddUsageDescription": "Allow app to save images to your photo library.",
         "NSCameraUsageDescription": "Allow app to use camera to take venue photos.",
-        "NSLocationWhenInUseUsageDescription": "Allow app to access your location to find nearby sports venues.",
-        "NSLocationAlwaysAndWhenInUseUsageDescription": "Allow app to access your location to find nearby sports venues."
+        "NSLocationWhenInUseUsageDescription": "เราใช้ตำแหน่งของคุณเพื่อแสดงสนามใกล้คุณและสนามในจังหวัดของคุณ",
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "เราใช้ตำแหน่งของคุณเพื่อแสดงสนามใกล้คุณและสนามในจังหวัดของคุณ"
       }
     },
     "android": {
