@@ -68,7 +68,7 @@ export default function LoginScreen({ navigation, route }: Props) {
       }
 
       login({
-        id: userData?.id || '1',
+        id: userData?.id,
         phone: userData?.phone || username.trim(),
         name: userData?.fullname || userData?.username || username.trim(),
         role: userRole,
