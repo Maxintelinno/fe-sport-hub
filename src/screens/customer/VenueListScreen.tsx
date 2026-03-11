@@ -127,7 +127,19 @@ export default function VenueListScreen({ navigation }: Props) {
       return null;
     }
 
-    let location = await Location.getCurrentPositionAsync({});
+    const enabled = await Location.hasServicesEnabledAsync();
+    if (!enabled) {
+      Alert.alert(
+        'Location Service ปิดอยู่',
+        'กรุณาเปิด Location Service ในการตั้งค่าเครื่องเพื่อใช้งานฟีเจอร์นี้',
+        [{ text: 'ตกลง' }]
+      );
+      return null;
+    }
+
+    let location = await Location.getCurrentPositionAsync({
+      accuracy: Location.Accuracy.Balanced,
+    });
     return {
       lat: location.coords.latitude,
       lng: location.coords.longitude
@@ -156,12 +168,23 @@ export default function VenueListScreen({ navigation }: Props) {
 
         if (section === 'province') {
           // Reverse geocode to get province
-          const reverseGeocode = await Location.reverseGeocodeAsync({
-            latitude: lat,
-            longitude: lng
-          });
-          if (reverseGeocode.length > 0) {
-            provinceStr = reverseGeocode[0].region; // 'region' is usually the province in Thailand
+          try {
+            const reverseGeocode = await Location.reverseGeocodeAsync({
+              latitude: lat,
+              longitude: lng
+            });
+            
+            console.log('Reverse Geocode Result:', JSON.stringify(reverseGeocode, null, 2));
+
+            if (reverseGeocode.length > 0) {
+              const geo = reverseGeocode[0];
+              // In Thailand:
+              // region is often the province (e.g. "Bangkok", "Chiang Mai")
+              // city might also contain it in some cases
+              provinceStr = geo.region || geo.city;
+            }
+          } catch (geoError) {
+            console.error('Reverse Geocode Error:', geoError);
           }
           
           // Fallback if not detected or provided

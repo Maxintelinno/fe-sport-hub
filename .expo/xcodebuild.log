@@ -860,11 +860,11 @@ ExecuteExternalTool /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeD
 
 ExecuteExternalTool /Applications/Xcode.app/Contents/Developer/usr/bin/ibtool --version --output-format xml1
 
-ExecuteExternalTool /Applications/Xcode.app/Contents/Developer/usr/bin/actool --print-asset-tag-combinations --output-format xml1 /Users/thakrit.ratchakote/Documents/my-document/1.MaxIntelligentInnovation/1.Project/sport-hub-fe/fe-sport-hub/ios/sportapp/Images.xcassets
-
 ExecuteExternalTool /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc --version
 
 ExecuteExternalTool /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -v -E -dM -arch arm64 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator26.2.sdk -x c++ -c /dev/null
+
+ExecuteExternalTool /Applications/Xcode.app/Contents/Developer/usr/bin/actool --print-asset-tag-combinations --output-format xml1 /Users/thakrit.ratchakote/Documents/my-document/1.MaxIntelligentInnovation/1.Project/sport-hub-fe/fe-sport-hub/ios/sportapp/Images.xcassets
 
 ExecuteExternalTool /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/libtool -V
 
@@ -872,8 +872,8 @@ ExecuteExternalTool /Applications/Xcode.app/Contents/Developer/usr/bin/actool --
 
 ExecuteExternalTool /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/ld -version_details
 
-Build description signature: 2526939d7f2975a82f5a2d41d8cfa5ff
-Build description path: /Users/thakrit.ratchakote/Library/Developer/Xcode/DerivedData/sportapp-dleifjnqlgpdpwgcdxwnoiiszqgm/Build/Intermediates.noindex/XCBuildData/2526939d7f2975a82f5a2d41d8cfa5ff.xcbuilddata
+Build description signature: d1aab074eb018ca23008279dc3b8a50b
+Build description path: /Users/thakrit.ratchakote/Library/Developer/Xcode/DerivedData/sportapp-dleifjnqlgpdpwgcdxwnoiiszqgm/Build/Intermediates.noindex/XCBuildData/d1aab074eb018ca23008279dc3b8a50b.xcbuilddata
 ClangStatCache /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang-stat-cache /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator26.2.sdk /Users/thakrit.ratchakote/Library/Developer/Xcode/DerivedData/SDKStatCaches.noindex/iphonesimulator26.2-23C57-7d00a8b37fbd7999ea79df8ebc024bf0.sdkstatcache
     cd /Users/thakrit.ratchakote/Documents/my-document/1.MaxIntelligentInnovation/1.Project/sport-hub-fe/fe-sport-hub/ios
     /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang-stat-cache /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator26.2.sdk -o /Users/thakrit.ratchakote/Library/Developer/Xcode/DerivedData/SDKStatCaches.noindex/iphonesimulator26.2-23C57-7d00a8b37fbd7999ea79df8ebc024bf0.sdkstatcache
@@ -3513,8 +3513,8 @@ PhaseScriptExecution [CP-User]\ Generate\ app.config\ for\ prebuilt\ Constants.m
     /bin/sh -c /Users/thakrit.ratchakote/Library/Developer/Xcode/DerivedData/sportapp-dleifjnqlgpdpwgcdxwnoiiszqgm/Build/Intermediates.noindex/Pods.build/Debug-iphonesimulator/EXConstants.build/Script-46EB2E00018B60.sh
 Node found at: /Users/thakrit.ratchakote/.nvm/versions/node/v24.13.1/bin/node
 
-note: Run script build phase '[Expo] Configure project' will be run during every build because the option to run the script phase "Based on dependency analysis" is unchecked. (in target 'sportapp' from project 'sportapp')
 note: Run script build phase 'Bundle React Native code and images' will be run during every build because the option to run the script phase "Based on dependency analysis" is unchecked. (in target 'sportapp' from project 'sportapp')
+note: Run script build phase '[Expo] Configure project' will be run during every build because the option to run the script phase "Based on dependency analysis" is unchecked. (in target 'sportapp' from project 'sportapp')
 PhaseScriptExecution [Expo]\ Configure\ project /Users/thakrit.ratchakote/Library/Developer/Xcode/DerivedData/sportapp-dleifjnqlgpdpwgcdxwnoiiszqgm/Build/Intermediates.noindex/sportapp.build/Debug-iphonesimulator/sportapp.build/Script-7AF02FA34772D0E24EF099D1.sh (in target 'sportapp' from project 'sportapp')
     cd /Users/thakrit.ratchakote/Documents/my-document/1.MaxIntelligentInnovation/1.Project/sport-hub-fe/fe-sport-hub/ios
     export ACTION\=build
@@ -4165,10 +4165,6 @@ Copy /Users/thakrit.ratchakote/Library/Developer/Xcode/DerivedData/sportapp-dlei
     cd /Users/thakrit.ratchakote/Documents/my-document/1.MaxIntelligentInnovation/1.Project/sport-hub-fe/fe-sport-hub/ios
     builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -resolve-src-symlinks -rename /Users/thakrit.ratchakote/Library/Developer/Xcode/DerivedData/sportapp-dleifjnqlgpdpwgcdxwnoiiszqgm/Build/Intermediates.noindex/sportapp.build/Debug-iphonesimulator/sportapp.build/Objects-normal/arm64/sportapp.abi.json /Users/thakrit.ratchakote/Library/Developer/Xcode/DerivedData/sportapp-dleifjnqlgpdpwgcdxwnoiiszqgm/Build/Products/Debug-iphonesimulator/sportapp.swiftmodule/arm64-apple-ios-simulator.abi.json
 
-GenerateDSYMFile /Users/thakrit.ratchakote/Library/Developer/Xcode/DerivedData/sportapp-dleifjnqlgpdpwgcdxwnoiiszqgm/Build/Products/Debug-iphonesimulator/sportapp.app.dSYM /Users/thakrit.ratchakote/Library/Developer/Xcode/DerivedData/sportapp-dleifjnqlgpdpwgcdxwnoiiszqgm/Build/Products/Debug-iphonesimulator/sportapp.app/sportapp.debug.dylib (in target 'sportapp' from project 'sportapp')
-    cd /Users/thakrit.ratchakote/Documents/my-document/1.MaxIntelligentInnovation/1.Project/sport-hub-fe/fe-sport-hub/ios
-    /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/dsymutil /Users/thakrit.ratchakote/Library/Developer/Xcode/DerivedData/sportapp-dleifjnqlgpdpwgcdxwnoiiszqgm/Build/Products/Debug-iphonesimulator/sportapp.app/sportapp.debug.dylib -o /Users/thakrit.ratchakote/Library/Developer/Xcode/DerivedData/sportapp-dleifjnqlgpdpwgcdxwnoiiszqgm/Build/Products/Debug-iphonesimulator/sportapp.app.dSYM
-
 PhaseScriptExecution Bundle\ React\ Native\ code\ and\ images /Users/thakrit.ratchakote/Library/Developer/Xcode/DerivedData/sportapp-dleifjnqlgpdpwgcdxwnoiiszqgm/Build/Intermediates.noindex/sportapp.build/Debug-iphonesimulator/sportapp.build/Script-00DD1BFF1BD5951E006B06BC.sh (in target 'sportapp' from project 'sportapp')
     cd /Users/thakrit.ratchakote/Documents/my-document/1.MaxIntelligentInnovation/1.Project/sport-hub-fe/fe-sport-hub/ios
     export ACTION\=build
@@ -4787,7 +4783,7 @@ PhaseScriptExecution [CP]\ Copy\ Pods\ Resources /Users/thakrit.ratchakote/Libra
 Transfer starting: 18 files
 EXConstants.bundle/app.config
 
-sent 2962 bytes  received 42 bytes  732682 bytes/sec
+sent 2962 bytes  received 42 bytes  589019 bytes/sec
 total size is 9797  speedup is 3.26
 
 CopySwiftLibs /Users/thakrit.ratchakote/Library/Developer/Xcode/DerivedData/sportapp-dleifjnqlgpdpwgcdxwnoiiszqgm/Build/Products/Debug-iphonesimulator/sportapp.app (in target 'sportapp' from project 'sportapp')
@@ -4797,14 +4793,8 @@ CopySwiftLibs /Users/thakrit.ratchakote/Library/Developer/Xcode/DerivedData/spor
 ExtractAppIntentsMetadata (in target 'sportapp' from project 'sportapp')
     cd /Users/thakrit.ratchakote/Documents/my-document/1.MaxIntelligentInnovation/1.Project/sport-hub-fe/fe-sport-hub/ios
     /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/appintentsmetadataprocessor --toolchain-dir /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain --module-name sportapp --sdk-root /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator26.2.sdk --xcode-version 17C529 --platform-family iOS --deployment-target 15.1 --bundle-identifier com.anonymous.sport-hub --output /Users/thakrit.ratchakote/Library/Developer/Xcode/DerivedData/sportapp-dleifjnqlgpdpwgcdxwnoiiszqgm/Build/Products/Debug-iphonesimulator/sportapp.app --target-triple arm64-apple-ios15.1-simulator --binary-file /Users/thakrit.ratchakote/Library/Developer/Xcode/DerivedData/sportapp-dleifjnqlgpdpwgcdxwnoiiszqgm/Build/Products/Debug-iphonesimulator/sportapp.app/sportapp --dependency-file /Users/thakrit.ratchakote/Library/Developer/Xcode/DerivedData/sportapp-dleifjnqlgpdpwgcdxwnoiiszqgm/Build/Intermediates.noindex/sportapp.build/Debug-iphonesimulator/sportapp.build/Objects-normal/arm64/sportapp_dependency_info.dat --stringsdata-file /Users/thakrit.ratchakote/Library/Developer/Xcode/DerivedData/sportapp-dleifjnqlgpdpwgcdxwnoiiszqgm/Build/Intermediates.noindex/sportapp.build/Debug-iphonesimulator/sportapp.build/Objects-normal/arm64/ExtractedAppShortcutsMetadata.stringsdata --source-file-list /Users/thakrit.ratchakote/Library/Developer/Xcode/DerivedData/sportapp-dleifjnqlgpdpwgcdxwnoiiszqgm/Build/Intermediates.noindex/sportapp.build/Debug-iphonesimulator/sportapp.build/Objects-normal/arm64/sportapp.SwiftFileList --metadata-file-list /Users/thakrit.ratchakote/Library/Developer/Xcode/DerivedData/sportapp-dleifjnqlgpdpwgcdxwnoiiszqgm/Build/Intermediates.noindex/sportapp.build/Debug-iphonesimulator/sportapp.build/sportapp.DependencyMetadataFileList --static-metadata-file-list /Users/thakrit.ratchakote/Library/Developer/Xcode/DerivedData/sportapp-dleifjnqlgpdpwgcdxwnoiiszqgm/Build/Intermediates.noindex/sportapp.build/Debug-iphonesimulator/sportapp.build/sportapp.DependencyStaticMetadataFileList --swift-const-vals-list /Users/thakrit.ratchakote/Library/Developer/Xcode/DerivedData/sportapp-dleifjnqlgpdpwgcdxwnoiiszqgm/Build/Intermediates.noindex/sportapp.build/Debug-iphonesimulator/sportapp.build/Objects-normal/arm64/sportapp.SwiftConstValuesFileList --compile-time-extraction --deployment-aware-processing --validate-assistant-intents --no-app-shortcuts-localization
-2026-03-11 12:37:32.725 appintentsmetadataprocessor[51703:12183188] Starting appintentsmetadataprocessor export
-2026-03-11 12:37:32.732 appintentsmetadataprocessor[51703:12183188] warning: Metadata extraction skipped. No AppIntents.framework dependency found.
-
-AppIntentsSSUTraining (in target 'sportapp' from project 'sportapp')
-    cd /Users/thakrit.ratchakote/Documents/my-document/1.MaxIntelligentInnovation/1.Project/sport-hub-fe/fe-sport-hub/ios
-    /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/appintentsnltrainingprocessor --infoplist-path /Users/thakrit.ratchakote/Library/Developer/Xcode/DerivedData/sportapp-dleifjnqlgpdpwgcdxwnoiiszqgm/Build/Products/Debug-iphonesimulator/sportapp.app/Info.plist --temp-dir-path /Users/thakrit.ratchakote/Library/Developer/Xcode/DerivedData/sportapp-dleifjnqlgpdpwgcdxwnoiiszqgm/Build/Intermediates.noindex/sportapp.build/Debug-iphonesimulator/sportapp.build/ssu --bundle-id com.anonymous.sport-hub --product-path /Users/thakrit.ratchakote/Library/Developer/Xcode/DerivedData/sportapp-dleifjnqlgpdpwgcdxwnoiiszqgm/Build/Products/Debug-iphonesimulator/sportapp.app --extracted-metadata-path /Users/thakrit.ratchakote/Library/Developer/Xcode/DerivedData/sportapp-dleifjnqlgpdpwgcdxwnoiiszqgm/Build/Products/Debug-iphonesimulator/sportapp.app/Metadata.appintents --metadata-file-list /Users/thakrit.ratchakote/Library/Developer/Xcode/DerivedData/sportapp-dleifjnqlgpdpwgcdxwnoiiszqgm/Build/Intermediates.noindex/sportapp.build/Debug-iphonesimulator/sportapp.build/sportapp.DependencyMetadataFileList --archive-ssu-assets
-2026-03-11 12:37:32.790 appintentsnltrainingprocessor[51704:12183205] Parsing options for appintentsnltrainingprocessor
-2026-03-11 12:37:32.790 appintentsnltrainingprocessor[51704:12183205] No AppShortcuts found - Skipping.
+2026-03-11 13:06:17.297 appintentsmetadataprocessor[92547:12278697] Starting appintentsmetadataprocessor export
+2026-03-11 13:06:17.302 appintentsmetadataprocessor[92547:12278697] warning: Metadata extraction skipped. No AppIntents.framework dependency found.
 
 CodeSign /Users/thakrit.ratchakote/Library/Developer/Xcode/DerivedData/sportapp-dleifjnqlgpdpwgcdxwnoiiszqgm/Build/Products/Debug-iphonesimulator/sportapp.app/sportapp.debug.dylib (in target 'sportapp' from project 'sportapp')
     cd /Users/thakrit.ratchakote/Documents/my-document/1.MaxIntelligentInnovation/1.Project/sport-hub-fe/fe-sport-hub/ios

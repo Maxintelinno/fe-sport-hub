@@ -97,11 +97,11 @@ export interface GetOwnerFieldsResponse {
 }
 
 export function getVenuesByOwner(ownerId: string): Venue[] {
-  // MOCK_VENUES and ownerVenues are not defined in this file.
-  // This function will cause a runtime error if called without them.
-  // Assuming they would be imported or defined elsewhere in a complete context.
-  // For now, returning an empty array to maintain syntactical correctness.
-  return [];
+    // MOCK_VENUES and ownerVenues are not defined in this file.
+    // This function will cause a runtime error if called without them.
+    // Assuming they would be imported or defined elsewhere in a complete context.
+    // For now, returning an empty array to maintain syntactical correctness.
+    return [];
 }
 
 export async function getOwnerFields(ownerId: string): Promise<Venue[]> {
@@ -116,10 +116,10 @@ export async function getOwnerFields(ownerId: string): Promise<Venue[]> {
 }
 
 export async function updateFieldStatus(owner_id: string, field_id: string, status: string) {
-    const response = await api.patch(`${API_URL}/v1/owner/fields/status`, { 
-        owner_id, 
-        field_id, 
-        status 
+    const response = await api.patch(`${API_URL}/v1/owner/fields/status`, {
+        owner_id,
+        field_id,
+        status
     }, {
         validateStatus: () => true,
     });
@@ -152,12 +152,21 @@ export interface GetFilteredFieldsParams {
 
 export async function getFilteredFields(params: GetFilteredFieldsParams): Promise<Venue[]> {
     const { section, limit = 10, offset = 0, lat, lng, province } = params;
+
+    console.log('section =', section);
+    console.log('limit =', limit);
+    console.log('offset =', offset);
+    console.log('lat =', lat);
+    console.log('lng =', lng);
+    console.log('province =', province);
+
+
     let url = `${API_URL}/v1/fields?section=${section}&limit=${limit}&offset=${offset}`;
-    
+
     if (lat !== undefined && lng !== undefined) {
         url += `&lat=${lat}&lng=${lng}`;
     }
-    
+
     if (province) {
         url += `&province=${encodeURIComponent(province)}`;
     }
@@ -169,6 +178,6 @@ export async function getFilteredFields(params: GetFilteredFieldsParams): Promis
     if (response.status >= 400) {
         throw new Error(response.data?.message || 'ไม่สามารถดึงข้อมูลสนามได้');
     }
-    
+
     return response.data.data || [];
 }
