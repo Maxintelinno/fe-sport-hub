@@ -36,14 +36,11 @@ export default function SplashScreen() {
                 ]}
             >
                 <View style={styles.logoContainer}>
-                    <Text style={styles.logoEmoji}>⚽</Text>
-                    {/* If you have a specific logo asset, you can use:
-           <Image 
-             source={require('../../assets/adaptive-icon.png')} 
-             style={styles.logo} 
-             resizeMode="contain" 
-           /> 
-           */}
+                    <Image 
+                      source={require('../assets/icon.png')} 
+                      style={styles.logo} 
+                      resizeMode="contain" 
+                    /> 
                 </View>
                 <Text style={styles.title}>SPORT HUB</Text>
                 <Text style={styles.subtitle}>Premium Sports Experience</Text>

@@ -141,6 +141,17 @@ export async function updateField(fieldId: string, data: Partial<CreateFieldRequ
     return response.data;
 }
 
+export async function getFieldById(fieldId: string): Promise<Venue> {
+    const response = await api.get(`${API_URL}/v1/fields/${fieldId}`, {
+        validateStatus: () => true,
+    });
+
+    if (response.status >= 400) {
+        throw new Error(response.data?.message || 'ไม่สามารถดึงข้อมูลสนามได้');
+    }
+    return response.data.data;
+}
+
 export interface GetFilteredFieldsParams {
     section: 'all' | 'popular' | 'nearby' | 'province';
     limit?: number;

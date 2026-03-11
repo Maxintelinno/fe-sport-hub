@@ -1,9 +1,11 @@
-import React, { useMemo, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert, Image, Dimensions } from 'react-native';
+import React, { useMemo, useState, useEffect } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert, Image, Dimensions, ActivityIndicator } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RouteProp } from '@react-navigation/native';
 import { CustomerStackParamList } from '../../navigation/types';
-import { getVenueById } from '../../data/venueStore';
+import { getFieldById } from '../../services/venueService';
+import { Venue } from '../../types';
+import { useAuth } from '../../context/AuthContext';
 
 type Props = {
   navigation: NativeStackNavigationProp<CustomerStackParamList, 'VenueDetail'>;
@@ -16,44 +18,80 @@ const IMAGE_HEIGHT = 210;
 
 export default function VenueDetailScreen({ navigation, route }: Props) {
   const { venueId } = route.params;
-  const venue = getVenueById(venueId);
+  const { isLoggedIn, loading: authLoading } = useAuth();
+  const [venue, setVenue] = useState<Venue | null>(null);
+  const [loading, setLoading] = useState(true);
   const [selectedDate, setSelectedDate] = useState('');
   const [selectedStart, setSelectedStart] = useState('');
   const [selectedEnd, setSelectedEnd] = useState('');
 
+  useEffect(() => {
+    if (!authLoading) {
+      fetchVenueDetails();
+    }
+  }, [venueId, authLoading]);
+
+  const fetchVenueDetails = async () => {
+    try {
+      setLoading(true);
+      const data = await getFieldById(venueId);
+      setVenue(data);
+    } catch (error: any) {
+      console.error('Error fetching venue details:', error);
+      // Only alert if it's not a session issue that we handle elsewhere
+      if (error.message !== 'Authorization header is missing') {
+        Alert.alert('ข้อผิดพลาด', 'ไม่สามารถโหลดข้อมูลสนามได้');
+      } else {
+         // If auth is required, maybe redirect to login? 
+         // But fields should be public. Let's show a clear message.
+         Alert.alert(
+           'กรุณาเข้าสู่ระบบ',
+           'ข้อมูลสนามนี้ต้องเข้าสู่ระบบเพื่อเข้าชม',
+           [
+             { text: 'ยกเลิก', onPress: () => navigation.goBack() },
+             { text: 'เข้าสู่ระบบ', onPress: () => navigation.navigate('Auth' as any, { screen: 'Login', params: { role: 'cust' } }) }
+           ]
+         );
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const images = useMemo(() => {
     if (!venue) return [];
+    if (Array.isArray(venue.images) && venue.images.length > 0) {
+        return venue.images
+            .sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0))
+            .map(img => img.image_url);
+    }
     if (venue.imageUrls?.length) return venue.imageUrls;
     if (venue.imageUrl) return [venue.imageUrl];
     return [];
   }, [venue]);
 
-  if (!venue) {
+  if (loading || authLoading) {
     return (
-      <View style={styles.container}>
-        <Text>ไม่พบสนาม</Text>
+      <View style={[styles.container, styles.center]}>
+        <ActivityIndicator size="large" color="#1a5f2a" />
+        <Text style={styles.loadingText}>กำลังโหลดข้อมูลสนาม...</Text>
       </View>
     );
   }
 
-  if (venue.isActive === false) {
+  if (!venue) {
     return (
-      <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-        {images.length > 0 && (
-          <Image source={{ uri: images[0] }} style={styles.heroImage} resizeMode="cover" />
-        )}
-        <Text style={styles.sportType}>{venue.sportType}</Text>
-        <Text style={styles.name}>{venue.name}</Text>
-        <Text style={styles.description}>{venue.description}</Text>
-        <Text style={styles.address}>📍 {venue.address}</Text>
-        <Text style={styles.hours}>🕐 {venue.openingTime} - {venue.closingTime}</Text>
-        <View style={styles.closedBox}>
-          <Text style={styles.closedTitle}>สนามปิดให้บริการชั่วคราว</Text>
-          <Text style={styles.closedSub}>โปรดลองเลือกสนามอื่น หรือกลับมาใหม่ภายหลัง</Text>
-        </View>
-      </ScrollView>
+      <View style={[styles.container, styles.center]}>
+        <Text style={styles.errorText}>ไม่พบสนาม</Text>
+        <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
+            <Text style={styles.backBtnText}>กลับไปหน้าหลัก</Text>
+        </TouchableOpacity>
+      </View>
     );
   }
+
+  // Handle active status from API (status string)
+  const isVenueActive = venue.status !== 'inactive' && venue.status !== 'pending_review';
 
   const handleBook = () => {
     if (!selectedDate || !selectedStart || !selectedEnd) {
@@ -75,79 +113,108 @@ export default function VenueDetailScreen({ navigation, route }: Props) {
     return d.toISOString().slice(0, 10);
   });
 
+  // Display fields mapping from API
+  const venueName = venue.name;
+  const venueSportType = venue.sport_type || venue.sportType;
+  const venueDescription = venue.description;
+  const venueAddress = venue.address_line || venue.address;
+  const venueOpenTime = venue.open_time || venue.openingTime;
+  const venueCloseTime = venue.close_time || venue.closingTime;
+  const venuePrice = venue.price_per_hour || venue.pricePerHour;
+
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      {images.length > 0 && (
+      {images.length > 0 ? (
         <ScrollView horizontal pagingEnabled showsHorizontalScrollIndicator={false} style={styles.carousel}>
           {images.map((uri, i) => (
             <Image key={`${uri}-${i}`} source={{ uri }} style={styles.heroImage} resizeMode="cover" />
           ))}
         </ScrollView>
+      ) : (
+        <View style={styles.imagePlaceholder}>
+            <Text style={styles.placeholderIcon}>🏟️</Text>
+        </View>
       )}
 
-      <Text style={styles.sportType}>{venue.sportType}</Text>
-      <Text style={styles.name}>{venue.name}</Text>
-      <Text style={styles.description}>{venue.description}</Text>
-      <Text style={styles.address}>📍 {venue.address}</Text>
-      <Text style={styles.hours}>🕐 {venue.openingTime} - {venue.closingTime}</Text>
-      <Text style={styles.price}>฿{venue.pricePerHour} / ชั่วโมง</Text>
+      <Text style={styles.sportType}>{venueSportType}</Text>
+      <Text style={styles.name}>{venueName}</Text>
+      <Text style={styles.description}>{venueDescription}</Text>
+      <Text style={styles.address}>📍 {venueAddress}</Text>
+      <Text style={styles.hours}>🕐 {venueOpenTime} - {venueCloseTime}</Text>
+      <Text style={styles.price}>฿{venuePrice} / ชั่วโมง</Text>
 
-      <Text style={styles.sectionTitle}>เลือกวันที่</Text>
-      <View style={styles.rowWrap}>
-        {dates.map((d) => (
-          <TouchableOpacity
-            key={d}
-            style={[styles.chip, selectedDate === d && styles.chipSelected]}
-            onPress={() => setSelectedDate(d)}
-          >
-            <Text style={[styles.chipText, selectedDate === d && styles.chipTextSelected]}>
-              {new Date(d).getDate()}/{new Date(d).getMonth() + 1}
-            </Text>
+      {!isVenueActive ? (
+        <View style={styles.closedBox}>
+          <Text style={styles.closedTitle}>สนามปิดให้บริการชั่วคราว</Text>
+          <Text style={styles.closedSub}>โปรดลองเลือกสนามอื่น หรือกลับมาใหม่ภายหลัง</Text>
+        </View>
+      ) : (
+        <>
+          <Text style={styles.sectionTitle}>เลือกวันที่</Text>
+          <View style={styles.rowWrap}>
+            {dates.map((d) => (
+              <TouchableOpacity
+                key={d}
+                style={[styles.chip, selectedDate === d && styles.chipSelected]}
+                onPress={() => setSelectedDate(d)}
+              >
+                <Text style={[styles.chipText, selectedDate === d && styles.chipTextSelected]}>
+                  {new Date(d).getDate()}/{new Date(d).getMonth() + 1}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+
+          <Text style={styles.sectionTitle}>เวลาเริ่ม</Text>
+          <View style={styles.rowWrap}>
+            {TIME_SLOTS.map((t) => (
+              <TouchableOpacity
+                key={t}
+                style={[styles.chip, selectedStart === t && styles.chipSelected]}
+                onPress={() => {
+                  setSelectedStart(t);
+                  setSelectedEnd('');
+                }}
+              >
+                <Text style={[styles.chipText, selectedStart === t && styles.chipTextSelected]}>{t}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+
+          <Text style={styles.sectionTitle}>เวลาสิ้นสุด</Text>
+          <View style={styles.rowWrap}>
+            {TIME_SLOTS.filter((t) => !selectedStart || t > selectedStart).map((t) => (
+              <TouchableOpacity
+                key={t}
+                style={[styles.chip, selectedEnd === t && styles.chipSelected]}
+                onPress={() => setSelectedEnd(t)}
+              >
+                <Text style={[styles.chipText, selectedEnd === t && styles.chipTextSelected]}>{t}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+
+          <TouchableOpacity style={styles.bookButton} onPress={handleBook}>
+            <Text style={styles.bookButtonText}>จองสนาม</Text>
           </TouchableOpacity>
-        ))}
-      </View>
-
-      <Text style={styles.sectionTitle}>เวลาเริ่ม</Text>
-      <View style={styles.rowWrap}>
-        {TIME_SLOTS.map((t) => (
-          <TouchableOpacity
-            key={t}
-            style={[styles.chip, selectedStart === t && styles.chipSelected]}
-            onPress={() => {
-              setSelectedStart(t);
-              setSelectedEnd('');
-            }}
-          >
-            <Text style={[styles.chipText, selectedStart === t && styles.chipTextSelected]}>{t}</Text>
-          </TouchableOpacity>
-        ))}
-      </View>
-
-      <Text style={styles.sectionTitle}>เวลาสิ้นสุด</Text>
-      <View style={styles.rowWrap}>
-        {TIME_SLOTS.filter((t) => !selectedStart || t > selectedStart).map((t) => (
-          <TouchableOpacity
-            key={t}
-            style={[styles.chip, selectedEnd === t && styles.chipSelected]}
-            onPress={() => setSelectedEnd(t)}
-          >
-            <Text style={[styles.chipText, selectedEnd === t && styles.chipTextSelected]}>{t}</Text>
-          </TouchableOpacity>
-        ))}
-      </View>
-
-      <TouchableOpacity style={styles.bookButton} onPress={handleBook}>
-        <Text style={styles.bookButtonText}>จองสนาม</Text>
-      </TouchableOpacity>
+        </>
+      )}
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#f0f7f0' },
+  center: { justifyContent: 'center', alignItems: 'center' },
+  loadingText: { marginTop: 16, color: '#1a5f2a', fontWeight: 'bold' },
+  errorText: { fontSize: 18, color: '#666', marginBottom: 20 },
+  backBtn: { backgroundColor: '#1a5f2a', paddingHorizontal: 20, paddingVertical: 10, borderRadius: 8 },
+  backBtnText: { color: '#fff', fontWeight: 'bold' },
   content: { paddingBottom: 32 },
   carousel: { maxHeight: IMAGE_HEIGHT, marginBottom: 16 },
   heroImage: { width: screenWidth, height: IMAGE_HEIGHT, backgroundColor: '#e0e0e0' },
+  imagePlaceholder: { width: screenWidth, height: IMAGE_HEIGHT, backgroundColor: '#e8f0e8', justifyContent: 'center', alignItems: 'center', marginBottom: 16 },
+  placeholderIcon: { fontSize: 60 },
 
   sportType: { fontSize: 12, color: '#1a5f2a', fontWeight: '700', marginBottom: 4, marginHorizontal: 16 },
   name: { fontSize: 22, fontWeight: '900', color: '#222', marginBottom: 8, marginHorizontal: 16 },
@@ -170,4 +237,3 @@ const styles = StyleSheet.create({
   closedTitle: { fontSize: 16, fontWeight: '900', color: '#a11', marginBottom: 6 },
   closedSub: { fontSize: 14, color: '#666', fontWeight: '600' },
 });
-

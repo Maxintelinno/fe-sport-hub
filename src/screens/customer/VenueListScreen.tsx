@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, Image, Dimensions, StatusBar, ScrollView, ActivityIndicator, Alert, Modal } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, Image, Dimensions, StatusBar, ScrollView, ActivityIndicator, Alert, Modal, Text as RNText } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useNavigation } from '@react-navigation/native';
 import { CustomerStackParamList } from '../../navigation/types';
@@ -97,11 +97,21 @@ const MOCK_INSIGHTS = [
   { id: '3', title: 'สุขภาพ: ยืดเหยียดหลังเล่น', description: '5 ท่าโยคะช่วยคลายกล้ามเนื้อหลังออกกำลังกาย', bg: '#6D28D9', image: '🧘' },
 ];
 
+const QUICK_MENU = [
+  { id: '1', title: 'จองสนาม', icon: '⚽', color: '#E8F5E9', target: 'Venues' },
+  { id: '2', title: 'การจอง', icon: '📋', color: '#FFF8E1', target: 'MyBookings' },
+  { id: '3', title: 'โปรโมชั่น', icon: '🎁', color: '#E3F2FD', target: 'AllPromotions' },
+  { id: '4', title: 'สาระกีฬา', icon: '💡', color: '#F3E5F5', target: 'SportsInsights' },
+];
+
 export default function VenueListScreen({ navigation }: Props) {
   const { isLoggedIn, user, loading: authLoading } = useAuth();
   const [selectedCategory, setSelectedCategory] = React.useState('ทั้งหมด');
   const [refreshing, setRefreshing] = React.useState(false);
   const [filteredVenues, setFilteredVenues] = React.useState<Venue[]>([]);
+  const scrollRef = React.useRef<ScrollView>(null);
+  const venuesSectionRef = React.useRef<View>(null);
+  const [venuesY, setVenuesY] = React.useState(0);
 
   // Gallery State
   const [galleryVisible, setGalleryVisible] = React.useState(false);
@@ -254,6 +264,23 @@ export default function VenueListScreen({ navigation }: Props) {
     }
   }, [authLoading]);
 
+  const handleQuickMenuPress = (item: typeof QUICK_MENU[0]) => {
+    switch (item.target) {
+      case 'Venues':
+        scrollRef.current?.scrollTo({ y: venuesY - 20, animated: true });
+        break;
+      case 'MyBookings':
+        navigation.navigate('MyBookings' as any);
+        break;
+      case 'AllPromotions':
+        navigation.navigate('AllPromotions');
+        break;
+      case 'SportsInsights':
+        navigation.navigate('SportsInsights');
+        break;
+    }
+  };
+
   const handleProfilePress = () => {
     if (!isLoggedIn) {
       navigation.navigate('Auth' as any, {
@@ -294,6 +321,7 @@ export default function VenueListScreen({ navigation }: Props) {
     <View style={styles.container}>
       <StatusBar barStyle="light-content" />
       <ScrollView 
+        ref={scrollRef}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
       >
@@ -318,6 +346,22 @@ export default function VenueListScreen({ navigation }: Props) {
           <Text style={styles.headerSubtitle}>สัมผัสประสบการณ์การเล่นกีฬาระดับพรีเมียม</Text>
         </View>
 
+        {/* QUICK MENU SECTION */}
+        <View style={styles.quickMenuContainer}>
+          {QUICK_MENU.map((item) => (
+            <TouchableOpacity 
+              key={item.id} 
+              style={styles.menuItem}
+              onPress={() => handleQuickMenuPress(item)}
+            >
+              <View style={[styles.menuIconContainer, { backgroundColor: item.color }]}>
+                <RNText style={styles.menuIconText}>{item.icon}</RNText>
+              </View>
+              <RNText style={styles.menuLabel}>{item.title}</RNText>
+            </TouchableOpacity>
+          ))}
+        </View>
+
         {/* SECTION 1: Special Promotions */}
         <View style={styles.adsSection}>
           <View style={styles.sectionHeader}>
@@ -340,7 +384,10 @@ export default function VenueListScreen({ navigation }: Props) {
         </View>
 
         {/* SECTION 2: All Venues */}
-        <View style={styles.venuesSection}>
+        <View 
+          style={styles.venuesSection}
+          onLayout={(e) => setVenuesY(e.nativeEvent.layout.y)}
+        >
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>สนามทั้งหมด</Text>
           </View>
@@ -480,6 +527,41 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 20,
     elevation: 10,
+  },
+  quickMenuContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingHorizontal: 24,
+    paddingVertical: 20,
+    backgroundColor: '#FFFFFF',
+    marginHorizontal: 16,
+    borderRadius: 20,
+    marginTop: -20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 10,
+    elevation: 4,
+  },
+  menuItem: {
+    alignItems: 'center',
+    flex: 1,
+  },
+  menuIconContainer: {
+    width: 50,
+    height: 50,
+    borderRadius: 15,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  menuIconText: {
+    fontSize: 24,
+  },
+  menuLabel: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#333',
   },
   headerTop: {
     flexDirection: 'row',
