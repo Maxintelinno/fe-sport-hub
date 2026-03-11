@@ -5,3 +5,5 @@ export { default as PaymentScreen } from './PaymentScreen';
 export { default as MyBookingsScreen } from './MyBookingsScreen';
 export { default as SportsInsightsScreen } from './SportsInsightsScreen';
 export { default as AdsScreen } from './AdsScreen';
+export { default as AllPromotionsScreen } from './AllPromotionsScreen';
+export { default as InsightDetailScreen } from './InsightDetailScreen';

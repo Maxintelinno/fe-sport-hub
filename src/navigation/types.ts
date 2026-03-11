@@ -6,7 +6,9 @@ export type CustomerStackParamList = {
     BookingForm: { venueId: string; date: string; startTime: string; endTime: string };
     Payment: { bookingId: string; venueName: string; totalPrice: number };
     SportsInsights: undefined;
+    InsightDetail: { insightId: string };
     Ads: undefined;
+    AllPromotions: undefined;
 };
 
 export type OwnerStackParamList = {

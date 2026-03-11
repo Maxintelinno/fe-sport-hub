@@ -8,7 +8,9 @@ import {
   PaymentScreen,
   MyBookingsScreen,
   SportsInsightsScreen,
-  AdsScreen
+  AdsScreen,
+  AllPromotionsScreen,
+  InsightDetailScreen
 } from '../screens/customer';
 import { Text as RNText, TouchableOpacity, View } from 'react-native';
 import { CustomerStackParamList } from './types';
@@ -46,6 +48,8 @@ function VenueStack() {
       <Stack.Screen name="Payment" component={PaymentScreen} options={{ title: 'ชำระเงิน' }} />
       <Stack.Screen name="SportsInsights" component={SportsInsightsScreen} options={{ title: 'สาระน่ารู้ & เทคนิคกีฬา' }} />
       <Stack.Screen name="Ads" component={AdsScreen} options={{ title: 'โฆษณา' }} />
+      <Stack.Screen name="AllPromotions" component={AllPromotionsScreen} options={{ title: 'โปรโมชั่นพิเศษ' }} />
+      <Stack.Screen name="InsightDetail" component={InsightDetailScreen} options={{ headerShown: false }} />
     </Stack.Navigator>
   );
 }

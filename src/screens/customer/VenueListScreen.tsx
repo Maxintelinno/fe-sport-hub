@@ -257,6 +257,20 @@ export default function VenueListScreen({ navigation }: Props) {
     </TouchableOpacity>
   );
 
+  const renderInsightItem = ({ item }: { item: typeof MOCK_INSIGHTS[0] }) => (
+    <TouchableOpacity 
+      style={[styles.adContainer, { backgroundColor: item.bg }]}
+      onPress={() => navigation.navigate('InsightDetail', { insightId: item.id })}
+    >
+      <View style={styles.adContent}>
+        <Text style={styles.adTitle}>{item.title}</Text>
+        <Text style={styles.adDescription}>{item.description}</Text>
+      </View>
+      <Text style={styles.adIcon}>{item.image}</Text>
+      <View style={styles.adGoldLine} />
+    </TouchableOpacity>
+  );
+
   return (
     <View style={styles.container}>
       <StatusBar barStyle="light-content" />
@@ -289,7 +303,7 @@ export default function VenueListScreen({ navigation }: Props) {
         <View style={styles.adsSection}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>โปรโมชั่นพิเศษ</Text>
-            <TouchableOpacity>
+            <TouchableOpacity onPress={() => navigation.navigate('AllPromotions')}>
               <Text style={styles.seeAllText}>ดูทั้งหมด</Text>
             </TouchableOpacity>
           </View>
@@ -370,7 +384,7 @@ export default function VenueListScreen({ navigation }: Props) {
             keyExtractor={(item) => item.id}
             horizontal
             showsHorizontalScrollIndicator={false}
-            renderItem={renderSliderItem}
+            renderItem={renderInsightItem}
             contentContainerStyle={styles.adsList}
             snapToAlignment="start"
             snapToInterval={width * 0.8 + 16}
