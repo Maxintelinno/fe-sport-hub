@@ -18,7 +18,8 @@ const IMAGE_HEIGHT = 210;
 
 export default function VenueDetailScreen({ navigation, route }: Props) {
   const { venueId } = route.params;
-  const { isLoggedIn, loading: authLoading } = useAuth();
+  const { isLoggedIn, user, loading: authLoading } = useAuth();
+  console.log('VenueDetail - isLoggedIn:', isLoggedIn, 'user:', JSON.stringify(user));
   const [venue, setVenue] = useState<Venue | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedDate, setSelectedDate] = useState('');
@@ -27,31 +28,53 @@ export default function VenueDetailScreen({ navigation, route }: Props) {
 
   useEffect(() => {
     if (!authLoading) {
+      if (!isLoggedIn) {
+        console.log('--- AUTH GUARD TRIGGERED --- Redirecting...');
+        Alert.alert(
+          'กรุณาเข้าสู่ระบบ',
+          'กรุณาเข้าสู่ระบบเพื่อเข้าชมข้อมูลสนาม',
+          [
+            { text: 'ภายหลัง', onPress: () => navigation.goBack() },
+            { 
+              text: 'เข้าสู่ระบบ', 
+              onPress: () => (navigation as any).navigate('Auth', { screen: 'Login', params: { role: 'cust' } }) 
+            }
+          ]
+        );
+        return;
+      }
+      console.log('--- AUTH GUARD PASSED --- Proceeding to fetch...');
       fetchVenueDetails();
     }
-  }, [venueId, authLoading]);
+  }, [venueId, authLoading, isLoggedIn]);
 
   const fetchVenueDetails = async () => {
     try {
+      console.log('Fetching venue details for ID:', venueId);
       setLoading(true);
       const data = await getFieldById(venueId);
+      console.log('Venue data received:', JSON.stringify(data, null, 2));
       setVenue(data);
     } catch (error: any) {
       console.error('Error fetching venue details:', error);
-      // Only alert if it's not a session issue that we handle elsewhere
-      if (error.message !== 'Authorization header is missing') {
-        Alert.alert('ข้อผิดพลาด', 'ไม่สามารถโหลดข้อมูลสนามได้');
+      console.log('Error Full Details:', JSON.stringify(error, Object.getOwnPropertyNames(error), 2));
+      
+      const errorMessage = error.response?.data?.message || error.message || '';
+      const status = error.response?.status;
+
+      if (status === 401 || status === 403 || errorMessage.includes('Authorization')) {
+          Alert.alert(
+            'กรุณาเข้าสู่ระบบ',
+            'ข้อมูลสนามนี้ต้องเข้าสู่ระบบเพื่อเข้าชม',
+            [
+              { text: 'ยกเลิก', onPress: () => navigation.goBack() },
+              { text: 'เข้าสู่ระบบ', onPress: () => navigation.navigate('Auth' as any, { screen: 'Login', params: { role: 'cust' } }) }
+            ]
+          );
+      } else if (status === 404 || errorMessage.includes('Not Found')) {
+        Alert.alert('ไม่พบข้อมูล', 'ขออภัย ไม่พบข้อมูลสนามที่คุณต้องการในขณะนี้');
       } else {
-         // If auth is required, maybe redirect to login? 
-         // But fields should be public. Let's show a clear message.
-         Alert.alert(
-           'กรุณาเข้าสู่ระบบ',
-           'ข้อมูลสนามนี้ต้องเข้าสู่ระบบเพื่อเข้าชม',
-           [
-             { text: 'ยกเลิก', onPress: () => navigation.goBack() },
-             { text: 'เข้าสู่ระบบ', onPress: () => navigation.navigate('Auth' as any, { screen: 'Login', params: { role: 'cust' } }) }
-           ]
-         );
+        Alert.alert('ข้อผิดพลาด', 'ไม่สามารถโหลดข้อมูลสนามได้ กรุณาลองใหม่ภายหลัง');
       }
     } finally {
       setLoading(false);

@@ -31,14 +31,19 @@ export default function AppNavigator() {
   return (
     <NavigationContainer>
       <Stack.Navigator screenOptions={{ headerShown: false }}>
-        {(!isLoggedIn || (user && user.role === 'cust')) ? (
-          <Stack.Screen name="CustomerMain" component={CustomerTabs} />
+        {isLoggedIn ? (
+          // Logged in state
+          user?.role === 'owner' ? (
+            <Stack.Screen name="OwnerMain" component={OwnerTabs} />
+          ) : (
+            <Stack.Screen name="CustomerMain" component={CustomerTabs} />
+          )
         ) : (
-          <Stack.Screen name="OwnerMain" component={OwnerTabs} />
-        )}
-        {/* We keep AuthStack registered so we can navigate to it if needed */}
-        {!isLoggedIn && (
-          <Stack.Screen name="Auth" component={AuthStack} />
+          // Guest state
+          <>
+            <Stack.Screen name="CustomerMain" component={CustomerTabs} />
+            <Stack.Screen name="Auth" component={AuthStack} />
+          </>
         )}
       </Stack.Navigator>
     </NavigationContainer>

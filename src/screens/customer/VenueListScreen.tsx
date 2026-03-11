@@ -15,7 +15,7 @@ type Props = {
   navigation: NativeStackNavigationProp<CustomerStackParamList, 'VenueList'>;
 };
 
-function VenueCard({ venue, onPress, onImagePress }: { venue: Venue; onPress: () => void; onImagePress: (images: any[]) => void }) {
+function VenueCard({ venue, onPress, onImagePress, onBookPress }: { venue: Venue; onPress: () => void; onImagePress: (images: any[]) => void; onBookPress: () => void }) {
   const displayImages = Array.isArray(venue.images) && venue.images.length > 0
     ? [...venue.images].sort((a, b) => (Number(a.sort_order) || 0) - (Number(b.sort_order) || 0))
     : [];
@@ -78,7 +78,16 @@ function VenueCard({ venue, onPress, onImagePress }: { venue: Venue; onPress: ()
             <Text style={styles.starIcon}>⭐</Text>
             <Text style={styles.ratingText}>4.8 (120+)</Text>
           </View>
-          <View style={styles.goldAccentLine} />
+          
+          <TouchableOpacity 
+            style={styles.bookActionBtn}
+            onPress={(e) => {
+              e.stopPropagation();
+              onBookPress();
+            }}
+          >
+            <Text style={styles.bookActionText}>จองสนาม</Text>
+          </TouchableOpacity>
         </View>
       </View>
     </TouchableOpacity>
@@ -223,6 +232,7 @@ export default function VenueListScreen({ navigation }: Props) {
         offset: 0
       });
 
+      console.log(`Results from API (${section}):`, JSON.stringify(results, null, 2));
       setFilteredVenues(results);
     } catch (error: any) {
       console.error('Error fetching venues:', error);
@@ -279,6 +289,31 @@ export default function VenueListScreen({ navigation }: Props) {
         navigation.navigate('SportsInsights');
         break;
     }
+  };
+
+  const handleBookPress = (venue: Venue) => {
+    const vId = venue.id || (venue as any).field_id;
+    if (!vId) {
+      console.error('Venue ID is missing!', venue);
+      Alert.alert('ข้อผิดพลาด', 'ไม่สามารถเชื่อมต่อกับสนามนี้ได้');
+      return;
+    }
+
+    if (!isLoggedIn) {
+      Alert.alert(
+        'กรุณาเข้าสู่ระบบ',
+        'คุณต้องเข้าสู่ระบบก่อนทำการจองสนาม',
+        [
+          { text: 'ยกเลิก', style: 'cancel' },
+          { 
+            text: 'เข้าสู่ระบบ', 
+            onPress: () => (navigation as any).navigate('Auth', { screen: 'Login', params: { role: 'cust' } })
+          }
+        ]
+      );
+      return;
+    }
+    navigation.navigate('VenueDetail', { venueId: vId });
   };
 
   const handleProfilePress = () => {
@@ -428,10 +463,11 @@ export default function VenueListScreen({ navigation }: Props) {
             <View style={styles.venuesList}>
               {filteredVenues.map((item) => (
                 <VenueCard 
-                  key={item.id} 
+                  key={item.id || (item as any).field_id} 
                   venue={item} 
-                  onPress={() => navigation.navigate('VenueDetail', { venueId: item.id })} 
+                  onPress={() => handleBookPress(item)} 
                   onImagePress={handleOpenGallery}
+                  onBookPress={() => handleBookPress(item)}
                 />
               ))}
             </View>
@@ -873,6 +909,22 @@ const styles = StyleSheet.create({
     backgroundColor: '#C5A021',
     borderRadius: 2,
     opacity: 0.6,
+  },
+  bookActionBtn: {
+    backgroundColor: '#1A5F2A',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 12,
+    shadowColor: '#1A5F2A',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  bookActionText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '900',
   },
 
   // Gallery Modal Styles

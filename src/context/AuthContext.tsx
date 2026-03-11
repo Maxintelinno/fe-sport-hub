@@ -26,10 +26,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       try {
         const storedUser = await AsyncStorage.getItem(AUTH_STORAGE_KEY);
         if (storedUser) {
-          const userData = JSON.parse(storedUser);
-          setUser(userData);
-          if (userData.accessToken) {
-            setAuthToken(userData.accessToken);
+          try {
+            const userData = JSON.parse(storedUser);
+            // Stricter validation: must have an ID to be considered logged in
+            if (userData && userData.id) {
+              setUser(userData);
+              if (userData.accessToken) {
+                setAuthToken(userData.accessToken);
+              }
+            } else {
+              // Corrupted or incomplete data (Ghost Login)
+              console.log('Ghost login detected, clearing storage...');
+              await AsyncStorage.removeItem(AUTH_STORAGE_KEY);
+              setUser(null);
+              setAuthToken(null);
+            }
+          } catch (e) {
+            console.error('Error parsing stored user:', e);
+            await AsyncStorage.removeItem(AUTH_STORAGE_KEY);
           }
         }
       } catch (error) {
