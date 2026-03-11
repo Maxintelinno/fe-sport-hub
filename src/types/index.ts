@@ -45,16 +45,48 @@ export interface Venue {
   isActive?: boolean;
 }
 
+export interface Court {
+  id: string;
+  field_id: string;
+  name: string;
+  price_per_hour: number;
+  status: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface BookingItem {
+  id: string;
+  booking_id: string;
+  field_id: string;
+  court_id: string;
+  booking_date: string;
+  start_time: string;
+  end_time: string;
+  price_per_hour: number;
+  total_amount: number;
+  status: string;
+}
+
 export interface Booking {
   id: string;
-  venueId: string;
-  venueName?: string;
-  userId: string;
-  date: string; // YYYY-MM-DD
-  startTime: string;
-  endTime: string;
-  totalPrice: number;
+  booking_no: string;
+  user_id: string;
+  field_id: string;
+  booking_date: string;
+  total_amount: number;
   status: 'pending' | 'confirmed' | 'cancelled';
-  createdAt: string;
+  payment_status: 'unpaid' | 'paid';
+  note?: string;
+  created_at: string;
+  updated_at: string;
+  items: BookingItem[];
+  // Legacy compatibility
+  venueId?: string;
+  venueName?: string;
+  date?: string;
+  startTime?: string;
+  endTime?: string;
+  totalPrice?: number;
 }
 

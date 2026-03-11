@@ -1,13 +1,71 @@
-import React from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, Image } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import React, { useState, useEffect, useCallback } from 'react';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, Image, ActivityIndicator, RefreshControl, Text as RNText } from 'react-native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { useAuth } from '../../context/AuthContext';
-import { getMockBookings } from './BookingFormScreen';
+import { getMyBookings } from '../../services/bookingService';
+import { Booking } from '../../types';
 
 export default function MyBookingsScreen() {
   const { user, logout } = useAuth();
   const navigation = useNavigation();
-  const bookings = user ? getMockBookings(user.id) : [];
+  const [bookings, setBookings] = useState<Booking[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const fetchBookings = async () => {
+    if (!user) return;
+    try {
+      setLoading(true);
+      // Use stored user ID or the specific one from request for testing
+      const userId = user.id || 'bb1c049c-b134-426f-8a9d-8ca18a5aaaf3';
+      const data = await getMyBookings(userId);
+      setBookings(data);
+    } catch (error) {
+      console.error('Error fetching bookings:', error);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  };
+
+  useFocusEffect(
+    useCallback(() => {
+      fetchBookings();
+    }, [user])
+  );
+
+  const onRefresh = () => {
+    setRefreshing(true);
+    fetchBookings();
+  };
+
+  const formatDate = (dateStr: string) => {
+    if (!dateStr) return '-';
+    try {
+      const date = new Date(dateStr);
+      return date.toLocaleDateString('th-TH', { 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric' 
+      });
+    } catch (e) {
+      return dateStr.split('T')[0];
+    }
+  };
+
+  const formatTime = (timeStr: string) => {
+    if (!timeStr) return '-';
+    // API might return "18:00:00" or "18:00"
+    return timeStr.substring(0, 5);
+  };
+
+  if (loading && !refreshing) {
+    return (
+      <View style={[styles.container, styles.center]}>
+        <ActivityIndicator size="large" color="#1a5f2a" />
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -15,42 +73,63 @@ export default function MyBookingsScreen() {
         data={bookings}
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.list}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#1a5f2a" />
+        }
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
-            <Text style={styles.empty}>ยังไม่มีรายการจอง</Text>
+            <RNText style={{ fontSize: 40, marginBottom: 16 }}>📋</RNText>
+            <Text style={styles.empty}>ยังไม่มีรายการจองในขณะนี้</Text>
+            <TouchableOpacity 
+                style={styles.browseBtn}
+                onPress={() => {
+                  // @ts-ignore - Browse route is handled by parent navigator
+                  navigation.navigate('Browse');
+                }}
+            >
+                <Text style={styles.browseBtnText}>ไปดูสนามต่างๆ</Text>
+            </TouchableOpacity>
           </View>
         }
         renderItem={({ item }) => (
           <View style={styles.card}>
-            <View style={styles.cardHeader}>
-              {item.venueImage ? (
-                <Image source={{ uri: item.venueImage }} style={styles.venueImage} />
-              ) : (
-                <View style={[styles.venueImage, styles.placeholderImage]}>
-                  <Text style={styles.placeholderText}>ไม่มีรูป</Text>
+            <View style={styles.cardBody}>
+              <View style={styles.cardHeader}>
+                <View>
+                  <Text style={styles.bookingNo}>หมายเลข: {item.booking_no}</Text>
+                  <Text style={styles.date}>{formatDate(item.booking_date)}</Text>
                 </View>
-              )}
-              <View style={styles.headerOverlay}>
-                <View style={[styles.badge, item.status === 'confirmed' && styles.badgeConfirmed]}>
+                <View style={[styles.badge, item.status === 'confirmed' || item.status === 'pending' ? styles.badgeActive : styles.badgeCancelled]}>
                   <Text style={styles.badgeText}>
-                    {item.status === 'confirmed' ? 'ยืนยันแล้ว' : item.status}
+                    {item.status === 'pending' ? 'รอดำเนินการ' : item.status === 'confirmed' ? 'ยืนยันแล้ว' : 'ยกเลิก'}
                   </Text>
                 </View>
               </View>
-            </View>
-            <View style={styles.cardBody}>
-              <Text style={styles.venueName}>{item.venueName}</Text>
-              <View style={styles.infoRow}>
-                <Text style={styles.infoIcon}>📅</Text>
-                <Text style={styles.date}>{item.date}</Text>
-              </View>
-              <View style={styles.infoRow}>
-                <Text style={styles.infoIcon}>🕒</Text>
-                <Text style={styles.time}>{item.startTime} - {item.endTime}</Text>
-              </View>
+
+              <View style={styles.divider} />
+
+              {item.items.map((subItem, idx) => (
+                <View key={subItem.id || idx} style={styles.courtRow}>
+                  <View style={styles.courtInfo}>
+                    <Text style={styles.courtName}>รายการที่ {idx + 1}</Text>
+                    <Text style={styles.timeInfo}>
+                      🕒 {formatTime(subItem.start_time)} - {formatTime(subItem.end_time)}
+                    </Text>
+                  </View>
+                  <Text style={styles.courtPrice}>฿{subItem.total_amount}</Text>
+                </View>
+              ))}
+
               <View style={styles.cardFooter}>
-                <Text style={styles.priceLabel}>ราคารวม</Text>
-                <Text style={styles.price}>฿{item.totalPrice}</Text>
+                <View>
+                    <Text style={styles.paymentStatus}>
+                        {item.payment_status === 'paid' ? '✅ ชำระเงินแล้ว' : '⏳ รอการชำระเงิน'}
+                    </Text>
+                </View>
+                <View style={styles.totalBlock}>
+                  <Text style={styles.priceLabel}>ราคาสุทธิ</Text>
+                  <Text style={styles.price}>฿{item.total_amount}</Text>
+                </View>
               </View>
             </View>
           </View>
@@ -70,10 +149,16 @@ export default function MyBookingsScreen() {
   );
 }
 
+// End of file
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#f8faf8',
+  },
+  center: {
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   list: {
     padding: 16,
@@ -89,118 +174,142 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#999',
     fontWeight: '500',
+    marginBottom: 20,
+  },
+  browseBtn: {
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    backgroundColor: '#1a5f2a',
+    borderRadius: 12,
+  },
+  browseBtnText: {
+    color: '#fff',
+    fontWeight: '700',
   },
   card: {
     backgroundColor: '#fff',
-    borderRadius: 16,
-    marginBottom: 20,
-    overflow: 'hidden',
-    elevation: 3,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
+    borderRadius: 20,
+    marginBottom: 16,
+    elevation: 4,
+    shadowColor: '#1a5f2a',
+    shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.1,
-    shadowRadius: 8,
+    shadowRadius: 10,
     borderWidth: 1,
-    borderColor: '#edf2ed',
-  },
-  cardHeader: {
-    height: 120,
-    width: '100%',
-    position: 'relative',
-  },
-  venueImage: {
-    width: '100%',
-    height: '100%',
-    backgroundColor: '#eee',
-  },
-  placeholderImage: {
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  placeholderText: {
-    color: '#999',
-    fontSize: 14,
-  },
-  headerOverlay: {
-    position: 'absolute',
-    top: 12,
-    right: 12,
+    borderColor: '#eef3ee',
   },
   cardBody: {
-    padding: 16,
+    padding: 18,
   },
-  venueName: {
-    fontSize: 18,
-    fontWeight: '800',
-    color: '#1a1a1a',
+  cardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
     marginBottom: 12,
   },
-  infoRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 6,
-  },
-  infoIcon: {
-    fontSize: 14,
-    marginRight: 8,
-    width: 20,
+  bookingNo: {
+    fontSize: 13,
+    color: '#1a5f2a',
+    fontWeight: '800',
+    letterSpacing: 0.5,
+    marginBottom: 2,
   },
   date: {
-    fontSize: 14,
-    color: '#555',
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#333',
   },
-  time: {
+  divider: {
+    height: 1,
+    backgroundColor: '#f0f0f0',
+    marginVertical: 12,
+  },
+  courtRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  courtInfo: {
+    flex: 1,
+  },
+  courtName: {
     fontSize: 14,
-    color: '#555',
+    fontWeight: '600',
+    color: '#444',
+  },
+  timeInfo: {
+    fontSize: 13,
+    color: '#777',
+    marginTop: 2,
+  },
+  courtPrice: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#333',
   },
   cardFooter: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
-    marginTop: 12,
+    alignItems: 'flex-end',
+    marginTop: 10,
     paddingTop: 12,
     borderTopWidth: 1,
-    borderTopColor: '#f0f0f0',
+    borderTopColor: '#f8f8f8',
   },
-  priceLabel: {
-    fontSize: 14,
+  paymentStatus: {
+    fontSize: 13,
+    fontWeight: '600',
     color: '#666',
   },
+  totalBlock: {
+    alignItems: 'flex-end',
+  },
+  priceLabel: {
+    fontSize: 12,
+    color: '#999',
+    marginBottom: 2,
+  },
   price: {
-    fontSize: 18,
-    fontWeight: '800',
+    fontSize: 20,
+    fontWeight: '900',
     color: '#1a5f2a',
   },
   badge: {
     paddingVertical: 4,
     paddingHorizontal: 10,
-    borderRadius: 20,
-    backgroundColor: 'rgba(0,0,0,0.5)',
+    borderRadius: 12,
   },
-  badgeConfirmed: {
-    backgroundColor: '#2e7d32',
+  badgeActive: {
+    backgroundColor: '#e8f5e9',
+  },
+  badgeCancelled: {
+    backgroundColor: '#ffebee',
   },
   badgeText: {
     fontSize: 11,
-    color: '#fff',
-    fontWeight: '700',
-    textTransform: 'uppercase',
+    fontWeight: '800',
+    color: '#2e7d32',
   },
   logoutButton: {
     position: 'absolute',
     bottom: 24,
     left: 16,
     right: 16,
-    paddingVertical: 12,
+    paddingVertical: 15,
     alignItems: 'center',
     backgroundColor: '#fff',
-    borderRadius: 12,
+    borderRadius: 16,
     borderWidth: 1,
-    borderColor: '#fee2e2',
+    borderColor: '#eee',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 10,
   },
   logoutText: {
     color: '#dc2626',
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: '700',
   },
 });

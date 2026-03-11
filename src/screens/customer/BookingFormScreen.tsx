@@ -4,7 +4,8 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RouteProp } from '@react-navigation/native';
 import { CustomerStackParamList } from '../../navigation/types';
 import { getFieldById } from '../../services/venueService';
-import { Venue } from '../../types';
+import { getCourtsByField, createCourt, createBooking } from '../../services/bookingService';
+import { Venue, Court } from '../../types';
 import { useAuth } from '../../context/AuthContext';
 
 type Props = {
@@ -12,22 +13,12 @@ type Props = {
   route: RouteProp<CustomerStackParamList, 'BookingForm'>;
 };
 
-// Keep for local history if needed, but primary focus is API
-let mockBookings: any[] = [];
-
-export function getMockBookings(userId: string) {
-  return mockBookings.filter((b) => b.userId === userId);
-}
-
-export function addMockBooking(booking: any) {
-  mockBookings.push(booking);
-}
-
 export default function BookingFormScreen({ navigation, route }: Props) {
   const { venueId, date, startTime, endTime } = route.params;
   const { user } = useAuth();
   const [venue, setVenue] = useState<Venue | null>(null);
   const [loading, setLoading] = useState(true);
+  const [bookingLoading, setBookingLoading] = useState(false);
 
   useEffect(() => {
     fetchVenue();
@@ -72,34 +63,55 @@ export default function BookingFormScreen({ navigation, route }: Props) {
   const pricePerHour = venue.price_per_hour || venue.pricePerHour || 0;
   const totalPrice = pricePerHour * hours;
 
-  const handleConfirm = () => {
-    const booking = {
-      id: String(Date.now()),
-      venueId: venue.id,
-      venueName: venue.name,
-      userId: user.id,
-      date,
-      startTime,
-      endTime,
-      totalPrice,
-      status: 'confirmed' as const,
-      createdAt: new Date().toISOString(),
-      venueImage: venue.images?.[0]?.image_url || venue.imageUrl,
-    };
-    
-    // In future: call API to create booking
-    addMockBooking(booking);
+  const handleConfirm = async () => {
+    try {
+      setBookingLoading(true);
 
-    Alert.alert('จองสำเร็จ', `กรุณาชำระเงินเพื่อยืนยันการจองสนาม ${venue.name}`, [
-      {
-        text: 'ไปหน้าชำระเงิน',
-        onPress: () => navigation.navigate('Payment', {
-          bookingId: booking.id,
-          venueName: venue.name,
-          totalPrice: totalPrice,
-        })
-      },
-    ]);
+      // 1. Check Courts
+      console.log('Step 1: Checking courts for field:', venue.id);
+      const courts = await getCourtsByField(venue.id);
+      let targetCourt = courts.find(c => c.name === 'คอร์ท A1' || c.status === 'active');
+
+      // 2. Create Court if not exists
+      if (!targetCourt) {
+        console.log('Step 2: Court not found, creating "คอร์ท A1"');
+        targetCourt = await createCourt({
+          field_id: venue.id,
+          name: 'คอร์ท A1',
+          price_per_hour: pricePerHour
+        });
+      }
+
+      // 3. Create Booking
+      console.log('Step 3: Creating booking for court:', targetCourt.id);
+      const bookingResponse = await createBooking({
+        user_id: user.id || 'bb1c049c-b134-426f-8a9d-8ca18a5aaaf3', // Use ID from request if local is empty
+        field_id: venue.id,
+        booking_date: date,
+        note: 'จองล่วงหน้า',
+        items: [
+          {
+            court_id: targetCourt.id,
+            start_time: startTime,
+            end_time: endTime
+          }
+        ]
+      });
+
+      console.log('Step 4: Booking created successfully:', bookingResponse.booking_no);
+      
+      Alert.alert('จองสำเร็จ', `การจองหมายเลข ${bookingResponse.booking_no} สำเร็จแล้ว`, [
+        {
+          text: 'ดูการจองของฉัน',
+          onPress: () => navigation.navigate('MyBookings' as any)
+        },
+      ]);
+    } catch (error: any) {
+      console.error('Booking Error:', error);
+      Alert.alert('การจองผิดพลาด', error.message || 'เกิดข้อผิดพลาดในการจอง');
+    } finally {
+      setBookingLoading(false);
+    }
   };
 
   return (
@@ -130,8 +142,16 @@ export default function BookingFormScreen({ navigation, route }: Props) {
           <Text style={styles.totalPrice}>฿{totalPrice}</Text>
         </View>
 
-        <TouchableOpacity style={styles.button} onPress={handleConfirm}>
-          <Text style={styles.buttonText}>ยืนยันการจอง</Text>
+        <TouchableOpacity 
+          style={[styles.button, bookingLoading && { opacity: 0.7 }]} 
+          onPress={handleConfirm}
+          disabled={bookingLoading}
+        >
+          {bookingLoading ? (
+            <ActivityIndicator color="#fff" />
+          ) : (
+            <Text style={styles.buttonText}>ยืนยันการจอง</Text>
+          )}
         </TouchableOpacity>
       </View>
     </ScrollView>
