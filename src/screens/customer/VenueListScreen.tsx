@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, Image, Dimensions, StatusBar, ScrollView, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, Image, Dimensions, StatusBar, ScrollView, ActivityIndicator, Alert, Modal } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useNavigation } from '@react-navigation/native';
 import { CustomerStackParamList } from '../../navigation/types';
@@ -15,7 +15,7 @@ type Props = {
   navigation: NativeStackNavigationProp<CustomerStackParamList, 'VenueList'>;
 };
 
-function VenueCard({ venue, onPress }: { venue: Venue; onPress: () => void }) {
+function VenueCard({ venue, onPress, onImagePress }: { venue: Venue; onPress: () => void; onImagePress: (images: any[]) => void }) {
   const displayImages = Array.isArray(venue.images) && venue.images.length > 0
     ? [...venue.images].sort((a, b) => (Number(a.sort_order) || 0) - (Number(b.sort_order) || 0))
     : [];
@@ -35,13 +35,19 @@ function VenueCard({ venue, onPress }: { venue: Venue; onPress: () => void }) {
       disabled={!active}
     >
       <View style={styles.imageContainer}>
-        {thumbUri ? (
-          <Image source={{ uri: thumbUri }} style={styles.cardImage} resizeMode="cover" />
-        ) : (
-          <View style={styles.imagePlaceholder}>
-            <Text style={styles.placeholderIcon}>🏟️</Text>
-          </View>
-        )}
+        <TouchableOpacity 
+          activeOpacity={0.8} 
+          onPress={() => onImagePress(displayImages)}
+          style={styles.cardImageTouch}
+        >
+          {thumbUri ? (
+            <Image source={{ uri: thumbUri }} style={styles.cardImage} resizeMode="cover" />
+          ) : (
+            <View style={styles.imagePlaceholder}>
+              <Text style={styles.placeholderIcon}>🏟️</Text>
+            </View>
+          )}
+        </TouchableOpacity>
         {!active && (
           <View style={styles.inactiveOverlay}>
             <Text style={styles.inactiveBadge}>ปิดให้บริการ</Text>
@@ -96,6 +102,10 @@ export default function VenueListScreen({ navigation }: Props) {
   const [selectedCategory, setSelectedCategory] = React.useState('ทั้งหมด');
   const [refreshing, setRefreshing] = React.useState(false);
   const [filteredVenues, setFilteredVenues] = React.useState<Venue[]>([]);
+
+  // Gallery State
+  const [galleryVisible, setGalleryVisible] = React.useState(false);
+  const [galleryImages, setGalleryImages] = React.useState<any[]>([]);
 
   const allVenues = useMemo(() => getAllVenues(), []);
 
@@ -225,6 +235,15 @@ export default function VenueListScreen({ navigation }: Props) {
       }
     } finally {
       setRefreshing(false);
+    }
+  };
+
+  const handleOpenGallery = (images: any[]) => {
+    if (images.length > 0) {
+      setGalleryImages(images);
+      setGalleryVisible(true);
+    } else {
+      Alert.alert('ขออภัย', 'ไม่มีรูปภาพเพิ่มเติมสำหรับสนามนี้');
     }
   };
 
@@ -365,11 +384,58 @@ export default function VenueListScreen({ navigation }: Props) {
                   key={item.id} 
                   venue={item} 
                   onPress={() => navigation.navigate('VenueDetail', { venueId: item.id })} 
+                  onImagePress={handleOpenGallery}
                 />
               ))}
             </View>
           )}
         </View>
+
+        {/* Gallery Modal */}
+        <Modal
+          visible={galleryVisible}
+          transparent={true}
+          animationType="fade"
+          onRequestClose={() => setGalleryVisible(false)}
+        >
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalContent}>
+              <View style={styles.modalHeader}>
+                <Text style={styles.modalTitle}>COURT GALLERY</Text>
+                <TouchableOpacity 
+                  style={styles.closeBtn}
+                  onPress={() => setGalleryVisible(false)}
+                >
+                  <Text style={styles.closeBtnText}>✕</Text>
+                </TouchableOpacity>
+              </View>
+              
+              <FlatList
+                data={galleryImages}
+                keyExtractor={(_, index) => index.toString()}
+                horizontal
+                pagingEnabled
+                showsHorizontalScrollIndicator={false}
+                renderItem={({ item }) => (
+                  <View style={styles.galleryItem}>
+                    <Image 
+                      source={{ uri: typeof item === 'string' ? item : item.image_url }} 
+                      style={styles.galleryImage}
+                      resizeMode="contain"
+                    />
+                    <View style={styles.galleryGoldFrame} />
+                  </View>
+                )}
+              />
+              
+              <View style={styles.modalFooter}>
+                <View style={styles.goldIndicator} />
+                <Text style={styles.modalSwipeText}>เลื่อนดูรูปภาพเพิ่มเติม</Text>
+                <View style={styles.goldIndicator} />
+              </View>
+            </View>
+          </View>
+        </Modal>
 
         {/* SECTION 3: Knowledge & Sports Techniques */}
         <View style={[styles.adsSection, { marginTop: 10, marginBottom: 40 }]}>
@@ -722,11 +788,94 @@ const styles = StyleSheet.create({
     color: '#C5A021',
   },
   goldAccentLine: {
-    width: 60,
-    height: 3,
     backgroundColor: '#C5A021',
     borderRadius: 2,
     opacity: 0.6,
+  },
+
+  // Gallery Modal Styles
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.9)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContent: {
+    width: '100%',
+    height: '80%',
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 24,
+    paddingBottom: 20,
+  },
+  modalTitle: {
+    color: '#C5A021',
+    fontSize: 14,
+    fontWeight: '900',
+    letterSpacing: 4,
+  },
+  closeBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(197, 160, 33, 0.3)',
+  },
+  closeBtnText: {
+    color: '#FFF',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  galleryItem: {
+    width: width,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  galleryImage: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 12,
+  },
+  galleryGoldFrame: {
+    position: 'absolute',
+    top: 15,
+    left: 15,
+    right: 15,
+    bottom: 15,
+    borderWidth: 1,
+    borderColor: 'rgba(197, 160, 33, 0.2)',
+    borderRadius: 15,
+    pointerEvents: 'none',
+  },
+  modalFooter: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingTop: 30,
+  },
+  modalSwipeText: {
+    color: 'rgba(255,255,255,0.5)',
+    fontSize: 10,
+    fontWeight: '800',
+    letterSpacing: 2,
+    marginHorizontal: 15,
+  },
+  goldIndicator: {
+    width: 30,
+    height: 1,
+    backgroundColor: '#C5A021',
+    opacity: 0.5,
+  },
+  cardImageTouch: {
+    width: '100%',
+    height: '100%',
   },
 });
 
