@@ -146,19 +146,31 @@ export default function VenueDetailScreen({ navigation, route }: Props) {
   // Handle active status from API (status string)
   const isVenueActive = venue.status !== 'inactive' && venue.status !== 'pending_review';
 
-  const isTimeBooked = (timeStr: string) => {
+  const isStartTimeBooked = (timeStr: string) => {
     if (!availability) return false;
     
     // Check across all courts for this basic implementation.
-    // If ANY court is booked at this time, we consider it "booked" for the UI simplification
-    // OR if we only have 1 court. 
-    // A more robust implementation would allow selecting a specific court first.
     return availability.courts.some(court => 
       court.booked_slots.some(slot => {
-        const slotStart = slot.start_time.substring(0, 5); // "09:00"
-        const slotEnd = slot.end_time.substring(0, 5);     // "11:00"
-        // If the requested time falls within the booked slot
+        const slotStart = slot.start_time.substring(0, 5); // "16:00"
+        const slotEnd = slot.end_time.substring(0, 5);     // "18:00"
+        // Start time is invalid if it falls in [slotStart, slotEnd) 
+        // e.g. "16:00", "17:00" are disabled.
         return timeStr >= slotStart && timeStr < slotEnd;
+      })
+    );
+  };
+
+  const isEndTimeBooked = (timeStr: string) => {
+    if (!availability) return false;
+    
+    return availability.courts.some(court => 
+      court.booked_slots.some(slot => {
+        const slotStart = slot.start_time.substring(0, 5); // "16:00"
+        const slotEnd = slot.end_time.substring(0, 5);     // "18:00"
+        // End time is invalid if it falls in (slotStart, slotEnd]
+        // e.g. "17:00", "18:00" are disabled. "16:00" is fine.
+        return timeStr > slotStart && timeStr <= slotEnd;
       })
     );
   };
@@ -172,7 +184,7 @@ export default function VenueDetailScreen({ navigation, route }: Props) {
     
     for (let i = startHour; i < endHour; i++) {
       const timeToCheck = `${i.toString().padStart(2, '0')}:00`;
-      if (isTimeBooked(timeToCheck)) {
+      if (isStartTimeBooked(timeToCheck)) {
         return true;
       }
     }
@@ -263,7 +275,7 @@ export default function VenueDetailScreen({ navigation, route }: Props) {
           </Text>
           <View style={styles.rowWrap}>
             {TIME_SLOTS.map((t) => {
-              const booked = isTimeBooked(t);
+              const booked = isStartTimeBooked(t);
               const isSelected = selectedStart === t;
               return (
               <TouchableOpacity
@@ -293,7 +305,7 @@ export default function VenueDetailScreen({ navigation, route }: Props) {
             {TIME_SLOTS.filter((t) => !selectedStart || t > selectedStart).map((t) => {
               // End time cannot overlap a booked slot. We check the range from selectedStart to t.
               const invalidRange = selectedStart ? isRangeBooked(selectedStart, t) : false;
-              const booked = invalidRange || isTimeBooked(t) && t !== TIME_SLOTS[TIME_SLOTS.length - 1]; // Can end AT a booked slot start
+              const booked = invalidRange || isEndTimeBooked(t);
               const isSelected = selectedEnd === t;
               
               return (
