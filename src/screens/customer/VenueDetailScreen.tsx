@@ -4,7 +4,8 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RouteProp } from '@react-navigation/native';
 import { CustomerStackParamList } from '../../navigation/types';
 import { getFieldById } from '../../services/venueService';
-import { Venue } from '../../types';
+import { getFieldAvailability } from '../../services/bookingService';
+import { Venue, FieldAvailability } from '../../types';
 import { useAuth } from '../../context/AuthContext';
 
 type Props = {
@@ -25,6 +26,35 @@ export default function VenueDetailScreen({ navigation, route }: Props) {
   const [selectedDate, setSelectedDate] = useState('');
   const [selectedStart, setSelectedStart] = useState('');
   const [selectedEnd, setSelectedEnd] = useState('');
+  const [availability, setAvailability] = useState<FieldAvailability | null>(null);
+  const [availabilityLoading, setAvailabilityLoading] = useState(false);
+
+  // Initialize selected date to today when venue loads
+  useEffect(() => {
+    if (venue && !selectedDate) {
+      const today = new Date().toISOString().slice(0, 10);
+      setSelectedDate(today);
+    }
+  }, [venue]);
+
+  useEffect(() => {
+    if (venueId && selectedDate) {
+      fetchAvailability(venueId, selectedDate);
+    }
+  }, [venueId, selectedDate]);
+
+  const fetchAvailability = async (id: string, date: string) => {
+    try {
+      setAvailabilityLoading(true);
+      const data = await getFieldAvailability(id, date);
+      setAvailability(data);
+    } catch (error) {
+      console.error('Error fetching availability:', error);
+      // Don't show alert here to be less intrusive, just log it
+    } finally {
+      setAvailabilityLoading(false);
+    }
+  };
 
   useEffect(() => {
     if (!authLoading) {
@@ -116,11 +146,50 @@ export default function VenueDetailScreen({ navigation, route }: Props) {
   // Handle active status from API (status string)
   const isVenueActive = venue.status !== 'inactive' && venue.status !== 'pending_review';
 
+  const isTimeBooked = (timeStr: string) => {
+    if (!availability) return false;
+    
+    // Check across all courts for this basic implementation.
+    // If ANY court is booked at this time, we consider it "booked" for the UI simplification
+    // OR if we only have 1 court. 
+    // A more robust implementation would allow selecting a specific court first.
+    return availability.courts.some(court => 
+      court.booked_slots.some(slot => {
+        const slotStart = slot.start_time.substring(0, 5); // "09:00"
+        const slotEnd = slot.end_time.substring(0, 5);     // "11:00"
+        // If the requested time falls within the booked slot
+        return timeStr >= slotStart && timeStr < slotEnd;
+      })
+    );
+  };
+
+  const isRangeBooked = (start: string, end: string) => {
+    if (!availability) return false;
+    
+    // For every hour in the range, check if it's booked
+    const startHour = parseInt(start.split(':')[0], 10);
+    const endHour = parseInt(end.split(':')[0], 10);
+    
+    for (let i = startHour; i < endHour; i++) {
+      const timeToCheck = `${i.toString().padStart(2, '0')}:00`;
+      if (isTimeBooked(timeToCheck)) {
+        return true;
+      }
+    }
+    return false;
+  };
+
   const handleBook = () => {
     if (!selectedDate || !selectedStart || !selectedEnd) {
       Alert.alert('กรุณาเลือกวันที่และเวลา');
       return;
     }
+
+    if (isRangeBooked(selectedStart, selectedEnd)) {
+      Alert.alert('เวลาไม่ว่าง', 'ช่วงเวลาที่คุณเลือกมีผู้จองไปแล้ว กรุณาเลือกเวลาอื่น');
+      return;
+    }
+
     navigation.navigate('BookingForm', {
       venueId: venue.id,
       date: selectedDate,
@@ -188,33 +257,63 @@ export default function VenueDetailScreen({ navigation, route }: Props) {
             ))}
           </View>
 
-          <Text style={styles.sectionTitle}>เวลาเริ่ม</Text>
+          <Text style={styles.sectionTitle}>
+            เวลาเริ่ม 
+            {availabilityLoading && <ActivityIndicator size="small" color="#1a5f2a" style={{marginLeft: 10}} />}
+          </Text>
           <View style={styles.rowWrap}>
-            {TIME_SLOTS.map((t) => (
+            {TIME_SLOTS.map((t) => {
+              const booked = isTimeBooked(t);
+              const isSelected = selectedStart === t;
+              return (
               <TouchableOpacity
-                key={t}
-                style={[styles.chip, selectedStart === t && styles.chipSelected]}
+                key={`start-${t}`}
+                style={[
+                  styles.chip, 
+                  isSelected && styles.chipSelected,
+                  booked && styles.chipDisabled
+                ]}
+                disabled={booked}
                 onPress={() => {
                   setSelectedStart(t);
                   setSelectedEnd('');
                 }}
               >
-                <Text style={[styles.chipText, selectedStart === t && styles.chipTextSelected]}>{t}</Text>
+                <Text style={[
+                  styles.chipText, 
+                  isSelected && styles.chipTextSelected,
+                  booked && styles.chipTextDisabled
+                ]}>{t}</Text>
               </TouchableOpacity>
-            ))}
+            )})}
           </View>
 
           <Text style={styles.sectionTitle}>เวลาสิ้นสุด</Text>
           <View style={styles.rowWrap}>
-            {TIME_SLOTS.filter((t) => !selectedStart || t > selectedStart).map((t) => (
+            {TIME_SLOTS.filter((t) => !selectedStart || t > selectedStart).map((t) => {
+              // End time cannot overlap a booked slot. We check the range from selectedStart to t.
+              const invalidRange = selectedStart ? isRangeBooked(selectedStart, t) : false;
+              const booked = invalidRange || isTimeBooked(t) && t !== TIME_SLOTS[TIME_SLOTS.length - 1]; // Can end AT a booked slot start
+              const isSelected = selectedEnd === t;
+              
+              return (
               <TouchableOpacity
-                key={t}
-                style={[styles.chip, selectedEnd === t && styles.chipSelected]}
+                key={`end-${t}`}
+                style={[
+                  styles.chip, 
+                  isSelected && styles.chipSelected,
+                  booked && styles.chipDisabled
+                ]}
+                disabled={booked}
                 onPress={() => setSelectedEnd(t)}
               >
-                <Text style={[styles.chipText, selectedEnd === t && styles.chipTextSelected]}>{t}</Text>
+                <Text style={[
+                  styles.chipText, 
+                  isSelected && styles.chipTextSelected,
+                  booked && styles.chipTextDisabled
+                ]}>{t}</Text>
               </TouchableOpacity>
-            ))}
+            )})}
           </View>
 
           <TouchableOpacity style={styles.bookButton} onPress={handleBook}>
@@ -250,8 +349,10 @@ const styles = StyleSheet.create({
   rowWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 8, marginHorizontal: 16 },
   chip: { paddingVertical: 10, paddingHorizontal: 14, backgroundColor: '#fff', borderRadius: 10, borderWidth: 1, borderColor: '#ccc' },
   chipSelected: { backgroundColor: '#1a5f2a', borderColor: '#1a5f2a' },
+  chipDisabled: { backgroundColor: '#f5f5f5', borderColor: '#eee' },
   chipText: { fontSize: 14, color: '#333', fontWeight: '700' },
   chipTextSelected: { color: '#fff' },
+  chipTextDisabled: { color: '#ccc', textDecorationLine: 'line-through' },
 
   bookButton: { backgroundColor: '#1a5f2a', paddingVertical: 16, borderRadius: 12, alignItems: 'center', marginTop: 20, marginHorizontal: 16 },
   bookButtonText: { color: '#fff', fontSize: 18, fontWeight: '900' },

@@ -55,6 +55,27 @@ export interface Court {
   updated_at: string;
 }
 
+export interface BookedSlot {
+  start_time: string;
+  end_time: string;
+  status: string;
+}
+
+export interface CourtAvailability {
+  court_id: string;
+  court_name: string;
+  price_per_hour: number;
+  booked_slots: BookedSlot[];
+}
+
+export interface FieldAvailability {
+  field_id: string;
+  date: string;
+  open_time: string;
+  close_time: string;
+  courts: CourtAvailability[];
+}
+
 export interface BookingItem {
   id: string;
   booking_id: string;

@@ -1,5 +1,5 @@
 import api from './api';
-import { Court, Booking } from '../types';
+import { Court, Booking, FieldAvailability } from '../types';
 
 const API_URL = 'http://sport-hub-register-staging.up.railway.app';
 
@@ -63,4 +63,15 @@ export async function getMyBookings(userId: string): Promise<Booking[]> {
     throw new Error(response.data?.message || 'ไม่สามารถดึงข้อมูลการจองได้');
   }
   return response.data.data || [];
+}
+
+export async function getFieldAvailability(fieldId: string, date: string): Promise<FieldAvailability> {
+  const response = await api.get(`${API_URL}/v1/availability?field_id=${fieldId}&date=${date}`, {
+    validateStatus: () => true,
+  });
+
+  if (response.status >= 400) {
+    throw new Error(response.data?.message || 'ไม่สามารถดึงข้อมูลเวลาว่างได้');
+  }
+  return response.data.data;
 }
