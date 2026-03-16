@@ -15,6 +15,7 @@ import OwnerProfileScreen from '../screens/owner/OwnerProfileScreen';
 import VenueBookingsScreen from '../screens/owner/VenueBookingsScreen';
 import RevenueDetailScreen from '../screens/owner/RevenueDetailScreen';
 import EditVenueScreen from '../screens/owner/EditVenueScreen';
+import AddCourtsScreen from '../screens/owner/AddCourtsScreen';
 import { OwnerStackParamList } from './types';
 
 const Tab = createBottomTabNavigator();
@@ -51,8 +52,22 @@ function ManagementStack() {
     >
       <Stack.Screen name="MyVenues" component={MyVenuesScreen} options={{ title: 'สนามของฉัน' }} />
       <Stack.Screen name="VenueBookings" component={VenueBookingsScreen} options={{ title: 'การจอง' }} />
-      <Stack.Screen name="AddVenue" component={AddVenueScreen} options={{ title: 'เพิ่มสนาม' }} />
       <Stack.Screen name="EditVenue" component={EditVenueScreen} options={{ title: 'แก้ไขสนาม' }} />
+    </Stack.Navigator>
+  );
+}
+
+function AddVenueStack() {
+  return (
+    <Stack.Navigator
+      screenOptions={{
+        headerStyle: { backgroundColor: '#1a5f2a' },
+        headerTintColor: '#fff',
+        title: 'เพิ่มสนาม',
+      }}
+    >
+      <Stack.Screen name="AddVenue" component={AddVenueScreen} options={{ title: 'เพิ่มสนามหลัก' }} />
+      <Stack.Screen name="AddCourts" component={AddCourtsScreen} options={{ title: 'เพิ่มสนามย่อย' }} />
     </Stack.Navigator>
   );
 }
@@ -111,16 +126,11 @@ export default function OwnerTabs() {
       />
       <Tab.Screen
         name="AddVenueTab"
-        component={AddVenueScreen}
+        component={AddVenueStack}
         options={{
           tabBarLabel: 'เพิ่มสนาม',
           tabBarIcon: () => <Text style={{ fontSize: 24 }}>➕</Text>,
-          headerShown: true,
-          headerTitle: 'เพิ่มสนาม',
-          headerTitleStyle: { fontWeight: '900', color: '#FFFFFF' },
-          headerStyle: { backgroundColor: '#1A5F2A' },
-          headerTintColor: '#FFFFFF',
-          headerTitleAlign: 'center',
+          headerShown: false,
         }}
       />
       <Tab.Screen

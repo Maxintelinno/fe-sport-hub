@@ -87,7 +87,7 @@ export async function createField(data: CreateFieldRequest) {
     if (response.status >= 400) {
         throw new Error(response.data?.message || 'ไม่สามารถสร้างสนามได้');
     }
-    return response.data;
+    return response.data.data;
 }
 
 export interface GetOwnerFieldsResponse {

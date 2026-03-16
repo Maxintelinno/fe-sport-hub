@@ -10,7 +10,6 @@ import {
 } from 'react-native';
 import { useAuth } from '../../context/AuthContext';
 import { getVenuesByOwner } from '../../data/venueStore';
-import { getMockBookingsByVenue } from '../customer/BookingFormScreen';
 
 const { width } = Dimensions.get('window');
 
@@ -56,12 +55,12 @@ export default function RevenueDetailScreen() {
 
         const bookings: any[] = [];
         ownerVenues.forEach((venue) => {
-            const vBookings = getMockBookingsByVenue(venue.id);
+            const vBookings: any[] = [];
 
             // If vBookings is empty, let's inject some dummy data to make it look "website-like"
             const dataToUse = vBookings.length > 0 ? vBookings : generateMockData(venue, 5);
 
-            dataToUse.forEach((b) => {
+            dataToUse.forEach((b: any) => {
                 let includePeriod = false;
                 switch (selectedPeriod) {
                     case 'day':

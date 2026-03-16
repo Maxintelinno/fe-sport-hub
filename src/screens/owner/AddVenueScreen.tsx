@@ -207,7 +207,7 @@ export default function AddVenueScreen({ navigation }: Props) {
         setLoading(true);
         try {
             // 1. Call real API
-            await createField({
+            const createdField = await createField({
                 owner_id: user.id,
                 name,
                 sport_type: sportType,
@@ -246,8 +246,14 @@ export default function AddVenueScreen({ navigation }: Props) {
                 isActive: true,
             });
 
-            Alert.alert('สำเร็จ', 'เพิ่มสนามเรียบร้อยแล้ว', [
-                { text: 'ตกลง', onPress: () => navigation.goBack() }
+            Alert.alert('สำเร็จ', 'เพิ่มสนามหลักเรียบร้อยแล้ว กรุณาเพิ่มสนามย่อยในหน้าถัดไป', [
+                { 
+                    text: 'ตกลง', 
+                    onPress: () => navigation.navigate('AddCourts', { 
+                        fieldId: createdField.id, 
+                        fieldName: createdField.name 
+                    }) 
+                }
             ]);
         } catch (error: any) {
             console.error('Add venue error:', error);

@@ -2,9 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, Dimensions } from 'react-native';
 import { useAuth } from '../../context/AuthContext';
 import { getVenuesByOwner } from '../../data/venueStore';
-import { getMockBookingsByVenue } from '../customer/BookingFormScreen';
-import { useNavigation } from '@react-navigation/native';
-import { useFocusEffect } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 
 const { width } = Dimensions.get('window');
 const PIE_SIZE = 180;
@@ -165,11 +163,11 @@ export default function OwnerProfileScreen() {
         const venueRevenues: { label: string; value: number; color: string; bookings: number }[] = [];
 
         ownerVenues.forEach((venue, idx) => {
-            const vBookings = getMockBookingsByVenue(venue.id);
+            const vBookings: any[] = []; 
             let venueRev = 0;
             let venueBookCount = 0;
 
-            vBookings.forEach((b) => {
+            vBookings.forEach((b: any) => {
                 if (b.status !== 'confirmed') return;
 
                 let include = false;
@@ -287,7 +285,7 @@ export default function OwnerProfileScreen() {
                     {revenueData.venueRevenues.length === 0 ? (
                         <Text style={styles.noDataText}>ยังไม่มีสนาม</Text>
                     ) : (
-                        revenueData.venueRevenues.map((vr, idx) => (
+                        revenueData.venueRevenues.map((vr: any, idx: number) => (
                             <View key={idx} style={styles.breakdownItem}>
                                 <View style={styles.breakdownLeft}>
                                     <View style={[styles.colorDot, { backgroundColor: vr.color }]} />

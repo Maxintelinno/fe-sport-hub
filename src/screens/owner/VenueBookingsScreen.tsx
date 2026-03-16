@@ -3,7 +3,6 @@ import { View, Text, StyleSheet, FlatList, Dimensions } from 'react-native';
 import { RouteProp } from '@react-navigation/native';
 import { OwnerStackParamList } from '../../navigation/types';
 import { getVenueById } from '../../data/venueStore';
-import { getMockBookingsByVenue } from '../customer/BookingFormScreen';
 
 const { width } = Dimensions.get('window');
 
@@ -27,7 +26,7 @@ function getStatusConfig(status: string) {
 export default function VenueBookingsScreen({ route }: Props) {
   const { venueId } = route.params;
   const venue = getVenueById(venueId);
-  const bookings = getMockBookingsByVenue(venueId);
+  const bookings: any[] = []; // In a real app, fetch from backend via venueId
 
   const confirmedCount = bookings.filter(b => b.status === 'confirmed').length;
   const pendingCount = bookings.filter(b => b.status === 'pending').length;

@@ -14,7 +14,6 @@ import {
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useAuth } from '../../context/AuthContext';
 import { getOwnerFields, updateFieldStatus } from '../../services/venueService';
-import { getMockBookingsByVenue } from '../customer/BookingFormScreen';
 import { Venue } from '../../types';
 import { OwnerStackParamList } from '../../navigation/types';
 import { useFocusEffect } from '@react-navigation/native';
@@ -271,7 +270,7 @@ export default function MyVenuesScreen({ navigation }: Props) {
             onPress={() => navigation.navigate('VenueBookings', { venueId: item.id })}
             onToggle={handleToggleStatus}
             onEdit={handleEdit}
-            bookingCount={getMockBookingsByVenue(item.id).length}
+            bookingCount={0}
           />
         )}
       />

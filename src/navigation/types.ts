@@ -21,6 +21,7 @@ export type OwnerStackParamList = {
     // Owner Management
     MyVenues: undefined;
     AddVenue: undefined;
+    AddCourts: { fieldId: string; fieldName: string };
     EditVenue: { venue: Venue };
     VenueBookings: { venueId: string };
     Profile: undefined;
