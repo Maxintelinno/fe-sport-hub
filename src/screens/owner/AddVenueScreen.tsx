@@ -115,6 +115,21 @@ export default function AddVenueScreen({ navigation }: Props) {
         return options;
     }, []);
 
+    const resetForm = () => {
+        setName('');
+        setSportType('');
+        setPrice('');
+        setOpeningTime('08:00');
+        setClosingTime('22:00');
+        setDescription('');
+        setAddress('');
+        setImages([]);
+        setLocalImages([]);
+        setProvince(null);
+        setDistrict(null);
+        setUploadedImages([]);
+    };
+
     const handleAddImage = async () => {
         if (localImages.length >= 10) {
             Alert.alert('จำกัดจำนวนรูป', 'คุณสามารถเพิ่มรูปภาพได้สูงสุด 10 รูป');
@@ -249,10 +264,13 @@ export default function AddVenueScreen({ navigation }: Props) {
             Alert.alert('สำเร็จ', 'เพิ่มสนามหลักเรียบร้อยแล้ว กรุณาเพิ่มสนามย่อยในหน้าถัดไป', [
                 { 
                     text: 'ตกลง', 
-                    onPress: () => navigation.navigate('AddCourts', { 
-                        fieldId: createdField.id, 
-                        fieldName: createdField.name 
-                    }) 
+                    onPress: () => {
+                        resetForm();
+                        navigation.navigate('AddCourts', { 
+                            fieldId: createdField?.field_id || createdField?.id, 
+                            fieldName: createdField?.name || name 
+                        });
+                    }
                 }
             ]);
         } catch (error: any) {

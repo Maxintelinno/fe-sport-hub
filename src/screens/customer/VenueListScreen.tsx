@@ -35,8 +35,8 @@ function VenueCard({ venue, onPress, onImagePress, onBookPress }: { venue: Venue
       disabled={!active}
     >
       <View style={styles.imageContainer}>
-        <TouchableOpacity 
-          activeOpacity={0.8} 
+        <TouchableOpacity
+          activeOpacity={0.8}
           onPress={() => onImagePress(displayImages)}
           style={styles.cardImageTouch}
         >
@@ -78,8 +78,8 @@ function VenueCard({ venue, onPress, onImagePress, onBookPress }: { venue: Venue
             <Text style={styles.starIcon}>⭐</Text>
             <Text style={styles.ratingText}>4.8 (120+)</Text>
           </View>
-          
-          <TouchableOpacity 
+
+          <TouchableOpacity
             style={styles.bookActionBtn}
             onPress={(e) => {
               e.stopPropagation();
@@ -202,7 +202,7 @@ export default function VenueListScreen({ navigation }: Props) {
               latitude: lat,
               longitude: lng
             });
-            
+
             console.log('Reverse Geocode Result:', JSON.stringify(reverseGeocode, null, 2));
 
             if (reverseGeocode.length > 0) {
@@ -215,7 +215,7 @@ export default function VenueListScreen({ navigation }: Props) {
           } catch (geoError) {
             console.error('Reverse Geocode Error:', geoError);
           }
-          
+
           // Fallback if not detected or provided
           if (!provinceStr) {
             provinceStr = 'กรุงเทพมหานคร';
@@ -236,7 +236,7 @@ export default function VenueListScreen({ navigation }: Props) {
       setFilteredVenues(results);
     } catch (error: any) {
       console.error('Error fetching venues:', error);
-      
+
       // If unauthorized, show login prompt only then
       if (error.message?.includes('Authorization') || error.message?.includes('401')) {
         Alert.alert(
@@ -244,8 +244,8 @@ export default function VenueListScreen({ navigation }: Props) {
           'กรุณาเข้าสู่ระบบเพื่อดูข้อมูลสนามในหมวดหมู่นี้',
           [
             { text: 'ภายหลัง', style: 'cancel' },
-            { 
-              text: 'เข้าสู่ระบบ', 
+            {
+              text: 'เข้าสู่ระบบ',
               onPress: () => (navigation as any).navigate('Auth', { screen: 'Login', params: { role: 'cust' } })
             }
           ]
@@ -305,8 +305,8 @@ export default function VenueListScreen({ navigation }: Props) {
         'คุณต้องเข้าสู่ระบบก่อนทำการจองสนาม',
         [
           { text: 'ยกเลิก', style: 'cancel' },
-          { 
-            text: 'เข้าสู่ระบบ', 
+          {
+            text: 'เข้าสู่ระบบ',
             onPress: () => (navigation as any).navigate('Auth', { screen: 'Login', params: { role: 'cust' } })
           }
         ]
@@ -339,7 +339,7 @@ export default function VenueListScreen({ navigation }: Props) {
   );
 
   const renderInsightItem = ({ item }: { item: typeof MOCK_INSIGHTS[0] }) => (
-    <TouchableOpacity 
+    <TouchableOpacity
       style={[styles.adContainer, { backgroundColor: item.bg }]}
       onPress={() => navigation.navigate('InsightDetail', { insightId: item.id })}
     >
@@ -355,7 +355,7 @@ export default function VenueListScreen({ navigation }: Props) {
   return (
     <View style={styles.container}>
       <StatusBar barStyle="light-content" />
-      <ScrollView 
+      <ScrollView
         ref={scrollRef}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
@@ -384,8 +384,8 @@ export default function VenueListScreen({ navigation }: Props) {
         {/* QUICK MENU SECTION */}
         <View style={styles.quickMenuContainer}>
           {QUICK_MENU.map((item) => (
-            <TouchableOpacity 
-              key={item.id} 
+            <TouchableOpacity
+              key={item.id}
               style={styles.menuItem}
               onPress={() => handleQuickMenuPress(item)}
             >
@@ -419,7 +419,7 @@ export default function VenueListScreen({ navigation }: Props) {
         </View>
 
         {/* SECTION 2: All Venues */}
-        <View 
+        <View
           style={styles.venuesSection}
           onLayout={(e) => setVenuesY(e.nativeEvent.layout.y)}
         >
@@ -459,13 +459,21 @@ export default function VenueListScreen({ navigation }: Props) {
               <ActivityIndicator size="large" color="#1A5F2A" />
               <Text style={styles.loadingText}>กำลังค้นหาสนาม...</Text>
             </View>
+          ) : filteredVenues.length === 0 ? (
+            <View style={styles.emptyContainer}>
+              <View style={styles.emptyIconCircle}>
+                <Text style={styles.emptyIcon}>🔍</Text>
+              </View>
+              <Text style={styles.emptyTitle}>ไม่พบสนาม</Text>
+              <Text style={styles.emptySubtitle}>ลองค้นหาสนามในพื้นที่อื่น</Text>
+            </View>
           ) : (
             <View style={styles.venuesList}>
               {filteredVenues.map((item) => (
-                <VenueCard 
-                  key={item.id || (item as any).field_id} 
-                  venue={item} 
-                  onPress={() => handleBookPress(item)} 
+                <VenueCard
+                  key={item.id || (item as any).field_id}
+                  venue={item}
+                  onPress={() => handleBookPress(item)}
                   onImagePress={handleOpenGallery}
                   onBookPress={() => handleBookPress(item)}
                 />
@@ -485,14 +493,14 @@ export default function VenueListScreen({ navigation }: Props) {
             <View style={styles.modalContent}>
               <View style={styles.modalHeader}>
                 <Text style={styles.modalTitle}>COURT GALLERY</Text>
-                <TouchableOpacity 
+                <TouchableOpacity
                   style={styles.closeBtn}
                   onPress={() => setGalleryVisible(false)}
                 >
                   <Text style={styles.closeBtnText}>✕</Text>
                 </TouchableOpacity>
               </View>
-              
+
               <FlatList
                 data={galleryImages}
                 keyExtractor={(_, index) => index.toString()}
@@ -501,8 +509,8 @@ export default function VenueListScreen({ navigation }: Props) {
                 showsHorizontalScrollIndicator={false}
                 renderItem={({ item }) => (
                   <View style={styles.galleryItem}>
-                    <Image 
-                      source={{ uri: typeof item === 'string' ? item : item.image_url }} 
+                    <Image
+                      source={{ uri: typeof item === 'string' ? item : item.image_url }}
                       style={styles.galleryImage}
                       resizeMode="contain"
                     />
@@ -510,7 +518,7 @@ export default function VenueListScreen({ navigation }: Props) {
                   </View>
                 )}
               />
-              
+
               <View style={styles.modalFooter}>
                 <View style={styles.goldIndicator} />
                 <Text style={styles.modalSwipeText}>เลื่อนดูรูปภาพเพิ่มเติม</Text>
@@ -999,17 +1007,50 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontWeight: '800',
     letterSpacing: 2,
-    marginHorizontal: 15,
+    marginHorizontal: 16,
   },
   goldIndicator: {
-    width: 30,
     height: 1,
+    width: 30,
     backgroundColor: '#C5A021',
     opacity: 0.5,
+  },
+  emptyContainer: {
+    alignItems: 'center',
+    marginTop: 40,
+    paddingHorizontal: 24,
+  },
+  emptyIconCircle: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    backgroundColor: '#F0F7F0',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 24,
+    borderWidth: 2,
+    borderColor: 'rgba(26, 95, 42, 0.1)',
+  },
+  emptyIcon: {
+    fontSize: 48,
+  },
+  emptyTitle: {
+    fontSize: 20,
+    fontWeight: '900',
+    color: '#1A5F2A',
+    marginBottom: 12,
+    textAlign: 'center',
+  },
+  emptySubtitle: {
+    fontSize: 14,
+    color: '#666',
+    textAlign: 'center',
+    lineHeight: 22,
+    marginBottom: 30,
+    paddingHorizontal: 10,
   },
   cardImageTouch: {
     width: '100%',
     height: '100%',
   },
 });
-

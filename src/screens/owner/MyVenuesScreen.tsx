@@ -255,11 +255,25 @@ export default function MyVenuesScreen({ navigation }: Props) {
             </View>
           ) : (
             <View style={styles.emptyContainer}>
-              <View style={styles.emptyIconCircle}>
-                <Text style={styles.emptyIcon}>🏟️</Text>
+              <View style={styles.emptyImageWrapper}>
+                <Image 
+                  source={{ uri: 'https://images.unsplash.com/photo-1579952363873-27f3bade9f55?q=80&w=600&auto=format&fit=crop' }} 
+                  style={styles.emptyImage}
+                />
+                <View style={styles.emptyImageOverlay} />
+                <View style={styles.emptyIconCircle}>
+                  <Text style={styles.emptyIcon}>🏟️</Text>
+                </View>
               </View>
-              <Text style={styles.emptyTitle}>คุณยังไม่เพิ่มสนาม</Text>
-              <Text style={styles.emptySubtitle}>เริ่มสร้างรายได้ด้วยการเพิ่มสนามแข่งของคุณ</Text>
+              <Text style={styles.emptyTitle}>เริ่มต้นธุรกิจสนามของคุณ</Text>
+              <Text style={styles.emptySubtitle}>ดูเหมือนว่าคุณยังไม่มีสนามในระบบ เพิ่มสนามแรกของคุณเพื่อเริ่มรับการจองและสร้างรายได้ทันที</Text>
+              
+              <TouchableOpacity 
+                style={styles.emptyAddBtn}
+                onPress={() => navigation.navigate('AddVenue')}
+              >
+                <Text style={styles.emptyAddBtnText}>+ เพิ่มสนามใหม่</Text>
+              </TouchableOpacity>
             </View>
           )
         }
@@ -585,33 +599,78 @@ const styles = StyleSheet.create({
   },
   emptyContainer: {
     alignItems: 'center',
-    marginTop: 60,
-    paddingHorizontal: 40,
+    marginTop: 40,
+    paddingHorizontal: 24,
+  },
+  emptyImageWrapper: {
+    width: 200,
+    height: 200,
+    borderRadius: 100,
+    overflow: 'hidden',
+    marginBottom: 24,
+    position: 'relative',
+    backgroundColor: '#f0f7f0',
+    borderWidth: 4,
+    borderColor: 'rgba(202, 160, 33, 0.2)', // Gold tint border
+  },
+  emptyImage: {
+    width: '100%',
+    height: '100%',
+  },
+  emptyImageOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(26, 95, 42, 0.4)', // Dark green tint
   },
   emptyIconCircle: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: '#f0f7f0',
+    position: 'absolute',
+    top: '50%',
+    left: '50%',
+    transform: [{ translateX: -35 }, { translateY: -35 }],
+    width: 70,
+    height: 70,
+    borderRadius: 35,
+    backgroundColor: '#fff',
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 20,
-    borderWidth: 1,
-    borderColor: 'rgba(197, 160, 33, 0.2)',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.15,
+    shadowRadius: 10,
+    elevation: 6,
   },
   emptyIcon: {
-    fontSize: 36,
+    fontSize: 32,
   },
   emptyTitle: {
-    fontSize: 20,
+    fontSize: 22,
     fontWeight: '900',
     color: '#1A5F2A',
-    marginBottom: 8,
+    marginBottom: 12,
+    textAlign: 'center',
   },
   emptySubtitle: {
     fontSize: 14,
-    color: '#888',
+    color: '#666',
     textAlign: 'center',
-    lineHeight: 20,
+    lineHeight: 22,
+    marginBottom: 30,
+    paddingHorizontal: 10,
+  },
+  emptyAddBtn: {
+    backgroundColor: '#C5A021', // Gold color for premium feel
+    paddingHorizontal: 32,
+    paddingVertical: 16,
+    borderRadius: 24,
+    shadowColor: '#C5A021',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.3,
+    shadowRadius: 12,
+    elevation: 6,
+  },
+  emptyAddBtnText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '900',
+    letterSpacing: 0.5,
   },
 });

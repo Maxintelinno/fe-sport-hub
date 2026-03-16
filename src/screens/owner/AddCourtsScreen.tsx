@@ -88,7 +88,7 @@ export default function AddCourtsScreen({ navigation, route }: Props) {
       await createCourtsBulk(payload);
 
       Alert.alert('สำเร็จ', 'เพิ่มสนามย่อยเรียบร้อยแล้ว', [
-        { text: 'ตกลง', onPress: () => navigation.navigate('MyVenues') },
+        { text: 'ตกลง', onPress: () => (navigation as any).navigate('ManagementTab', { screen: 'MyVenues' }) },
       ]);
     } catch (error: any) {
       console.error('Error creating courts:', error);
