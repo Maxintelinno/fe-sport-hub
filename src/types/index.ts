@@ -50,6 +50,8 @@ export interface Court {
   field_id: string;
   name: string;
   price_per_hour: number;
+  capacity?: number;
+  court_type?: string;
   status: string;
   created_at: string;
   updated_at: string;

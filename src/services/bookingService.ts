@@ -19,6 +19,8 @@ export interface CreateCourtRequest {
   field_id: string;
   name: string;
   price_per_hour: number;
+  capacity: number;
+  court_type: string;
 }
 
 export interface CreateCourtsBulkRequest {
@@ -29,6 +31,14 @@ export interface CreateCourtsBulkRequest {
     capacity: number;
     court_type: string;
   }[];
+}
+
+export interface UpdateCourtRequest {
+  name?: string;
+  price_per_hour?: number;
+  capacity?: number;
+  court_type?: string;
+  status?: string;
 }
 
 export async function getCourtsByField(fieldId: string): Promise<Court[]> {
@@ -51,6 +61,27 @@ export async function createCourt(data: CreateCourtRequest): Promise<Court> {
     throw new Error(response.data?.message || 'ไม่สามารถสร้างคอร์ทได้');
   }
   return response.data.data;
+}
+
+export async function updateCourt(courtId: string, data: UpdateCourtRequest): Promise<Court> {
+  const response = await api.put(`${API_URL}/v1/courts/${courtId}`, data, {
+    validateStatus: () => true,
+  });
+
+  if (response.status >= 400) {
+    throw new Error(response.data?.message || 'ไม่สามารถแก้ไขคอร์ทได้');
+  }
+  return response.data.data;
+}
+
+export async function deleteCourt(courtId: string): Promise<void> {
+  const response = await api.delete(`${API_URL}/v1/courts/${courtId}`, {
+    validateStatus: () => true,
+  });
+
+  if (response.status >= 400) {
+    throw new Error(response.data?.message || 'ไม่สามารถลบคอร์ทได้');
+  }
 }
 
 export async function createCourtsBulk(data: CreateCourtsBulkRequest): Promise<Court[]> {

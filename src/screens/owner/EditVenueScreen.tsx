@@ -22,6 +22,8 @@ import { useAuth } from '../../context/AuthContext';
 import { THAI_LOCATIONS, SPORT_TYPES, Province, District } from '../../data/locationData';
 import * as ImagePicker from 'expo-image-picker';
 import { getPresignedUrls, uploadToPresignedUrl, updateField, FieldImage } from '../../services/venueService';
+import { getCourtsByField, createCourt, updateCourt, deleteCourt } from '../../services/bookingService';
+import { Court } from '../../types';
 
 const { width, height } = Dimensions.get('window');
 
@@ -82,7 +84,114 @@ export default function EditVenueScreen({ navigation, route }: Props) {
     // Form State - Pre-filled from venue
     const [name, setName] = useState(venue.name);
     const [sportType, setSportType] = useState(venue.sport_type);
-    const [price, setPrice] = useState(venue.price_per_hour.toString());
+
+    // Tab State
+    const [activeTab, setActiveTab] = useState<'info' | 'courts'>('info');
+
+    // Courts State
+    const [courts, setCourts] = useState<Court[]>([]);
+    const [loadingCourts, setLoadingCourts] = useState(false);
+    
+    // Court Form Modal State
+    const [courtModalVisible, setCourtModalVisible] = useState(false);
+    const [editingCourt, setEditingCourt] = useState<Court | null>(null);
+    const [courtName, setCourtName] = useState('');
+    const [courtType, setCourtType] = useState('');
+    const [courtCapacity, setCourtCapacity] = useState('');
+    const [courtPrice, setCourtPrice] = useState('');
+    const [savingCourt, setSavingCourt] = useState(false);
+
+    useEffect(() => {
+        if (activeTab === 'courts' && courts.length === 0) {
+            fetchCourts();
+        }
+    }, [activeTab]);
+
+    const fetchCourts = async () => {
+        setLoadingCourts(true);
+        try {
+            const data = await getCourtsByField(venue.id);
+            setCourts(data);
+        } catch (error) {
+            console.error('Fetch courts error:', error);
+        } finally {
+            setLoadingCourts(false);
+        }
+    };
+
+    const handleOpenAddCourt = () => {
+        setEditingCourt(null);
+        setCourtName('');
+        setCourtType(sportType || '');
+        setCourtCapacity('');
+        setCourtPrice('');
+        setCourtModalVisible(true);
+    };
+
+    const handleOpenEditCourt = (court: Court) => {
+        setEditingCourt(court);
+        setCourtName(court.name);
+        setCourtType(court.court_type || '');
+        setCourtCapacity(court.capacity?.toString() || '');
+        setCourtPrice(court.price_per_hour.toString());
+        setCourtModalVisible(true);
+    };
+
+    const handleDeleteCourt = (courtId: string) => {
+        Alert.alert('ยืนยันการลบ', 'คุณต้องการลบคอร์ทนี้ใช่หรือไม่?', [
+            { text: 'ยกเลิก', style: 'cancel' },
+            { 
+                text: 'ลบ', 
+                style: 'destructive',
+                onPress: async () => {
+                    try {
+                        await deleteCourt(courtId);
+                        setCourts(prev => prev.filter(c => c.id !== courtId));
+                        Alert.alert('สำเร็จ', 'ลบคอร์ทเรียบร้อยแล้ว');
+                    } catch (error: any) {
+                        Alert.alert('ข้อผิดพลาด', error.message || 'ไม่สามารถลบได้');
+                    }
+                }
+            }
+        ]);
+    };
+
+    const handleSaveCourt = async () => {
+        if (!courtName || !courtType || !courtCapacity || !courtPrice) {
+            Alert.alert('แจ้งเตือน', 'กรุณากรอกข้อมูลให้ครบถ้วน');
+            return;
+        }
+
+        setSavingCourt(true);
+        try {
+            if (editingCourt) {
+                const updated = await updateCourt(editingCourt.id, {
+                    name: courtName,
+                    court_type: courtType,
+                    capacity: Number(courtCapacity),
+                    price_per_hour: Number(courtPrice)
+                });
+                setCourts(prev => prev.map(c => c.id === updated.id ? updated : c));
+                Alert.alert('สำเร็จ', 'อัปเดตข้อมูลคอร์ทเรียบร้อยแล้ว');
+            } else {
+                const created = await createCourt({
+                    field_id: venue.id,
+                    name: courtName,
+                    price_per_hour: Number(courtPrice),
+                    capacity: Number(courtCapacity),
+                    court_type: courtType
+                });
+                setCourts(prev => [...prev, created]);
+                Alert.alert('สำเร็จ', 'เพิ่มคอร์ทย่อยเรียบร้อยแล้ว');
+            }
+            setCourtModalVisible(false);
+        } catch (error: any) {
+            console.error('Save court error:', error);
+            Alert.alert('เกิดข้อผิดพลาด', error.message || 'ไม่สามารถบันทึกข้อมูลคอร์ทได้');
+        } finally {
+            setSavingCourt(false);
+        }
+    };
     const [openingTime, setOpeningTime] = useState(venue.open_time.substring(0, 5));
     const [closingTime, setClosingTime] = useState(venue.close_time.substring(0, 5));
     const [description, setDescription] = useState(venue.description);
@@ -212,7 +321,7 @@ export default function EditVenueScreen({ navigation, route }: Props) {
     };
 
     const handleUpdateVenue = async () => {
-        if (!name || !sportType || !price || !address || !province || !district) {
+        if (!name || !sportType || !address || !province || !district) {
             Alert.alert('กรุณากรอกข้อมูลที่จำเป็นให้ครบถ้วน');
             return;
         }
@@ -225,7 +334,7 @@ export default function EditVenueScreen({ navigation, route }: Props) {
                 owner_id: user.id,
                 name,
                 sport_type: sportType,
-                price_per_hour: Number(price),
+                price_per_hour: venue.price_per_hour,
                 open_time: openingTime.length === 5 ? `${openingTime}:00` : openingTime,
                 close_time: closingTime.length === 5 ? `${closingTime}:00` : closingTime,
                 province: province.name,
@@ -268,6 +377,22 @@ export default function EditVenueScreen({ navigation, route }: Props) {
             keyboardVerticalOffset={100}
         >
             <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
+                <View style={styles.tabContainer}>
+                    <TouchableOpacity 
+                        style={[styles.tabBtn, activeTab === 'info' && styles.activeTabBtn]} 
+                        onPress={() => setActiveTab('info')}
+                    >
+                        <Text style={[styles.tabText, activeTab === 'info' && styles.activeTabText]}>ℹ️ ข้อมูลสนาม</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity 
+                        style={[styles.tabBtn, activeTab === 'courts' && styles.activeTabBtn]} 
+                        onPress={() => setActiveTab('courts')}
+                    >
+                        <Text style={[styles.tabText, activeTab === 'courts' && styles.activeTabText]}>🎾 คอร์ท (สนามย่อย)</Text>
+                    </TouchableOpacity>
+                </View>
+
+                {activeTab === 'info' ? (
                 <View style={styles.card}>
                     <Text style={styles.cardTitle}>✏️ แก้ไขข้อมูลสนาม</Text>
                     <Text style={styles.cardSubtitle}>ปรับปรุงข้อมูลสนามของคุณให้ทันสมัยอยู่เสมอ</Text>
@@ -323,21 +448,12 @@ export default function EditVenueScreen({ navigation, route }: Props) {
                     />
 
                     <View style={styles.row}>
-                        <View style={{ flex: 1, marginRight: 8 }}>
+                        <View style={{ flex: 1 }}>
                             <RoyaltyPicker
                                 label="ประเภทกีฬา *"
                                 value={sportType}
                                 placeholder="เลือกกีฬา"
                                 onPress={() => setSportModal(true)}
-                            />
-                        </View>
-                        <View style={{ flex: 1, marginLeft: 8 }}>
-                            <InputField
-                                label="ราคาต่อชั่วโมง *"
-                                value={price}
-                                onChangeText={setPrice}
-                                placeholder="เช่น 1200"
-                                keyboardType="numeric"
                             />
                         </View>
                     </View>
@@ -415,6 +531,47 @@ export default function EditVenueScreen({ navigation, route }: Props) {
                         <Text style={styles.cancelBtnText}>ยกเลิก</Text>
                     </TouchableOpacity>
                 </View>
+                ) : (
+                <View style={styles.card}>
+                    <View style={styles.courtHeaderRow}>
+                        <View>
+                            <Text style={styles.cardTitle}>🎾 จัดการคอร์ท</Text>
+                            <Text style={styles.cardSubtitle}>กำหนดสนามย่อยและราคา</Text>
+                        </View>
+                        <TouchableOpacity style={styles.addCourtBtn} onPress={handleOpenAddCourt}>
+                            <Text style={styles.addCourtBtnText}>+ เพิ่มคอร์ท</Text>
+                        </TouchableOpacity>
+                    </View>
+
+                    {loadingCourts ? (
+                        <ActivityIndicator size="large" color="#1A5F2A" style={{ marginVertical: 30 }} />
+                    ) : courts.length === 0 ? (
+                        <View style={styles.emptyCourtsContainer}>
+                            <Text style={styles.emptyCourtsIcon}>📋</Text>
+                            <Text style={styles.emptyCourtsText}>ยังไม่มีคอร์ทย่อย</Text>
+                            <Text style={styles.emptyCourtsSub}>เพิ่มคอร์ทเพื่อเริ่มเปิดรับการจอง</Text>
+                        </View>
+                    ) : (
+                        courts.map((court) => (
+                            <View key={court.id} style={styles.courtItemCard}>
+                                <View style={styles.courtItemInfo}>
+                                    <Text style={styles.courtItemName}>{court.name}</Text>
+                                    <Text style={styles.courtItemType}>{court.court_type || sportType} • จุ {court.capacity || '-'} คน</Text>
+                                    <Text style={styles.courtItemPrice}>฿{court.price_per_hour}/ชม.</Text>
+                                </View>
+                                <View style={styles.courtItemActions}>
+                                    <TouchableOpacity style={styles.courtActionEdit} onPress={() => handleOpenEditCourt(court)}>
+                                        <Text style={styles.courtActionText}>แก้ไข</Text>
+                                    </TouchableOpacity>
+                                    <TouchableOpacity style={styles.courtActionDel} onPress={() => handleDeleteCourt(court.id)}>
+                                        <Text style={styles.courtActionTextDel}>ลบ</Text>
+                                    </TouchableOpacity>
+                                </View>
+                            </View>
+                        ))
+                    )}
+                </View>
+                )}
 
                 {/* Modals */}
                 <SelectionModal
@@ -455,6 +612,61 @@ export default function EditVenueScreen({ navigation, route }: Props) {
                     onSelect={(item: string) => setClosingTime(item)}
                     onClose={() => setCloseTimeModal(false)}
                 />
+
+                {/* Court Modal */}
+                <Modal visible={courtModalVisible} transparent animationType="slide">
+                    <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.modalOverlay}>
+                        <View style={styles.modalContentLarge}>
+                            <View style={styles.modalHeader}>
+                                <Text style={styles.modalTitle}>{editingCourt ? 'แก้ไขคอร์ท' : 'เพิ่มคอร์ทใหม่'}</Text>
+                                <TouchableOpacity onPress={() => setCourtModalVisible(false)} disabled={savingCourt}>
+                                    <Text style={styles.closeBtnText}>ปิด</Text>
+                                </TouchableOpacity>
+                            </View>
+                            <ScrollView showsVerticalScrollIndicator={false}>
+                                <InputField
+                                    label="ชื่อคอร์ท *"
+                                    value={courtName}
+                                    onChangeText={setCourtName}
+                                    placeholder="เช่น คอร์ท A, พรีเมียม B"
+                                />
+                                <InputField
+                                    label="ประเภทกีฬา *"
+                                    value={courtType}
+                                    onChangeText={setCourtType}
+                                    placeholder="เช่น ฟุตบอล"
+                                />
+                                <View style={styles.row}>
+                                    <View style={{ flex: 1, marginRight: 8 }}>
+                                        <InputField
+                                            label="ความจุ (คน) *"
+                                            value={courtCapacity}
+                                            onChangeText={setCourtCapacity}
+                                            placeholder="เช่น 10"
+                                            keyboardType="numeric"
+                                        />
+                                    </View>
+                                    <View style={{ flex: 1, marginLeft: 8 }}>
+                                        <InputField
+                                            label="ราคา/ชม. *"
+                                            value={courtPrice}
+                                            onChangeText={setCourtPrice}
+                                            placeholder="เช่น 1200"
+                                            keyboardType="numeric"
+                                        />
+                                    </View>
+                                </View>
+                                <TouchableOpacity 
+                                    style={[styles.submitBtn, savingCourt && styles.submitBtnDisabled]} 
+                                    onPress={handleSaveCourt}
+                                    disabled={savingCourt}
+                                >
+                                    <Text style={styles.submitBtnText}>{savingCourt ? 'กำลังบันทึก...' : 'บันทึกข้อมูลคอร์ท'}</Text>
+                                </TouchableOpacity>
+                            </ScrollView>
+                        </View>
+                    </KeyboardAvoidingView>
+                </Modal>
             </ScrollView>
         </KeyboardAvoidingView>
     );
@@ -716,5 +928,138 @@ const styles = StyleSheet.create({
         fontSize: 16,
         fontWeight: '600',
         color: '#333',
+    },
+    tabContainer: {
+        flexDirection: 'row',
+        backgroundColor: '#E8EBE8',
+        borderRadius: 20,
+        padding: 4,
+        marginBottom: 20,
+    },
+    tabBtn: {
+        flex: 1,
+        paddingVertical: 12,
+        alignItems: 'center',
+        borderRadius: 16,
+    },
+    activeTabBtn: {
+        backgroundColor: '#fff',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        elevation: 2,
+    },
+    tabText: {
+        fontSize: 15,
+        fontWeight: '700',
+        color: '#666',
+    },
+    activeTabText: {
+        color: '#1A5F2A',
+    },
+    modalContentLarge: {
+        backgroundColor: '#fff',
+        borderTopLeftRadius: 30,
+        borderTopRightRadius: 30,
+        maxHeight: height * 0.9,
+        padding: 24,
+    },
+    courtHeaderRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'flex-start',
+        marginBottom: 16,
+    },
+    addCourtBtn: {
+        backgroundColor: '#C5A021',
+        paddingHorizontal: 16,
+        paddingVertical: 8,
+        borderRadius: 12,
+    },
+    addCourtBtnText: {
+        color: '#fff',
+        fontWeight: 'bold',
+        fontSize: 14,
+    },
+    emptyCourtsContainer: {
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingVertical: 40,
+        backgroundColor: '#F9FBF9',
+        borderRadius: 20,
+        borderWidth: 1,
+        borderColor: '#E8EBE8',
+        borderStyle: 'dashed',
+    },
+    emptyCourtsIcon: {
+        fontSize: 48,
+        marginBottom: 12,
+    },
+    emptyCourtsText: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        color: '#333',
+    },
+    emptyCourtsSub: {
+        fontSize: 14,
+        color: '#666',
+        marginTop: 4,
+    },
+    courtItemCard: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        padding: 16,
+        backgroundColor: '#F9FBF9',
+        borderRadius: 16,
+        marginBottom: 12,
+        borderWidth: 1,
+        borderColor: '#E8EBE8',
+    },
+    courtItemInfo: {
+        flex: 1,
+    },
+    courtItemName: {
+        fontSize: 16,
+        fontWeight: 'bold',
+        color: '#333',
+        marginBottom: 4,
+    },
+    courtItemType: {
+        fontSize: 13,
+        color: '#666',
+        marginBottom: 4,
+    },
+    courtItemPrice: {
+        fontSize: 15,
+        fontWeight: 'bold',
+        color: '#1A5F2A',
+    },
+    courtItemActions: {
+        flexDirection: 'row',
+    },
+    courtActionEdit: {
+        backgroundColor: '#E8F5E9',
+        paddingHorizontal: 12,
+        paddingVertical: 6,
+        borderRadius: 8,
+        marginRight: 8,
+    },
+    courtActionText: {
+        color: '#1A5F2A',
+        fontWeight: 'bold',
+        fontSize: 13,
+    },
+    courtActionDel: {
+        backgroundColor: '#FFEBEE',
+        paddingHorizontal: 12,
+        paddingVertical: 6,
+        borderRadius: 8,
+    },
+    courtActionTextDel: {
+        color: '#FF3B30',
+        fontWeight: 'bold',
+        fontSize: 13,
     },
 });
