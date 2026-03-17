@@ -86,6 +86,18 @@ export default function BookingFormScreen({ navigation, route }: Props) {
       
       Alert.alert('จองสำเร็จ', `การจองคอร์ท ${courtName} หมายเลข ${bookingResponse.booking_no} สำเร็จแล้ว`, [
         {
+          text: 'ไปหน้าชำระเงิน',
+          onPress: () => navigation.replace('Payment', { 
+            bookingId: bookingResponse.id, 
+            venueName: venue.name, 
+            totalPrice: totalPrice 
+          })
+        },
+        {
+          text: 'กลับหน้าหลัก',
+          onPress: () => navigation.replace('VenueList' as any)
+        },
+        {
           text: 'ดูการจองของฉัน',
           onPress: () => navigation.navigate('MyBookings' as any)
         },
