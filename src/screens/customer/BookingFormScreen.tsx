@@ -19,6 +19,29 @@ export default function BookingFormScreen({ navigation, route }: Props) {
   const [venue, setVenue] = useState<Venue | null>(null);
   const [loading, setLoading] = useState(true);
   const [bookingLoading, setBookingLoading] = useState(false);
+  const [timeLeft, setTimeLeft] = useState(600); // 10 minutes in seconds
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setTimeLeft((prev) => (prev > 0 ? prev - 1 : 0));
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  const formatThaiDate = (dateStr: string) => {
+    const d = new Date(dateStr);
+    return d.toLocaleDateString('th-TH', {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+    });
+  };
 
   useEffect(() => {
     fetchVenue();
@@ -41,7 +64,7 @@ export default function BookingFormScreen({ navigation, route }: Props) {
     return (
       <View style={[styles.container, styles.center]}>
         <ActivityIndicator size="large" color="#1a5f2a" />
-        <Text style={styles.loadingText}>กำลังเตรียมข้อมูลการจอง...</Text>
+        <Text style={styles.loadingText}>กำลังสร้างรายการ...</Text>
       </View>
     );
   }
@@ -84,24 +107,11 @@ export default function BookingFormScreen({ navigation, route }: Props) {
 
       console.log('Booking created successfully:', bookingResponse.booking_no);
       
-      Alert.alert('จองสำเร็จ', `การจองคอร์ท ${courtName} หมายเลข ${bookingResponse.booking_no} สำเร็จแล้ว`, [
-        {
-          text: 'ไปหน้าชำระเงิน',
-          onPress: () => navigation.replace('Payment', { 
-            bookingId: bookingResponse.id, 
-            venueName: venue.name, 
-            totalPrice: totalPrice 
-          })
-        },
-        {
-          text: 'กลับหน้าหลัก',
-          onPress: () => navigation.replace('VenueList' as any)
-        },
-        {
-          text: 'ดูการจองของฉัน',
-          onPress: () => navigation.navigate('MyBookings' as any)
-        },
-      ]);
+      navigation.replace('Payment', { 
+        bookingId: bookingResponse.id, 
+        venueName: venue.name, 
+        totalPrice: totalPrice 
+      });
     } catch (error: any) {
       console.error('Booking Error:', error);
       Alert.alert('การจองผิดพลาด', error.message || 'เกิดข้อผิดพลาดในการจอง');
@@ -119,7 +129,7 @@ export default function BookingFormScreen({ navigation, route }: Props) {
 
         <View style={styles.row}>
           <Text style={styles.label}>วันที่</Text>
-          <Text style={styles.value}>{date}</Text>
+          <Text style={styles.value}>{formatThaiDate(date)}</Text>
         </View>
         <View style={styles.row}>
           <Text style={styles.label}>เวลา</Text>
@@ -136,8 +146,13 @@ export default function BookingFormScreen({ navigation, route }: Props) {
         
         <View style={styles.totalRow}>
           <Text style={styles.totalLabel}>ราคารวม</Text>
-          <Text style={styles.totalPrice}>฿{totalPrice}</Text>
+          <View style={{ alignItems: 'flex-end' }}>
+            <Text style={styles.totalPrice}>฿{totalPrice}</Text>
+            <Text style={styles.priceBreakdown}>{hours} ชั่วโมง x ฿{pricePerHour}</Text>
+          </View>
         </View>
+        
+        <Text style={styles.timerHint}>⏳ เหลือเวลา {formatTime(timeLeft)}</Text>
 
         <TouchableOpacity 
           style={[styles.button, bookingLoading && { opacity: 0.7 }]} 
@@ -147,9 +162,14 @@ export default function BookingFormScreen({ navigation, route }: Props) {
           {bookingLoading ? (
             <ActivityIndicator color="#fff" />
           ) : (
-            <Text style={styles.buttonText}>ยืนยันการจอง</Text>
+            <Text style={styles.buttonText}>ยืนยันและไปชำระเงิน</Text>
           )}
         </TouchableOpacity>
+
+        <View style={styles.footerNote}>
+          <Text style={styles.noteText}>* ไม่สามารถยกเลิกหลังชำระเงิน</Text>
+          <Text style={styles.noteText}>* กรุณามาก่อนเวลา 10 นาที</Text>
+        </View>
       </View>
     </ScrollView>
   );
@@ -218,12 +238,20 @@ const styles = StyleSheet.create({
   },
   totalLabel: { fontSize: 18, fontWeight: '800', color: '#1a5f2a' },
   totalPrice: { fontSize: 24, fontWeight: '900', color: '#1a5f2a' },
+  priceBreakdown: { fontSize: 12, color: '#4a7c59', fontWeight: '600', marginTop: -2 },
+  timerHint: {
+    fontSize: 14,
+    color: '#d32f2f',
+    fontWeight: '700',
+    textAlign: 'center',
+    marginTop: 16,
+  },
   button: {
     backgroundColor: '#1a5f2a',
     paddingVertical: 18,
     borderRadius: 16,
     alignItems: 'center',
-    marginTop: 32,
+    marginTop: 16,
     shadowColor: '#1a5f2a',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
@@ -234,6 +262,16 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 18,
     fontWeight: '900',
+  },
+  footerNote: {
+    marginTop: 20,
+    alignItems: 'center',
+  },
+  noteText: {
+    fontSize: 12,
+    color: '#888',
+    fontWeight: '600',
+    marginBottom: 4,
   },
   loadingText: { marginTop: 16, color: '#1a5f2a', fontWeight: 'bold' },
   errorText: { fontSize: 18, color: '#666', marginBottom: 20 },

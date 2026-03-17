@@ -1,5 +1,5 @@
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image, ScrollView, Alert } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, Image, ScrollView, Alert, ActivityIndicator } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RouteProp } from '@react-navigation/native';
 import { CustomerStackParamList } from '../../navigation/types';
@@ -9,13 +9,55 @@ type Props = {
     route: RouteProp<CustomerStackParamList, 'Payment'>;
 };
 
+type PaymentStatus = 'waiting' | 'verifying' | 'success' | 'expired';
+
 export default function PaymentScreen({ navigation, route }: Props) {
     const { bookingId, venueName, totalPrice } = route.params;
+    const [status, setStatus] = useState<PaymentStatus>('waiting');
+    const [timeLeft, setTimeLeft] = useState(600); // 10 minutes
 
-    const handleFinish = () => {
-        Alert.alert('ชำระเงินสำเร็จ', 'เราได้รับยอดเงินของคุณเรียบร้อยแล้ว', [
-            { text: 'ตกลง', onPress: () => navigation.popToTop() },
+    useEffect(() => {
+        const timer = setInterval(() => {
+            setTimeLeft((prev) => {
+                if (prev <= 1) {
+                    clearInterval(timer);
+                    setStatus('expired');
+                    return 0;
+                }
+                return prev - 1;
+            });
+        }, 1000);
+        return () => clearInterval(timer);
+    }, [status]);
+
+    const formatTime = (seconds: number) => {
+        const mins = Math.floor(seconds / 60);
+        const secs = seconds % 60;
+        return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    };
+
+    const handleSaveQR = () => {
+        Alert.alert('บันทึกรูปภาพสำเร็จ', 'QR Code ถูกบันทึกลงในเครื่องของคุณแล้ว', [
+            { 
+                text: 'ตกลง', 
+                onPress: () => {
+                    setStatus('verifying');
+                    // Simulate automatic verification after saving
+                    setTimeout(() => {
+                        setStatus('success');
+                    }, 3000);
+                }
+            },
         ]);
+    };
+
+    const getStatusIcon = () => {
+        switch (status) {
+            case 'waiting': return '🟡 รอการชำระเงิน';
+            case 'verifying': return '🟠 กำลังตรวจสอบ';
+            case 'success': return '🟢 ชำระเงินสำเร็จ';
+            case 'expired': return '🔴 หมดเวลาชำระเงิน';
+        }
     };
 
     return (
@@ -25,38 +67,82 @@ export default function PaymentScreen({ navigation, route }: Props) {
                 <Text style={styles.subtitle}>{venueName}</Text>
                 <Text style={styles.bookingId}>Booking ID: {bookingId}</Text>
 
+                <View style={[styles.statusBadge, status === 'expired' && styles.expiredBadge]}>
+                    <Text style={[styles.statusText, status === 'expired' && styles.expiredText]}>{getStatusIcon()}</Text>
+                </View>
+
+                {status === 'waiting' && (
+                    <Text style={styles.timerHint}>⏳ เหลือเวลา {formatTime(timeLeft)}</Text>
+                )}
+
                 <View style={styles.divider} />
 
-                <View style={styles.priceRow}>
-                    <Text style={styles.totalLabel}>ยอดที่ต้องชำระ</Text>
+                <View style={styles.priceContainer}>
+                    <Text style={styles.totalLabel}>💰 ยอดที่ต้องชำระ</Text>
                     <Text style={styles.totalValue}>฿{totalPrice.toLocaleString()}</Text>
                 </View>
 
-                <View style={styles.qrContainer}>
-                    <Text style={styles.qrLabel}>Scan QR Code เพื่อชำrateเงิน</Text>
-                    <Image
-                        source={{ uri: 'https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=PromptPay_Mock_Data' }}
-                        style={styles.qrImage}
-                    />
-                    <Text style={styles.promptPayText}>PromptPay / QR Payment</Text>
-                </View>
+                {status === 'success' ? (
+                    <View style={styles.successCard}>
+                        <Text style={styles.successTitle}>✅ ชำระเงินสำเร็จ</Text>
+                        <Text style={styles.successText}>จองสนามเรียบร้อยแล้ว!</Text>
+                        <TouchableOpacity 
+                            style={styles.bookingsButton} 
+                            onPress={() => navigation.navigate('MyBookings' as any)}
+                        >
+                            <Text style={styles.bookingsButtonText}>ไปหน้าการจองของฉัน</Text>
+                        </TouchableOpacity>
+                    </View>
+                ) : status === 'expired' ? (
+                    <View style={styles.expiredCard}>
+                        <Text style={styles.expiredTitle}>ขออภัย เวลาชำระเงินหมดลงแล้ว</Text>
+                        <Text style={styles.expiredSubtitle}>กรุณาทำรายการจองใหม่อีกครั้ง</Text>
+                        <TouchableOpacity 
+                            style={styles.backToBookingButton} 
+                            onPress={() => navigation.goBack()}
+                        >
+                            <Text style={styles.backToBookingText}>กลับไปหน้าจอง</Text>
+                        </TouchableOpacity>
+                    </View>
+                ) : (
+                    <>
+                        <View style={styles.qrContainer}>
+                            {status === 'verifying' ? (
+                                <View style={styles.verifyingContainer}>
+                                    <ActivityIndicator size="large" color="#1a5f2a" />
+                                    <Text style={styles.verifyingText}>กำลังตรวจสอบการชำระเงิน...</Text>
+                                </View>
+                            ) : (
+                                <>
+                                    <Text style={styles.qrLabel}>Scan QR Code เพื่อชำระเงิน</Text>
+                                    <Image
+                                        source={{ uri: 'https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=PromptPay_Mock_Data' }}
+                                        style={styles.qrImage}
+                                    />
+                                    <Text style={styles.promptPayText}>PromptPay / QR Payment</Text>
+                                    
+                                    <TouchableOpacity style={styles.saveQRButton} onPress={handleSaveQR}>
+                                        <Text style={styles.saveQRButtonText}>📥 บันทึกรูปภาพ</Text>
+                                    </TouchableOpacity>
+                                </>
+                            )}
+                        </View>
 
-                <View style={styles.instructionCard}>
-                    <Text style={styles.instructionTitle}>ขั้นตอนการชำระเงิน:</Text>
-                    <Text style={styles.instructionText}>1. บันทึกรูปภาพ QR Code หรือสแกนจากหน้าจอนี้</Text>
-                    <Text style={styles.instructionText}>2. เปิดแอปพลิเคชันธนาคารของคุณ</Text>
-                    <Text style={styles.instructionText}>3. เลือกเมนูสแกนจ่าย และตรวจสอบยอดเงิน</Text>
-                    <Text style={styles.instructionText}>4. เมื่อชำระเงินสำเร็จ ระบบจะแจ้งเตือนคุณ</Text>
-                </View>
+                        {status !== 'verifying' && (
+                            <View style={styles.instructionCard}>
+                                <Text style={styles.instructionTitle}>ขั้นตอนการชำระเงิน:</Text>
+                                <Text style={styles.instructionText}>1. กดปุ่มบันทึกรูปภาพ QR Code</Text>
+                                <Text style={styles.instructionText}>2. เปิดแอปพลิเคชันธนาคารของคุณเพื่อสแกนจ่าย</Text>
+                                <Text style={styles.instructionText}>3. ระบบจะตรวจสอบยอดเงินให้อัตโนมัติ</Text>
+                            </View>
+                        )}
+
+                        <TouchableOpacity style={styles.cancelButton} onPress={() => navigation.goBack()}>
+                            <Text style={styles.cancelButtonText}>ยกเลิกรายการ</Text>
+                        </TouchableOpacity>
+                    </>
+                )}
             </View>
-
-            <TouchableOpacity style={styles.confirmButton} onPress={handleFinish}>
-                <Text style={styles.confirmButtonText}>แจ้งชำระเงินสำเร็จ</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity style={styles.cancelButton} onPress={() => navigation.goBack()}>
-                <Text style={styles.cancelButtonText}>ยกเลิก</Text>
-            </TouchableOpacity>
         </ScrollView>
     );
 }
@@ -99,12 +185,34 @@ const styles = StyleSheet.create({
         textAlign: 'center',
         marginTop: 4,
     },
+    statusBadge: {
+        backgroundColor: '#fafafa',
+        paddingVertical: 8,
+        paddingHorizontal: 16,
+        borderRadius: 12,
+        marginTop: 16,
+        alignSelf: 'center',
+        borderWidth: 1,
+        borderColor: '#eee',
+    },
+    statusText: {
+        fontSize: 14,
+        fontWeight: '700',
+        color: '#555',
+    },
+    timerHint: {
+        fontSize: 16,
+        color: '#d32f2f',
+        fontWeight: '800',
+        textAlign: 'center',
+        marginTop: 16,
+    },
     divider: {
         height: 1,
         backgroundColor: '#eee',
         marginVertical: 20,
     },
-    priceRow: {
+    priceContainer: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
@@ -113,10 +221,11 @@ const styles = StyleSheet.create({
     totalLabel: {
         fontSize: 16,
         color: '#666',
+        fontWeight: '600',
     },
     totalValue: {
-        fontSize: 28,
-        fontWeight: '800',
+        fontSize: 32,
+        fontWeight: '900',
         color: '#1a5f2a',
     },
     qrContainer: {
@@ -126,6 +235,17 @@ const styles = StyleSheet.create({
         borderRadius: 16,
         borderWidth: 1,
         borderColor: '#e8f0e8',
+        minHeight: 280,
+        justifyContent: 'center',
+    },
+    verifyingContainer: {
+        alignItems: 'center',
+    },
+    verifyingText: {
+        marginTop: 16,
+        fontSize: 15,
+        color: '#1a5f2a',
+        fontWeight: '600',
     },
     qrLabel: {
         fontSize: 14,
@@ -142,7 +262,7 @@ const styles = StyleSheet.create({
         marginTop: 16,
         fontSize: 16,
         fontWeight: '700',
-        color: '#004677', // PromptPay Blue
+        color: '#004677',
     },
     instructionCard: {
         marginTop: 24,
@@ -190,5 +310,86 @@ const styles = StyleSheet.create({
         color: '#999',
         fontSize: 14,
         fontWeight: '600',
+    },
+    successCard: {
+        backgroundColor: '#f0f9f1',
+        padding: 30,
+        borderRadius: 20,
+        alignItems: 'center',
+        borderWidth: 1,
+        borderColor: '#d4edda',
+    },
+    successTitle: {
+        fontSize: 22,
+        fontWeight: '800',
+        color: '#1a5f2a',
+        marginBottom: 10,
+    },
+    successText: {
+        fontSize: 16,
+        color: '#4a7c59',
+        textAlign: 'center',
+        marginBottom: 20,
+    },
+    bookingsButton: {
+        backgroundColor: '#1a5f2a',
+        paddingVertical: 14,
+        paddingHorizontal: 30,
+        borderRadius: 12,
+    },
+    bookingsButtonText: {
+        color: '#fff',
+        fontSize: 16,
+        fontWeight: '700',
+    },
+    saveQRButton: {
+        backgroundColor: '#004677',
+        paddingVertical: 10,
+        paddingHorizontal: 20,
+        borderRadius: 10,
+        marginTop: 16,
+    },
+    saveQRButtonText: {
+        color: '#fff',
+        fontSize: 14,
+        fontWeight: '700',
+    },
+    expiredBadge: {
+        backgroundColor: '#ffebee',
+        borderColor: '#ffcdd2',
+    },
+    expiredText: {
+        color: '#d32f2f',
+    },
+    expiredCard: {
+        backgroundColor: '#fff5f5',
+        padding: 30,
+        borderRadius: 20,
+        alignItems: 'center',
+        borderWidth: 1,
+        borderColor: '#ffdee2',
+    },
+    expiredTitle: {
+        fontSize: 18,
+        fontWeight: '800',
+        color: '#d32f2f',
+        marginBottom: 8,
+    },
+    expiredSubtitle: {
+        fontSize: 14,
+        color: '#666',
+        textAlign: 'center',
+        marginBottom: 20,
+    },
+    backToBookingButton: {
+        backgroundColor: '#d32f2f',
+        paddingVertical: 12,
+        paddingHorizontal: 24,
+        borderRadius: 10,
+    },
+    backToBookingText: {
+        color: '#fff',
+        fontSize: 16,
+        fontWeight: '700',
     },
 });
