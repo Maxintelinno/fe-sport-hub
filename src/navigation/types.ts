@@ -3,7 +3,15 @@ import { Venue } from '../types';
 export type CustomerStackParamList = {
     VenueList: undefined;
     VenueDetail: { venueId: string };
-    BookingForm: { venueId: string; date: string; startTime: string; endTime: string };
+    BookingForm: { 
+        venueId: string; 
+        courtId: string; 
+        courtName: string; 
+        date: string; 
+        startTime: string; 
+        endTime: string;
+        pricePerHour: number;
+    };
     Payment: { bookingId: string; venueName: string; totalPrice: number };
     SportsInsights: undefined;
     InsightDetail: { insightId: string };
@@ -15,7 +23,15 @@ export type OwnerStackParamList = {
     // Public Screens
     VenueList: undefined;
     VenueDetail: { venueId: string };
-    BookingForm: { venueId: string; date: string; startTime: string; endTime: string };
+    BookingForm: { 
+        venueId: string; 
+        courtId: string; 
+        courtName: string; 
+        date: string; 
+        startTime: string; 
+        endTime: string;
+        pricePerHour: number;
+    };
     Payment: { bookingId: string; venueName: string; totalPrice: number };
     SportsInsights: undefined;
     // Owner Management

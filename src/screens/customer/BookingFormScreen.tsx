@@ -4,7 +4,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RouteProp } from '@react-navigation/native';
 import { CustomerStackParamList } from '../../navigation/types';
 import { getFieldById } from '../../services/venueService';
-import { getCourtsByField, createCourt, createBooking } from '../../services/bookingService';
+import { createBooking } from '../../services/bookingService';
 import { Venue, Court } from '../../types';
 import { useAuth } from '../../context/AuthContext';
 
@@ -14,7 +14,7 @@ type Props = {
 };
 
 export default function BookingFormScreen({ navigation, route }: Props) {
-  const { venueId, date, startTime, endTime } = route.params;
+  const { venueId, courtId, courtName, date, startTime, endTime, pricePerHour } = route.params;
   const { user } = useAuth();
   const [venue, setVenue] = useState<Venue | null>(null);
   const [loading, setLoading] = useState(true);
@@ -60,47 +60,31 @@ export default function BookingFormScreen({ navigation, route }: Props) {
   const startHour = parseInt(startTime.slice(0, 2), 10);
   const endHour = parseInt(endTime.slice(0, 2), 10);
   const hours = endHour - startHour;
-  const pricePerHour = venue.price_per_hour || venue.pricePerHour || 0;
   const totalPrice = pricePerHour * hours;
 
   const handleConfirm = async () => {
     try {
       setBookingLoading(true);
 
-      // 1. Check Courts
-      console.log('Step 1: Checking courts for field:', venue.id);
-      const courts = await getCourtsByField(venue.id);
-      let targetCourt = courts.find(c => c.name === 'คอร์ท A1' || c.status === 'active');
-
-      // 2. Create Court if not exists
-      if (!targetCourt) {
-        console.log('Step 2: Court not found, creating "คอร์ท A1"');
-        targetCourt = await createCourt({
-          field_id: venue.id,
-          name: 'คอร์ท A1',
-          price_per_hour: pricePerHour
-        });
-      }
-
-      // 3. Create Booking
-      console.log('Step 3: Creating booking for court:', targetCourt.id);
+      // Create Booking
+      console.log('Creating booking for court:', courtId);
       const bookingResponse = await createBooking({
-        user_id: user.id || 'bb1c049c-b134-426f-8a9d-8ca18a5aaaf3', // Use ID from request if local is empty
+        user_id: user.id,
         field_id: venue.id,
         booking_date: date,
         note: 'จองล่วงหน้า',
         items: [
           {
-            court_id: targetCourt.id,
+            court_id: courtId,
             start_time: startTime,
             end_time: endTime
           }
         ]
       });
 
-      console.log('Step 4: Booking created successfully:', bookingResponse.booking_no);
+      console.log('Booking created successfully:', bookingResponse.booking_no);
       
-      Alert.alert('จองสำเร็จ', `การจองหมายเลข ${bookingResponse.booking_no} สำเร็จแล้ว`, [
+      Alert.alert('จองสำเร็จ', `การจองคอร์ท ${courtName} หมายเลข ${bookingResponse.booking_no} สำเร็จแล้ว`, [
         {
           text: 'ดูการจองของฉัน',
           onPress: () => navigation.navigate('MyBookings' as any)
@@ -118,6 +102,7 @@ export default function BookingFormScreen({ navigation, route }: Props) {
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       <View style={styles.card}>
         <Text style={styles.venueName}>{venue.name}</Text>
+        <Text style={styles.courtNameLabel}>สนามย่อย: {courtName}</Text>
         <View style={styles.goldDivider} />
 
         <View style={styles.row}>
@@ -133,7 +118,7 @@ export default function BookingFormScreen({ navigation, route }: Props) {
           <Text style={styles.value}>{hours} ชม.</Text>
         </View>
         <View style={styles.row}>
-          <Text style={styles.label}>ราคากลางต่อชั่วโมง</Text>
+          <Text style={styles.label}>ราคาต่อชั่วโมง</Text>
           <Text style={styles.value}>฿{pricePerHour}</Text>
         </View>
         
@@ -184,7 +169,14 @@ const styles = StyleSheet.create({
     fontWeight: '900',
     color: '#1a1a1a',
     textAlign: 'center',
-    marginBottom: 8,
+    marginBottom: 4,
+  },
+  courtNameLabel: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#666',
+    textAlign: 'center',
+    marginBottom: 16,
   },
   goldDivider: {
     width: 40,

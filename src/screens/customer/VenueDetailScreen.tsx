@@ -4,8 +4,8 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RouteProp } from '@react-navigation/native';
 import { CustomerStackParamList } from '../../navigation/types';
 import { getFieldById } from '../../services/venueService';
-import { getFieldAvailability } from '../../services/bookingService';
-import { Venue, FieldAvailability } from '../../types';
+import { getFieldAvailability, getCourtsByField } from '../../services/bookingService';
+import { Venue, FieldAvailability, Court } from '../../types';
 import { useAuth } from '../../context/AuthContext';
 
 type Props = {
@@ -28,6 +28,9 @@ export default function VenueDetailScreen({ navigation, route }: Props) {
   const [selectedEnd, setSelectedEnd] = useState('');
   const [availability, setAvailability] = useState<FieldAvailability | null>(null);
   const [availabilityLoading, setAvailabilityLoading] = useState(false);
+  const [courts, setCourts] = useState<Court[]>([]);
+  const [selectedCourtId, setSelectedCourtId] = useState<string | null>(null);
+  const [loadingCourts, setLoadingCourts] = useState(false);
 
   // Initialize selected date to today when venue loads
   useEffect(() => {
@@ -75,8 +78,24 @@ export default function VenueDetailScreen({ navigation, route }: Props) {
       }
       console.log('--- AUTH GUARD PASSED --- Proceeding to fetch...');
       fetchVenueDetails();
+      fetchCourts();
     }
   }, [venueId, authLoading, isLoggedIn]);
+
+  const fetchCourts = async () => {
+    try {
+      setLoadingCourts(true);
+      const data = await getCourtsByField(venueId);
+      setCourts(data);
+      if (data.length > 0) {
+        setSelectedCourtId(data[0].id);
+      }
+    } catch (error) {
+      console.error('Error fetching courts:', error);
+    } finally {
+      setLoadingCourts(false);
+    }
+  };
 
   const fetchVenueDetails = async () => {
     try {
@@ -109,6 +128,34 @@ export default function VenueDetailScreen({ navigation, route }: Props) {
     } finally {
       setLoading(false);
     }
+  };
+  const minPrice = useMemo(() => {
+    const venuePrice = venue?.price_per_hour || venue?.pricePerHour || 0;
+    if (courts.length === 0) return venuePrice;
+    return Math.min(...courts.map(c => c.price_per_hour || 0));
+  }, [courts, venue]);
+
+  const getCourtStatus = (courtId: string) => {
+    if (!availability) return { label: 'ข้อมูลไม่พร้อม', color: '#999', emoji: '⚪' };
+    
+    const courtAvail = availability.courts.find(c => c.court_id === courtId);
+    if (!courtAvail) return { label: 'ว่าง', color: '#28a745', emoji: '🟢' };
+
+    const bookedCount = TIME_SLOTS.filter(slot => {
+      return courtAvail.booked_slots.some(booked => {
+        const slotStart = slot;
+        const bookedStart = booked.start_time.substring(0, 5);
+        const bookedEnd = booked.end_time.substring(0, 5);
+        return slotStart >= bookedStart && slotStart < bookedEnd;
+      });
+    }).length;
+
+    const totalSlots = TIME_SLOTS.length;
+    const freeSlots = totalSlots - bookedCount;
+
+    if (freeSlots === 0) return { label: 'เต็ม', color: '#dc3545', emoji: '🔴' };
+    if (freeSlots <= 3) return { label: 'เหลือน้อย', color: '#ffc107', emoji: '🟡' };
+    return { label: 'ว่าง', color: '#28a745', emoji: '🟢' };
   };
 
   const images = useMemo(() => {
@@ -147,32 +194,29 @@ export default function VenueDetailScreen({ navigation, route }: Props) {
   const isVenueActive = venue.status !== 'inactive' && venue.status !== 'pending_review';
 
   const isStartTimeBooked = (timeStr: string) => {
-    if (!availability) return false;
+    if (!availability || !selectedCourtId) return false;
     
-    // Check across all courts for this basic implementation.
-    return availability.courts.some(court => 
-      court.booked_slots.some(slot => {
-        const slotStart = slot.start_time.substring(0, 5); // "16:00"
-        const slotEnd = slot.end_time.substring(0, 5);     // "18:00"
-        // Start time is invalid if it falls in [slotStart, slotEnd) 
-        // e.g. "16:00", "17:00" are disabled.
+    const courtAvailability = availability.courts.find(c => c.court_id === selectedCourtId);
+    if (!courtAvailability) return false;
+
+    return courtAvailability.booked_slots.some(slot => {
+        const slotStart = slot.start_time.substring(0, 5);
+        const slotEnd = slot.end_time.substring(0, 5);
         return timeStr >= slotStart && timeStr < slotEnd;
-      })
-    );
+    });
   };
 
   const isEndTimeBooked = (timeStr: string) => {
-    if (!availability) return false;
+    if (!availability || !selectedCourtId) return false;
     
-    return availability.courts.some(court => 
-      court.booked_slots.some(slot => {
-        const slotStart = slot.start_time.substring(0, 5); // "16:00"
-        const slotEnd = slot.end_time.substring(0, 5);     // "18:00"
-        // End time is invalid if it falls in (slotStart, slotEnd]
-        // e.g. "17:00", "18:00" are disabled. "16:00" is fine.
+    const courtAvailability = availability.courts.find(c => c.court_id === selectedCourtId);
+    if (!courtAvailability) return false;
+
+    return courtAvailability.booked_slots.some(slot => {
+        const slotStart = slot.start_time.substring(0, 5);
+        const slotEnd = slot.end_time.substring(0, 5);
         return timeStr > slotStart && timeStr <= slotEnd;
-      })
-    );
+    });
   };
 
   const isRangeBooked = (start: string, end: string) => {
@@ -192,8 +236,8 @@ export default function VenueDetailScreen({ navigation, route }: Props) {
   };
 
   const handleBook = () => {
-    if (!selectedDate || !selectedStart || !selectedEnd) {
-      Alert.alert('กรุณาเลือกวันที่และเวลา');
+    if (!selectedCourtId || !selectedDate || !selectedStart || !selectedEnd) {
+      Alert.alert('กรุณาเลือกสนาม วันที่ และเวลา');
       return;
     }
 
@@ -202,11 +246,16 @@ export default function VenueDetailScreen({ navigation, route }: Props) {
       return;
     }
 
+    const selectedCourt = courts.find(c => c.id === selectedCourtId);
+
     navigation.navigate('BookingForm', {
       venueId: venue.id,
+      courtId: selectedCourtId,
+      courtName: selectedCourt?.name || '',
       date: selectedDate,
       startTime: selectedStart,
       endTime: selectedEnd,
+      pricePerHour: selectedCourt?.price_per_hour || 0
     });
   };
 
@@ -224,7 +273,6 @@ export default function VenueDetailScreen({ navigation, route }: Props) {
   const venueAddress = venue.address_line || venue.address;
   const venueOpenTime = venue.open_time || venue.openingTime;
   const venueCloseTime = venue.close_time || venue.closingTime;
-  const venuePrice = venue.price_per_hour || venue.pricePerHour;
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
@@ -245,7 +293,7 @@ export default function VenueDetailScreen({ navigation, route }: Props) {
       <Text style={styles.description}>{venueDescription}</Text>
       <Text style={styles.address}>📍 {venueAddress}</Text>
       <Text style={styles.hours}>🕐 {venueOpenTime} - {venueCloseTime}</Text>
-      {(venuePrice || 0) > 0 && <Text style={styles.price}>฿{venuePrice} / ชั่วโมง</Text>}
+      {minPrice > 0 && <Text style={styles.price}>เริ่มต้น ฿{minPrice} / ชั่วโมง</Text>}
 
       {!isVenueActive ? (
         <View style={styles.closedBox}>
@@ -254,6 +302,46 @@ export default function VenueDetailScreen({ navigation, route }: Props) {
         </View>
       ) : (
         <>
+          <Text style={styles.sectionTitle}>เลือกสนาม / คอร์ท</Text>
+          {loadingCourts ? (
+            <ActivityIndicator size="small" color="#1a5f2a" style={{ marginVertical: 10 }} />
+          ) : (
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.courtsContainer}>
+              {courts.map((court) => (
+                <TouchableOpacity
+                  key={court.id}
+                  style={[
+                    styles.courtCard,
+                    selectedCourtId === court.id && styles.courtCardSelected
+                  ]}
+                  onPress={() => {
+                    setSelectedCourtId(court.id);
+                    setSelectedStart('');
+                    setSelectedEnd('');
+                  }}
+                >
+                  <Text style={[styles.courtName, selectedCourtId === court.id && styles.courtNameSelected]}>
+                    {court.name}
+                  </Text>
+                  <View style={styles.statusRow}>
+                    <Text style={[styles.statusDot, { color: getCourtStatus(court.id).color }]}>
+                      {getCourtStatus(court.id).emoji}
+                    </Text>
+                    <Text style={[styles.statusLabel, { color: getCourtStatus(court.id).color }]}>
+                      {getCourtStatus(court.id).label}
+                    </Text>
+                  </View>
+                  <Text style={[styles.courtPrice, selectedCourtId === court.id && styles.courtPriceSelected]}>
+                    ฿{court.price_per_hour}/ชม.
+                  </Text>
+                  <Text style={[styles.courtInfo, selectedCourtId === court.id && styles.courtInfoSelected]}>
+                    {court.court_type} • {court.capacity} คน
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          )}
+
           <Text style={styles.sectionTitle}>เลือกวันที่</Text>
           <View style={styles.rowWrap}>
             {dates.map((d) => (
@@ -372,4 +460,62 @@ const styles = StyleSheet.create({
   closedBox: { backgroundColor: '#fff', margin: 16, padding: 16, borderRadius: 12, borderWidth: 1, borderColor: '#e0e0e0' },
   closedTitle: { fontSize: 16, fontWeight: '900', color: '#a11', marginBottom: 6 },
   closedSub: { fontSize: 14, color: '#666', fontWeight: '600' },
+  
+  courtsContainer: { paddingHorizontal: 16, gap: 12, paddingBottom: 10 },
+  courtCard: {
+    width: 160,
+    padding: 16,
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    borderWidth: 1.5,
+    borderColor: '#eee',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 5,
+    elevation: 2,
+  },
+  courtCardSelected: {
+    borderColor: '#1a5f2a',
+    backgroundColor: '#f0f7f0',
+  },
+  courtName: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: '#333',
+    marginBottom: 4,
+  },
+  courtNameSelected: {
+    color: '#1a5f2a',
+  },
+  courtPrice: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#1a5f2a',
+    marginBottom: 4,
+  },
+  courtPriceSelected: {
+    color: '#1a5f2a',
+  },
+  courtInfo: {
+    fontSize: 12,
+    color: '#666',
+    fontWeight: '600',
+  },
+  courtInfoSelected: {
+    color: '#4a7c59',
+  },
+  statusRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 4,
+    gap: 4,
+  },
+  statusDot: {
+    fontSize: 10,
+  },
+  statusLabel: {
+    fontSize: 12,
+    fontWeight: '700',
+  },
 });
