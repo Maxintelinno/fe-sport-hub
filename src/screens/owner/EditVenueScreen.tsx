@@ -149,6 +149,7 @@ export default function EditVenueScreen({ navigation, route }: Props) {
                         setCourts(prev => prev.filter(c => c.id !== courtId));
                         Alert.alert('สำเร็จ', 'ลบคอร์ทเรียบร้อยแล้ว');
                     } catch (error: any) {
+                        console.error('Delete court error:', error);
                         Alert.alert('ข้อผิดพลาด', error.message || 'ไม่สามารถลบได้');
                     }
                 }
@@ -165,25 +166,26 @@ export default function EditVenueScreen({ navigation, route }: Props) {
         setSavingCourt(true);
         try {
             if (editingCourt) {
-                const updated = await updateCourt(editingCourt.id, {
+                await updateCourt(editingCourt.id, {
+                    field_id: venue.id,
                     name: courtName,
                     court_type: courtType,
                     capacity: Number(courtCapacity),
-                    price_per_hour: Number(courtPrice)
+                    price_per_hour: Number(courtPrice),
+                    status: 'active'
                 });
-                setCourts(prev => prev.map(c => c.id === updated.id ? updated : c));
                 Alert.alert('สำเร็จ', 'อัปเดตข้อมูลคอร์ทเรียบร้อยแล้ว');
             } else {
-                const created = await createCourt({
+                await createCourt({
                     field_id: venue.id,
                     name: courtName,
                     price_per_hour: Number(courtPrice),
                     capacity: Number(courtCapacity),
                     court_type: courtType
                 });
-                setCourts(prev => [...prev, created]);
                 Alert.alert('สำเร็จ', 'เพิ่มคอร์ทย่อยเรียบร้อยแล้ว');
             }
+            await fetchCourts();
             setCourtModalVisible(false);
         } catch (error: any) {
             console.error('Save court error:', error);

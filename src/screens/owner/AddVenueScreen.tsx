@@ -79,7 +79,6 @@ export default function AddVenueScreen({ navigation }: Props) {
     // Form State
     const [name, setName] = useState('');
     const [sportType, setSportType] = useState('');
-    const [price, setPrice] = useState('');
     const [openingTime, setOpeningTime] = useState('08:00');
     const [closingTime, setClosingTime] = useState('22:00');
     const [description, setDescription] = useState('');
@@ -118,7 +117,6 @@ export default function AddVenueScreen({ navigation }: Props) {
     const resetForm = () => {
         setName('');
         setSportType('');
-        setPrice('');
         setOpeningTime('08:00');
         setClosingTime('22:00');
         setDescription('');
@@ -212,7 +210,7 @@ export default function AddVenueScreen({ navigation }: Props) {
     };
 
     const handleAddVenue = async () => {
-        if (!name || !sportType || !price || !address || !province || !district) {
+        if (!name || !sportType || !address || !province || !district) {
             Alert.alert('กรุณากรอกข้อมูลที่จำเป็นให้ครบถ้วน');
             return;
         }
@@ -226,7 +224,6 @@ export default function AddVenueScreen({ navigation }: Props) {
                 owner_id: user.id,
                 name,
                 sport_type: sportType,
-                price_per_hour: Number(price),
                 open_time: openingTime,
                 close_time: closingTime,
                 province: province.name,
@@ -240,7 +237,6 @@ export default function AddVenueScreen({ navigation }: Props) {
             addVenue({
                 name,
                 sport_type: sportType,
-                price_per_hour: Number(price),
                 open_time: openingTime,
                 close_time: closingTime,
                 description,
@@ -361,21 +357,12 @@ export default function AddVenueScreen({ navigation }: Props) {
                     />
 
                     <View style={styles.row}>
-                        <View style={{ flex: 1, marginRight: 8 }}>
+                        <View style={{ flex: 1 }}>
                             <RoyaltyPicker
                                 label="ประเภทกีฬา *"
                                 value={sportType}
                                 placeholder="เลือกกีฬา"
                                 onPress={() => setSportModal(true)}
-                            />
-                        </View>
-                        <View style={{ flex: 1, marginLeft: 8 }}>
-                            <InputField
-                                label="ราคาต่อชั่วโมง *"
-                                value={price}
-                                onChangeText={setPrice}
-                                placeholder="เช่น 1200"
-                                keyboardType="numeric"
                             />
                         </View>
                     </View>

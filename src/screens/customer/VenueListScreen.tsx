@@ -53,10 +53,12 @@ function VenueCard({ venue, onPress, onImagePress, onBookPress }: { venue: Venue
             <Text style={styles.inactiveBadge}>ปิดให้บริการ</Text>
           </View>
         )}
+      {(venue.price_per_hour || venue.pricePerHour || 0) > 0 && (
         <View style={styles.priceBadge}>
           <Text style={styles.priceText}>฿{venue.price_per_hour || venue.pricePerHour}</Text>
           <Text style={styles.priceUnit}>/ชม.</Text>
         </View>
+      )}
       </View>
 
       <View style={styles.cardBody}>

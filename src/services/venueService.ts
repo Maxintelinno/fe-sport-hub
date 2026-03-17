@@ -1,7 +1,7 @@
 import api from './api';
 import { Venue } from '../types';
 
-const API_URL = 'http://sport-hub-register-staging.up.railway.app';
+const API_URL = 'https://sport-hub-register-staging.up.railway.app';
 
 export interface PresignRequestFile {
     file_name: string;
@@ -69,7 +69,7 @@ export interface CreateFieldRequest {
     owner_id: string;
     name: string;
     sport_type: string;
-    price_per_hour: number;
+    price_per_hour?: number;
     open_time: string;
     close_time: string;
     province: string;

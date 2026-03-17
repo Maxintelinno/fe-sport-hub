@@ -1,7 +1,7 @@
 import api from './api';
 import { Court, Booking, FieldAvailability } from '../types';
 
-const API_URL = 'http://sport-hub-register-staging.up.railway.app';
+const API_URL = 'https://sport-hub-register-staging.up.railway.app';
 
 export interface CreateBookingRequest {
   user_id: string;
@@ -34,6 +34,7 @@ export interface CreateCourtsBulkRequest {
 }
 
 export interface UpdateCourtRequest {
+  field_id: string;
   name?: string;
   price_per_hour?: number;
   capacity?: number;

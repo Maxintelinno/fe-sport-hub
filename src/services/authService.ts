@@ -87,9 +87,9 @@ export async function getAuthToken(data: { id: string; phone: string; username: 
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      username: data.id,
+      username: data.username,
       phone: data.phone,
-      userid: data.username
+      userid: data.id
     }),
   });
 

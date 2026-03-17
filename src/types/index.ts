@@ -23,7 +23,7 @@ export interface Venue {
   owner_id: string;
   name: string;
   sport_type: string;
-  price_per_hour: number;
+  price_per_hour?: number;
   open_time: string;
   close_time: string;
   province: string;

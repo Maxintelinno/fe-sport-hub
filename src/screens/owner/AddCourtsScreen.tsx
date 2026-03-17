@@ -17,6 +17,8 @@ import { RouteProp } from '@react-navigation/native';
 import { OwnerStackParamList } from '../../navigation/types';
 import { createCourtsBulk } from '../../services/bookingService';
 
+import { useAuth } from '../../context/AuthContext';
+
 const { width } = Dimensions.get('window');
 
 type Props = {
@@ -34,6 +36,7 @@ interface CourtForm {
 
 export default function AddCourtsScreen({ navigation, route }: Props) {
   const { fieldId, fieldName } = route.params;
+  const { user } = useAuth();
   const [loading, setLoading] = useState(false);
 
   // Initialize with one empty court form
@@ -75,6 +78,11 @@ export default function AddCourtsScreen({ navigation, route }: Props) {
 
     setLoading(true);
     try {
+      if (!user) {
+        Alert.alert('ข้อผิดพลาด', 'ไม่พบข้อมูลผู้ใช้ กรุณาเข้าสู่ระบบใหม่');
+        return;
+      }
+
       const payload = {
         field_id: fieldId,
         courts: courts.map(court => ({

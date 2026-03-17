@@ -245,7 +245,7 @@ export default function VenueDetailScreen({ navigation, route }: Props) {
       <Text style={styles.description}>{venueDescription}</Text>
       <Text style={styles.address}>📍 {venueAddress}</Text>
       <Text style={styles.hours}>🕐 {venueOpenTime} - {venueCloseTime}</Text>
-      <Text style={styles.price}>฿{venuePrice} / ชั่วโมง</Text>
+      {(venuePrice || 0) > 0 && <Text style={styles.price}>฿{venuePrice} / ชั่วโมง</Text>}
 
       {!isVenueActive ? (
         <View style={styles.closedBox}>
