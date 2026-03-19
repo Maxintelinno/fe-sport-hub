@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity, Image, ScrollView, Alert, Act
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RouteProp } from '@react-navigation/native';
 import { CustomerStackParamList } from '../../navigation/types';
+import { generateQRCode } from '../../services/paymentService';
 
 type Props = {
     navigation: NativeStackNavigationProp<CustomerStackParamList, 'Payment'>;
@@ -15,6 +16,30 @@ export default function PaymentScreen({ navigation, route }: Props) {
     const { bookingId, venueName, totalPrice } = route.params;
     const [status, setStatus] = useState<PaymentStatus>('waiting');
     const [timeLeft, setTimeLeft] = useState(600); // 10 minutes
+    const [qrCode, setQrCode] = useState<string>('');
+    const [loadingQr, setLoadingQr] = useState(true);
+
+    useEffect(() => {
+        const fetchQRCode = async () => {
+            try {
+                setLoadingQr(true);
+                const response = await generateQRCode({
+                    booking_id: bookingId,
+                    amount: totalPrice.toFixed(2),
+                    reference1: bookingId.substring(0, 8).toUpperCase(),
+                    reference2: 'SPORT-HUB'
+                });
+                setQrCode(response.qrCode);
+            } catch (error: any) {
+                console.error('Error generating QR Code:', error);
+                Alert.alert('ข้อผิดพลาด', error.message || 'ไม่สามารถสร้าง QR Code ได้ กรุณาลองใหม่อีกครั้ง');
+            } finally {
+                setLoadingQr(false);
+            }
+        };
+
+        fetchQRCode();
+    }, [bookingId, totalPrice]);
 
     useEffect(() => {
         const timer = setInterval(() => {
@@ -115,10 +140,18 @@ export default function PaymentScreen({ navigation, route }: Props) {
                             ) : (
                                 <>
                                     <Text style={styles.qrLabel}>Scan QR Code เพื่อชำระเงิน</Text>
-                                    <Image
-                                        source={{ uri: 'https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=PromptPay_Mock_Data' }}
-                                        style={styles.qrImage}
-                                    />
+                                    {loadingQr ? (
+                                        <ActivityIndicator size="large" color="#1a5f2a" style={{ marginVertical: 40 }} />
+                                    ) : qrCode ? (
+                                        <Image
+                                            source={{ uri: `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(qrCode)}` }}
+                                            style={styles.qrImage}
+                                        />
+                                    ) : (
+                                        <View style={styles.qrErrorContainer}>
+                                            <Text style={styles.qrErrorText}>ไม่สามารถดึงข้อมูล QR Code ได้</Text>
+                                        </View>
+                                    )}
                                     <Text style={styles.promptPayText}>PromptPay / QR Payment</Text>
                                     
                                     <TouchableOpacity style={styles.saveQRButton} onPress={handleSaveQR}>
@@ -257,6 +290,20 @@ const styles = StyleSheet.create({
         width: 200,
         height: 200,
         backgroundColor: '#fff',
+    },
+    qrErrorContainer: {
+        width: 200,
+        height: 200,
+        backgroundColor: '#f8d7da',
+        justifyContent: 'center',
+        alignItems: 'center',
+        borderRadius: 8,
+    },
+    qrErrorText: {
+        color: '#721c24',
+        fontSize: 12,
+        textAlign: 'center',
+        padding: 10,
     },
     promptPayText: {
         marginTop: 16,
