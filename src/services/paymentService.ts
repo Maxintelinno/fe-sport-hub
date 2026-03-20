@@ -10,15 +10,9 @@ export interface QRGenerateRequest {
 }
 
 export interface QRGenerateResponse {
-    id: string; // Added ID for polling
-    partnerTxnUid: string;
-    partnerId: string;
-    statusCode: string;
-    errorCode: string;
-    errorDesc: string;
-    accountName: string;
+    paymentId: string;
     qrCode: string;
-    sof: string[];
+    status: string;
 }
 
 export async function generateQRCode(data: QRGenerateRequest): Promise<QRGenerateResponse> {
@@ -28,10 +22,6 @@ export async function generateQRCode(data: QRGenerateRequest): Promise<QRGenerat
 
     if (response.status >= 400) {
         throw new Error(response.data?.message || 'ไม่สามารถสร้าง QR Code ได้');
-    }
-
-    if (response.data.statusCode !== '00') {
-        throw new Error(response.data.errorDesc || 'เกิดข้อผิดพลาดในการสร้าง QR Code');
     }
 
     return response.data;
@@ -45,7 +35,7 @@ export interface PaymentStatusResponse {
     Method: string;
     Amount: number;
     Currency: string;
-    Status: 'pending' | 'success' | 'failed' | 'expired' | 'paid';
+    Status: 'pending' | 'success' | 'failed' | 'expired' | 'paid' | 'verifying';
     ProviderPaymentID: string | null;
     ProviderTransactionID: string | null;
     ProviderReference: string | null;

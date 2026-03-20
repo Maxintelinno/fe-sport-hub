@@ -352,9 +352,13 @@ export default function OwnerProfileScreen() {
             {/* Logout */}
             <TouchableOpacity
                 style={styles.logoutButton}
-                onPress={() => {
-                    logout();
-                    navigation.navigate('Browse');
+                onPress={async () => {
+                    await logout();
+                    // Reset navigation to Customer Home
+                    navigation.reset({
+                        index: 0,
+                        routes: [{ name: 'CustomerMain' as any }],
+                    });
                 }}
             >
                 <Text style={styles.logoutText}>ออกจากระบบ</Text>

@@ -108,7 +108,7 @@ export async function createBooking(data: CreateBookingRequest): Promise<Booking
 }
 
 export async function getMyBookings(userId: string): Promise<Booking[]> {
-  const response = await api.get(`${API_URL}/v1/bookings/my?user_id=${userId}`, {
+  const response = await api.get(`${API_URL}/v1/bookings/my?user_id=${userId}&t=${Date.now()}`, {
     validateStatus: () => true,
   });
 

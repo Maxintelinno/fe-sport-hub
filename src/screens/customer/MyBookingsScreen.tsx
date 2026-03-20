@@ -7,21 +7,23 @@ import { Booking } from '../../types';
 
 export default function MyBookingsScreen() {
   const { user, logout } = useAuth();
-  const navigation = useNavigation();
+  const navigation = useNavigation<any>();
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   const fetchBookings = async () => {
     if (!user) return;
     try {
       setLoading(true);
-      // Use stored user ID or the specific one from request for testing
-      const userId = user.id || 'bb1c049c-b134-426f-8a9d-8ca18a5aaaf3';
+      setErrorMsg(null);
+      const userId = user.id;
       const data = await getMyBookings(userId);
       setBookings(data);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error fetching bookings:', error);
+      setErrorMsg(error.message || 'ไม่สามารถดึงข้อมูลการจองได้');
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -63,6 +65,18 @@ export default function MyBookingsScreen() {
     return (
       <View style={[styles.container, styles.center]}>
         <ActivityIndicator size="large" color="#1a5f2a" />
+      </View>
+    );
+  }
+
+  if (errorMsg) {
+    return (
+      <View style={[styles.container, styles.center]}>
+        <RNText style={{ fontSize: 40, marginBottom: 16 }}>⚠️</RNText>
+        <Text style={styles.errorText}>{errorMsg}</Text>
+        <TouchableOpacity style={styles.browseBtn} onPress={fetchBookings}>
+          <Text style={styles.browseBtnText}>ลองใหม่อีกครั้ง</Text>
+        </TouchableOpacity>
       </View>
     );
   }
@@ -137,10 +151,13 @@ export default function MyBookingsScreen() {
       />
       <TouchableOpacity
         style={styles.logoutButton}
-        onPress={() => {
-          logout();
-          // @ts-ignore
-          navigation.navigate('Browse');
+        onPress={async () => {
+          await logout();
+          // Reset navigation and go to main page
+          navigation.reset({
+            index: 0,
+            routes: [{ name: 'Browse' as any }],
+          });
         }}
       >
         <Text style={styles.logoutText}>ออกจากระบบ</Text>
@@ -247,6 +264,14 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '700',
     color: '#333',
+  },
+  errorText: {
+    fontSize: 16,
+    color: '#dc2626',
+    fontWeight: '600',
+    textAlign: 'center',
+    marginBottom: 20,
+    paddingHorizontal: 40,
   },
   cardFooter: {
     flexDirection: 'row',

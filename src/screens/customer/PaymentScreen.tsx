@@ -37,21 +37,13 @@ export default function PaymentScreen({ navigation, route }: Props) {
                     reference1: bookingId.substring(0, 8).toUpperCase(),
                     reference2: 'SPORT-HUB'
                 });
-                console.log('FULL QR Generation Response Object:', response);
-                setQrCode(response.qrCode || (response as any).data?.qrCode);
+                
+                setQrCode(response.qrCode);
 
-                // Try to find the ID in various common locations
-                const pId = response.id || (response as any).ID || (response as any).payment_id ||
-                    (response as any).data?.id || (response as any).data?.ID;
-
-                if (pId) {
-                    console.log('✅ Found Payment ID:', pId);
-                    setPaymentId(pId);
+                if (response.paymentId) {
+                    setPaymentId(response.paymentId);
                 } else {
-                    console.log('❌ Payment ID NOT found in response. Available keys:', Object.keys(response));
-                    if ((response as any).data) {
-                        console.log('Available keys in data:', Object.keys((response as any).data));
-                    }
+                    console.error('Payment ID not found in generation response');
                 }
             } catch (error: any) {
                 console.error('Error generating QR Code:', error);
@@ -64,25 +56,18 @@ export default function PaymentScreen({ navigation, route }: Props) {
         fetchQRCode();
     }, [bookingId, totalPrice]);
 
-   console.log('✅ Start Polling for payment status');
-
     // Polling for payment status
     useEffect(() => {
-        // Allow polling if status is 'waiting' or 'pending'
-        console.log('Payment ID:', paymentId);
-        console.log('Status:', status);
-        if (!paymentId || (status !== 'waiting' && status !== 'pending')) return;
+        // Allow polling if status is 'pending', 'waiting' or 'verifying'
+        if (!paymentId || (status !== 'pending' && status !== 'waiting' && status !== 'verifying')) return;
 
-        console.log('Starting polling for payment ID:', paymentId);
         const pollInterval = setInterval(async () => {
             try {
-                console.log('Polling status for payment ID:', paymentId);
                 const response = await getPaymentStatus(paymentId);
-                console.log('Polling Response:', response);
                 const currentStatus = response.Status || (response as any).status;
 
                 if (currentStatus === 'success' || currentStatus === 'paid') {
-                    console.log('Payment Success detected! Status:', currentStatus);
+                    setStatus('success');
                     clearInterval(pollInterval);
                     setStatus('success');
 
@@ -95,10 +80,13 @@ export default function PaymentScreen({ navigation, route }: Props) {
                         totalPrice: tPrice,
                         paymentNo: response.PaymentNo || (response as any).payment_no || 'N/A'
                     });
+                } else if (currentStatus === 'verifying') {
+                    setStatus('verifying');
                 } else if (currentStatus === 'failed' || currentStatus === 'expired') {
-                    console.log('Payment failed or expired:', currentStatus);
                     clearInterval(pollInterval);
                     setStatus('expired');
+                } else if (currentStatus === 'pending' || currentStatus === 'waiting') {
+                    setStatus('pending');
                 }
             } catch (error) {
                 console.error('Polling error:', error);
@@ -106,7 +94,6 @@ export default function PaymentScreen({ navigation, route }: Props) {
         }, 5000); // Poll every 5 seconds
 
         return () => {
-            console.log('Clearing polling interval for ID:', paymentId);
             clearInterval(pollInterval);
         };
     }, [paymentId, status]);

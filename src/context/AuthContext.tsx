@@ -74,7 +74,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = useCallback(async () => {
     setUser(null);
     setAuthToken(null);
-    await AsyncStorage.removeItem(AUTH_STORAGE_KEY);
+    try {
+      await AsyncStorage.clear();
+    } catch (e) {
+      console.error('Error clearing storage:', e);
+      await AsyncStorage.removeItem(AUTH_STORAGE_KEY);
+    }
   }, []);
 
   return (
