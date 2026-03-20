@@ -13,6 +13,7 @@ export type CustomerStackParamList = {
         pricePerHour: number;
     };
     Payment: { bookingId: string; venueName: string; totalPrice: number };
+    PaymentSuccess: { bookingId: string; venueName: string; totalPrice: number; paymentNo: string };
     SportsInsights: undefined;
     InsightDetail: { insightId: string };
     Ads: undefined;
@@ -33,6 +34,7 @@ export type OwnerStackParamList = {
         pricePerHour: number;
     };
     Payment: { bookingId: string; venueName: string; totalPrice: number };
+    PaymentSuccess: { bookingId: string; venueName: string; totalPrice: number; paymentNo: string };
     SportsInsights: undefined;
     // Owner Management
     MyVenues: undefined;

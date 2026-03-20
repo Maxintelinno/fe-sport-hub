@@ -10,7 +10,8 @@ import {
   SportsInsightsScreen,
   AdsScreen,
   AllPromotionsScreen,
-  InsightDetailScreen
+  InsightDetailScreen,
+  PaymentSuccessScreen
 } from '../screens/customer';
 import { Text as RNText, TouchableOpacity, View } from 'react-native';
 import { CustomerStackParamList } from './types';
@@ -50,6 +51,7 @@ function VenueStack() {
       <Stack.Screen name="Ads" component={AdsScreen} options={{ title: 'โฆษณา' }} />
       <Stack.Screen name="AllPromotions" component={AllPromotionsScreen} options={{ title: 'โปรโมชั่นพิเศษ' }} />
       <Stack.Screen name="InsightDetail" component={InsightDetailScreen} options={{ headerShown: false }} />
+      <Stack.Screen name="PaymentSuccess" component={PaymentSuccessScreen} options={{ headerShown: false }} />
     </Stack.Navigator>
   );
 }

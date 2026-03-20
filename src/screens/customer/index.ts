@@ -7,3 +7,4 @@ export { default as SportsInsightsScreen } from './SportsInsightsScreen';
 export { default as AdsScreen } from './AdsScreen';
 export { default as AllPromotionsScreen } from './AllPromotionsScreen';
 export { default as InsightDetailScreen } from './InsightDetailScreen';
+export { default as PaymentSuccessScreen } from './PaymentSuccessScreen';

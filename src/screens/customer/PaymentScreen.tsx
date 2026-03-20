@@ -1,23 +1,31 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image, ScrollView, Alert, ActivityIndicator } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RouteProp } from '@react-navigation/native';
 import { CustomerStackParamList } from '../../navigation/types';
-import { generateQRCode } from '../../services/paymentService';
+import { generateQRCode, getPaymentStatus } from '../../services/paymentService';
 
 type Props = {
     navigation: NativeStackNavigationProp<CustomerStackParamList, 'Payment'>;
     route: RouteProp<CustomerStackParamList, 'Payment'>;
 };
 
-type PaymentStatus = 'waiting' | 'verifying' | 'success' | 'expired';
+type PaymentStatus = 'waiting' | 'pending' | 'verifying' | 'success' | 'expired';
 
 export default function PaymentScreen({ navigation, route }: Props) {
     const { bookingId, venueName, totalPrice } = route.params;
-    const [status, setStatus] = useState<PaymentStatus>('waiting');
+    const [status, setStatus] = useState<PaymentStatus>('pending');
     const [timeLeft, setTimeLeft] = useState(600); // 10 minutes
     const [qrCode, setQrCode] = useState<string>('');
     const [loadingQr, setLoadingQr] = useState(true);
+    const [paymentId, setPaymentId] = useState<string | null>(null);
+
+    // Use refs for stable access in polling to prevent interval restarts
+    const paramsRef = useRef({ bookingId, venueName, totalPrice, navigation });
+
+    useEffect(() => {
+        paramsRef.current = { bookingId, venueName, totalPrice, navigation };
+    }, [bookingId, venueName, totalPrice, navigation]);
 
     useEffect(() => {
         const fetchQRCode = async () => {
@@ -29,7 +37,22 @@ export default function PaymentScreen({ navigation, route }: Props) {
                     reference1: bookingId.substring(0, 8).toUpperCase(),
                     reference2: 'SPORT-HUB'
                 });
-                setQrCode(response.qrCode);
+                console.log('FULL QR Generation Response Object:', response);
+                setQrCode(response.qrCode || (response as any).data?.qrCode);
+
+                // Try to find the ID in various common locations
+                const pId = response.id || (response as any).ID || (response as any).payment_id ||
+                    (response as any).data?.id || (response as any).data?.ID;
+
+                if (pId) {
+                    console.log('✅ Found Payment ID:', pId);
+                    setPaymentId(pId);
+                } else {
+                    console.log('❌ Payment ID NOT found in response. Available keys:', Object.keys(response));
+                    if ((response as any).data) {
+                        console.log('Available keys in data:', Object.keys((response as any).data));
+                    }
+                }
             } catch (error: any) {
                 console.error('Error generating QR Code:', error);
                 Alert.alert('ข้อผิดพลาด', error.message || 'ไม่สามารถสร้าง QR Code ได้ กรุณาลองใหม่อีกครั้ง');
@@ -40,6 +63,53 @@ export default function PaymentScreen({ navigation, route }: Props) {
 
         fetchQRCode();
     }, [bookingId, totalPrice]);
+
+   console.log('✅ Start Polling for payment status');
+
+    // Polling for payment status
+    useEffect(() => {
+        // Allow polling if status is 'waiting' or 'pending'
+        console.log('Payment ID:', paymentId);
+        console.log('Status:', status);
+        if (!paymentId || (status !== 'waiting' && status !== 'pending')) return;
+
+        console.log('Starting polling for payment ID:', paymentId);
+        const pollInterval = setInterval(async () => {
+            try {
+                console.log('Polling status for payment ID:', paymentId);
+                const response = await getPaymentStatus(paymentId);
+                console.log('Polling Response:', response);
+                const currentStatus = response.Status || (response as any).status;
+
+                if (currentStatus === 'success' || currentStatus === 'paid') {
+                    console.log('Payment Success detected! Status:', currentStatus);
+                    clearInterval(pollInterval);
+                    setStatus('success');
+
+                    const { bookingId: bId, venueName: vName, totalPrice: tPrice, navigation: nav } = paramsRef.current;
+
+                    // Navigate to Success Screen
+                    nav.navigate('PaymentSuccess', {
+                        bookingId: bId,
+                        venueName: vName,
+                        totalPrice: tPrice,
+                        paymentNo: response.PaymentNo || (response as any).payment_no || 'N/A'
+                    });
+                } else if (currentStatus === 'failed' || currentStatus === 'expired') {
+                    console.log('Payment failed or expired:', currentStatus);
+                    clearInterval(pollInterval);
+                    setStatus('expired');
+                }
+            } catch (error) {
+                console.error('Polling error:', error);
+            }
+        }, 5000); // Poll every 5 seconds
+
+        return () => {
+            console.log('Clearing polling interval for ID:', paymentId);
+            clearInterval(pollInterval);
+        };
+    }, [paymentId, status]);
 
     useEffect(() => {
         const timer = setInterval(() => {
@@ -62,23 +132,13 @@ export default function PaymentScreen({ navigation, route }: Props) {
     };
 
     const handleSaveQR = () => {
-        Alert.alert('บันทึกรูปภาพสำเร็จ', 'QR Code ถูกบันทึกลงในเครื่องของคุณแล้ว', [
-            { 
-                text: 'ตกลง', 
-                onPress: () => {
-                    setStatus('verifying');
-                    // Simulate automatic verification after saving
-                    setTimeout(() => {
-                        setStatus('success');
-                    }, 3000);
-                }
-            },
-        ]);
+        Alert.alert('บันทึกรูปภาพสำเร็จ', 'QR Code ถูกบันทึกลงในเครื่องของคุณแล้ว');
     };
 
     const getStatusIcon = () => {
         switch (status) {
-            case 'waiting': return '🟡 รอการชำระเงิน';
+            case 'waiting':
+            case 'pending': return '🟡 รอการชำระเงิน';
             case 'verifying': return '🟠 กำลังตรวจสอบ';
             case 'success': return '🟢 ชำระเงินสำเร็จ';
             case 'expired': return '🔴 หมดเวลาชำระเงิน';
@@ -96,7 +156,7 @@ export default function PaymentScreen({ navigation, route }: Props) {
                     <Text style={[styles.statusText, status === 'expired' && styles.expiredText]}>{getStatusIcon()}</Text>
                 </View>
 
-                {status === 'waiting' && (
+                {(status === 'waiting' || status === 'pending') && (
                     <Text style={styles.timerHint}>⏳ เหลือเวลา {formatTime(timeLeft)}</Text>
                 )}
 
@@ -111,8 +171,8 @@ export default function PaymentScreen({ navigation, route }: Props) {
                     <View style={styles.successCard}>
                         <Text style={styles.successTitle}>✅ ชำระเงินสำเร็จ</Text>
                         <Text style={styles.successText}>จองสนามเรียบร้อยแล้ว!</Text>
-                        <TouchableOpacity 
-                            style={styles.bookingsButton} 
+                        <TouchableOpacity
+                            style={styles.bookingsButton}
                             onPress={() => navigation.navigate('MyBookings' as any)}
                         >
                             <Text style={styles.bookingsButtonText}>ไปหน้าการจองของฉัน</Text>
@@ -122,8 +182,8 @@ export default function PaymentScreen({ navigation, route }: Props) {
                     <View style={styles.expiredCard}>
                         <Text style={styles.expiredTitle}>ขออภัย เวลาชำระเงินหมดลงแล้ว</Text>
                         <Text style={styles.expiredSubtitle}>กรุณาทำรายการจองใหม่อีกครั้ง</Text>
-                        <TouchableOpacity 
-                            style={styles.backToBookingButton} 
+                        <TouchableOpacity
+                            style={styles.backToBookingButton}
                             onPress={() => navigation.goBack()}
                         >
                             <Text style={styles.backToBookingText}>กลับไปหน้าจอง</Text>
@@ -153,7 +213,7 @@ export default function PaymentScreen({ navigation, route }: Props) {
                                         </View>
                                     )}
                                     <Text style={styles.promptPayText}>PromptPay / QR Payment</Text>
-                                    
+
                                     <TouchableOpacity style={styles.saveQRButton} onPress={handleSaveQR}>
                                         <Text style={styles.saveQRButtonText}>📥 บันทึกรูปภาพ</Text>
                                     </TouchableOpacity>

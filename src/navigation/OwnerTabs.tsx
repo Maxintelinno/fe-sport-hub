@@ -7,7 +7,8 @@ import {
   VenueDetailScreen,
   BookingFormScreen,
   PaymentScreen,
-  SportsInsightsScreen
+  SportsInsightsScreen,
+  PaymentSuccessScreen
 } from '../screens/customer';
 import MyVenuesScreen from '../screens/owner/MyVenuesScreen';
 import AddVenueScreen from '../screens/owner/AddVenueScreen';
@@ -38,6 +39,7 @@ function PublicVenueStack() {
       <Stack.Screen name="BookingForm" component={BookingFormScreen} options={{ title: 'จองสนาม' }} />
       <Stack.Screen name="Payment" component={PaymentScreen} options={{ title: 'ชำระเงิน' }} />
       <Stack.Screen name="SportsInsights" component={SportsInsightsScreen} options={{ title: 'สาระน่ารู้ & เทคนิคกีฬา' }} />
+      <Stack.Screen name="PaymentSuccess" component={PaymentSuccessScreen} options={{ headerShown: false }} />
     </Stack.Navigator>
   );
 }
