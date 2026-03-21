@@ -83,6 +83,7 @@ export interface BookingItem {
   booking_id: string;
   field_id: string;
   court_id: string;
+  court_name?: string;
   booking_date: string;
   start_time: string;
   end_time: string;

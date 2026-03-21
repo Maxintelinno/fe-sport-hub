@@ -125,7 +125,7 @@ export default function MyBookingsScreen() {
               {item.items.map((subItem, idx) => (
                 <View key={subItem.id || idx} style={styles.courtRow}>
                   <View style={styles.courtInfo}>
-                    <Text style={styles.courtName}>รายการที่ {idx + 1}</Text>
+                    <Text style={styles.courtName}>{subItem.court_name || `รายการที่ ${idx + 1}`}</Text>
                     <Text style={styles.timeInfo}>
                       🕒 {formatTime(subItem.start_time)} - {formatTime(subItem.end_time)}
                     </Text>

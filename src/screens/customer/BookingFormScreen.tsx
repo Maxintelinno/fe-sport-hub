@@ -14,7 +14,7 @@ type Props = {
 };
 
 export default function BookingFormScreen({ navigation, route }: Props) {
-  const { venueId, courtId, courtName, date, startTime, endTime, pricePerHour } = route.params;
+  const { venueId, courtId, courtName, date, selectedSlots, pricePerHour } = route.params;
   const { user } = useAuth();
   const [venue, setVenue] = useState<Venue | null>(null);
   const [loading, setLoading] = useState(true);
@@ -80,9 +80,7 @@ export default function BookingFormScreen({ navigation, route }: Props) {
     );
   }
 
-  const startHour = parseInt(startTime.slice(0, 2), 10);
-  const endHour = parseInt(endTime.slice(0, 2), 10);
-  const hours = endHour - startHour;
+  const hours = selectedSlots.length;
   const totalPrice = pricePerHour * hours;
 
   const handleConfirm = async () => {
@@ -96,13 +94,11 @@ export default function BookingFormScreen({ navigation, route }: Props) {
         field_id: venue.id,
         booking_date: date,
         note: 'จองล่วงหน้า',
-        items: [
-          {
-            court_id: courtId,
-            start_time: startTime,
-            end_time: endTime
-          }
-        ]
+        items: selectedSlots.map(slot => ({
+          court_id: courtId,
+          start_time: slot.start,
+          end_time: slot.end
+        }))
       });
 
       console.log('Booking created successfully:', bookingResponse.booking_no);
@@ -110,7 +106,8 @@ export default function BookingFormScreen({ navigation, route }: Props) {
       navigation.replace('Payment', { 
         bookingId: bookingResponse.id, 
         venueName: venue.name, 
-        totalPrice: totalPrice 
+        totalPrice: totalPrice,
+        bookingNo: bookingResponse.booking_no
       });
     } catch (error: any) {
       console.error('Booking Error:', error);
@@ -133,7 +130,11 @@ export default function BookingFormScreen({ navigation, route }: Props) {
         </View>
         <View style={styles.row}>
           <Text style={styles.label}>เวลา</Text>
-          <Text style={styles.value}>{startTime} - {endTime}</Text>
+          <View style={{ alignItems: 'flex-end' }}>
+            {selectedSlots.map((slot, index) => (
+              <Text key={index} style={styles.value}>{slot.label}</Text>
+            ))}
+          </View>
         </View>
         <View style={styles.row}>
           <Text style={styles.label}>จำนวนชั่วโมง</Text>

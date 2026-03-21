@@ -13,7 +13,7 @@ type Props = {
 type PaymentStatus = 'waiting' | 'pending' | 'verifying' | 'success' | 'expired';
 
 export default function PaymentScreen({ navigation, route }: Props) {
-    const { bookingId, venueName, totalPrice } = route.params;
+    const { bookingId, venueName, totalPrice, bookingNo } = route.params;
     const [status, setStatus] = useState<PaymentStatus>('pending');
     const [timeLeft, setTimeLeft] = useState(600); // 10 minutes
     const [qrCode, setQrCode] = useState<string>('');
@@ -21,11 +21,11 @@ export default function PaymentScreen({ navigation, route }: Props) {
     const [paymentId, setPaymentId] = useState<string | null>(null);
 
     // Use refs for stable access in polling to prevent interval restarts
-    const paramsRef = useRef({ bookingId, venueName, totalPrice, navigation });
+    const paramsRef = useRef({ bookingId, venueName, totalPrice, bookingNo, navigation });
 
     useEffect(() => {
-        paramsRef.current = { bookingId, venueName, totalPrice, navigation };
-    }, [bookingId, venueName, totalPrice, navigation]);
+        paramsRef.current = { bookingId, venueName, totalPrice, bookingNo, navigation };
+    }, [bookingId, venueName, totalPrice, bookingNo, navigation]);
 
     useEffect(() => {
         const fetchQRCode = async () => {
@@ -78,7 +78,8 @@ export default function PaymentScreen({ navigation, route }: Props) {
                         bookingId: bId,
                         venueName: vName,
                         totalPrice: tPrice,
-                        paymentNo: response.PaymentNo || (response as any).payment_no || 'N/A'
+                        paymentNo: response.PaymentNo || (response as any).payment_no || 'N/A',
+                        bookingNo: bookingNo
                     });
                 } else if (currentStatus === 'verifying') {
                     setStatus('verifying');
@@ -137,7 +138,7 @@ export default function PaymentScreen({ navigation, route }: Props) {
             <View style={styles.card}>
                 <Text style={styles.title}>ชำระเงิน</Text>
                 <Text style={styles.subtitle}>{venueName}</Text>
-                <Text style={styles.bookingId}>Booking ID: {bookingId}</Text>
+                <Text style={styles.bookingId}>Booking No: {bookingNo}</Text>
 
                 <View style={[styles.statusBadge, status === 'expired' && styles.expiredBadge]}>
                     <Text style={[styles.statusText, status === 'expired' && styles.expiredText]}>{getStatusIcon()}</Text>

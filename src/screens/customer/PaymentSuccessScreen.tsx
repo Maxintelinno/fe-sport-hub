@@ -10,7 +10,7 @@ type Props = {
 };
 
 export default function PaymentSuccessScreen({ navigation, route }: Props) {
-    const { bookingId, venueName, totalPrice, paymentNo } = route.params;
+    const { venueName, totalPrice, paymentNo, bookingNo } = route.params;
 
     return (
         <SafeAreaView style={styles.container}>
@@ -31,8 +31,8 @@ export default function PaymentSuccessScreen({ navigation, route }: Props) {
                             <Text style={styles.detailValue}>{venueName}</Text>
                         </View>
                         <View style={styles.detailRow}>
-                            <Text style={styles.detailLabel}>Booking ID</Text>
-                            <Text style={styles.detailValue}>{bookingId}</Text>
+                            <Text style={styles.detailLabel}>Booking No</Text>
+                            <Text style={styles.detailValue}>{bookingNo}</Text>
                         </View>
                         <View style={styles.detailRow}>
                             <Text style={styles.detailLabel}>เลขที่รายการ</Text>

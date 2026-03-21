@@ -8,12 +8,11 @@ export type CustomerStackParamList = {
         courtId: string; 
         courtName: string; 
         date: string; 
-        startTime: string; 
-        endTime: string;
+        selectedSlots: { start: string, end: string, label: string }[];
         pricePerHour: number;
     };
-    Payment: { bookingId: string; venueName: string; totalPrice: number };
-    PaymentSuccess: { bookingId: string; venueName: string; totalPrice: number; paymentNo: string };
+    Payment: { bookingId: string; venueName: string; totalPrice: number; bookingNo: string };
+    PaymentSuccess: { bookingId: string; venueName: string; totalPrice: number; paymentNo: string; bookingNo: string };
     SportsInsights: undefined;
     InsightDetail: { insightId: string };
     Ads: undefined;
@@ -29,12 +28,11 @@ export type OwnerStackParamList = {
         courtId: string; 
         courtName: string; 
         date: string; 
-        startTime: string; 
-        endTime: string;
+        selectedSlots: { start: string, end: string, label: string }[];
         pricePerHour: number;
     };
-    Payment: { bookingId: string; venueName: string; totalPrice: number };
-    PaymentSuccess: { bookingId: string; venueName: string; totalPrice: number; paymentNo: string };
+    Payment: { bookingId: string; venueName: string; totalPrice: number; bookingNo: string };
+    PaymentSuccess: { bookingId: string; venueName: string; totalPrice: number; paymentNo: string; bookingNo: string };
     SportsInsights: undefined;
     // Owner Management
     MyVenues: undefined;

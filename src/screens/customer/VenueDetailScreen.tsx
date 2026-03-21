@@ -23,8 +23,7 @@ export default function VenueDetailScreen({ navigation, route }: Props) {
   const [venue, setVenue] = useState<Venue | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedDate, setSelectedDate] = useState('');
-  const [selectedStart, setSelectedStart] = useState('');
-  const [selectedEnd, setSelectedEnd] = useState('');
+  const [selectedSlots, setSelectedSlots] = useState<{ start: string, end: string, label: string }[]>([]);
   const [availability, setAvailability] = useState<FieldAvailability | null>(null);
   const [availabilityLoading, setAvailabilityLoading] = useState(false);
   const [courts, setCourts] = useState<Court[]>([]);
@@ -147,6 +146,22 @@ export default function VenueDetailScreen({ navigation, route }: Props) {
     });
   };
 
+  const isSlotPast = (slotStart: string) => {
+    const today = new Date().toISOString().slice(0, 10);
+    if (selectedDate !== today) return false;
+
+    const [slotHour, slotMin] = slotStart.split(':').map(Number);
+    const now = new Date();
+    // Use the Thai timezone offset if necessary, but Date() usually works for local comparison 
+    // in React Native unless specifically handling UTC.
+    const currentHour = now.getHours();
+    const currentMin = now.getMinutes();
+
+    if (slotHour < currentHour) return true;
+    if (slotHour === currentHour && slotMin < currentMin) return true;
+    return false;
+  };
+
   const getCourtStatus = (courtId: string) => {
     if (!availability) return { label: 'ข้อมูลไม่พร้อม', color: '#999', emoji: '⚪' };
     const courtAvail = availability.courts.find(c => c.court_id === courtId);
@@ -189,7 +204,7 @@ export default function VenueDetailScreen({ navigation, route }: Props) {
   const isVenueActive = venue.status !== 'inactive' && venue.status !== 'pending_review';
 
   const handleBook = () => {
-    if (!selectedCourtId || !selectedDate || !selectedStart || !selectedEnd) {
+    if (!selectedCourtId || !selectedDate || selectedSlots.length === 0) {
       Alert.alert('กรุณาเลือกสนาม วันที่ และเวลา');
       return;
     }
@@ -199,8 +214,7 @@ export default function VenueDetailScreen({ navigation, route }: Props) {
       courtId: selectedCourtId,
       courtName: selectedCourt?.name || '',
       date: selectedDate,
-      startTime: selectedStart,
-      endTime: selectedEnd,
+      selectedSlots,
       pricePerHour: selectedCourt?.price_per_hour || 0
     });
   };
@@ -250,8 +264,7 @@ export default function VenueDetailScreen({ navigation, route }: Props) {
                   style={[styles.courtCard, selectedCourtId === court.id && styles.courtCardSelected]}
                   onPress={() => {
                     setSelectedCourtId(court.id);
-                    setSelectedStart('');
-                    setSelectedEnd('');
+                    setSelectedSlots([]);
                   }}
                 >
                   <Text style={[styles.courtName, selectedCourtId === court.id && styles.courtNameSelected]}>{court.name}</Text>
@@ -272,7 +285,10 @@ export default function VenueDetailScreen({ navigation, route }: Props) {
               <TouchableOpacity
                 key={d}
                 style={[styles.chip, selectedDate === d && styles.chipSelected]}
-                onPress={() => setSelectedDate(d)}
+                onPress={() => {
+                  setSelectedDate(d);
+                  setSelectedSlots([]);
+                }}
               >
                 <Text style={[styles.chipText, selectedDate === d && styles.chipTextSelected]}>
                   {new Date(d).getDate()}/{new Date(d).getMonth() + 1}
@@ -288,33 +304,40 @@ export default function VenueDetailScreen({ navigation, route }: Props) {
           <View style={styles.rowWrap}>
             {timeIntervals.map((interval) => {
               const booked = isIntervalBooked(interval.start, interval.end);
-              const isSelected = selectedStart === interval.start && selectedEnd === interval.end;
+              const past = isSlotPast(interval.start);
+              const isSelected = selectedSlots.some(s => s.start === interval.start);
+              
+              const disabled = booked || past;
+
               return (
               <TouchableOpacity
                 key={`slot-${interval.start}`}
                 style={[
                   styles.chip, 
                   isSelected && styles.chipSelected,
-                  booked && styles.chipDisabled,
+                  disabled && styles.chipDisabled,
                   { width: '47%' }
                 ]}
-                disabled={booked}
+                disabled={disabled}
                 onPress={() => {
-                  setSelectedStart(interval.start);
-                  setSelectedEnd(interval.end);
+                  if (isSelected) {
+                    setSelectedSlots(selectedSlots.filter(s => s.start !== interval.start));
+                  } else {
+                    setSelectedSlots([...selectedSlots, interval].sort((a, b) => a.start.localeCompare(b.start)));
+                  }
                 }}
               >
                 <Text style={[
                   styles.chipText, 
                   isSelected && styles.chipTextSelected,
-                  booked && styles.chipTextDisabled,
+                  disabled && styles.chipTextDisabled,
                   { textAlign: 'center' }
                 ]}>{interval.label}</Text>
               </TouchableOpacity>
             )})}
           </View>
 
-          {selectedCourtId && selectedDate && selectedStart && selectedEnd && (
+          {selectedCourtId && selectedDate && selectedSlots.length > 0 && (
             <View style={styles.summaryContainer}>
               <Text style={styles.summaryTitle}>สรุปรายการที่เลือก</Text>
               <View style={styles.summaryRow}>
@@ -327,15 +350,21 @@ export default function VenueDetailScreen({ navigation, route }: Props) {
               </View>
               <View style={styles.summaryRow}>
                 <Text style={styles.summaryLabel}>เวลา:</Text>
-                <Text style={styles.summaryValue}>{selectedStart} - {selectedEnd}</Text>
+                <Text style={styles.summaryValue}>{selectedSlots.map(s => s.label).join(', ')}</Text>
+              </View>
+              <View style={[styles.summaryRow, { marginTop: 8, borderTopWidth: 1, borderTopColor: '#f0f0f0', paddingTop: 8 }]}>
+                <Text style={styles.summaryLabel}>ราคารวม:</Text>
+                <Text style={[styles.summaryValue, { fontSize: 18 }]}>
+                  ฿{(courts.find(c => c.id === selectedCourtId)?.price_per_hour || 0) * selectedSlots.length}
+                </Text>
               </View>
             </View>
           )}
 
           <TouchableOpacity 
-            style={[styles.bookButton, (!selectedCourtId || !selectedDate || !selectedStart || !selectedEnd) && styles.bookButtonDisabled]} 
+            style={[styles.bookButton, (!selectedCourtId || !selectedDate || selectedSlots.length === 0) && styles.bookButtonDisabled]} 
             onPress={handleBook}
-            disabled={!selectedCourtId || !selectedDate || !selectedStart || !selectedEnd}
+            disabled={!selectedCourtId || !selectedDate || selectedSlots.length === 0}
           >
             <Text style={styles.bookButtonText}>จองสนาม</Text>
           </TouchableOpacity>
