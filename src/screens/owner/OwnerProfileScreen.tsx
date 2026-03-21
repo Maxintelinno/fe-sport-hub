@@ -249,6 +249,23 @@ export default function OwnerProfileScreen() {
                 </View>
             </View>
 
+            {/* Upgrade Card */}
+            <TouchableOpacity style={styles.upgradeCard}>
+                <View style={styles.upgradeLeft}>
+                    <View style={styles.upgradePlanBadge}>
+                        <Text>📦</Text>
+                        <Text style={styles.upgradePlanText}>Free Plan</Text>
+                    </View>
+                    <View style={styles.upgradeStatRow}>
+                        <Text style={styles.upgradeStatItem}>สนาม: 1/1</Text>
+                        <Text style={styles.upgradeStatItem}>คอร์ท: 2/2</Text>
+                    </View>
+                </View>
+                <View style={styles.upgradeAction}>
+                    <Text style={styles.upgradeActionText}>🚀 Upgrade Now</Text>
+                </View>
+            </TouchableOpacity>
+
             {/* Revenue Section */}
             <View style={styles.revenueCard}>
                 <View style={styles.revenueTitleRow}>
@@ -389,6 +406,70 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.25,
         shadowRadius: 16,
         elevation: 6,
+    },
+
+    // Upgrade Card
+    upgradeCard: {
+        backgroundColor: '#fff',
+        borderRadius: 24,
+        padding: 20,
+        marginBottom: 16,
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        borderWidth: 1,
+        borderColor: 'rgba(26, 95, 42, 0.1)',
+        shadowColor: '#1A5F2A',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.1,
+        shadowRadius: 10,
+        elevation: 4,
+    },
+    upgradeLeft: {
+        flex: 1,
+    },
+    upgradePlanBadge: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: 'rgba(26, 95, 42, 0.05)',
+        paddingHorizontal: 12,
+        paddingVertical: 4,
+        borderRadius: 10,
+        alignSelf: 'flex-start',
+        marginBottom: 12,
+    },
+    upgradePlanText: {
+        fontSize: 14,
+        fontWeight: '800',
+        color: '#1A5F2A',
+        marginLeft: 6,
+    },
+    upgradeStatRow: {
+        flexDirection: 'row',
+        gap: 16,
+    },
+    upgradeStatItem: {
+        fontSize: 14,
+        fontWeight: '600',
+        color: '#444',
+    },
+    upgradeAction: {
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: '#C5A021',
+        paddingHorizontal: 16,
+        paddingVertical: 12,
+        borderRadius: 14,
+        shadowColor: '#C5A021',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 8,
+        elevation: 4,
+    },
+    upgradeActionText: {
+        fontSize: 14,
+        fontWeight: '900',
+        color: '#fff',
     },
     avatarSection: {
         position: 'relative',
