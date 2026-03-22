@@ -10,13 +10,18 @@ import {
   SportsInsightsScreen,
   PaymentSuccessScreen
 } from '../screens/customer';
-import MyVenuesScreen from '../screens/owner/MyVenuesScreen';
-import AddVenueScreen from '../screens/owner/AddVenueScreen';
-import OwnerProfileScreen from '../screens/owner/OwnerProfileScreen';
-import VenueBookingsScreen from '../screens/owner/VenueBookingsScreen';
-import RevenueDetailScreen from '../screens/owner/RevenueDetailScreen';
-import EditVenueScreen from '../screens/owner/EditVenueScreen';
-import AddCourtsScreen from '../screens/owner/AddCourtsScreen';
+import {
+  MyVenuesScreen,
+  AddVenueScreen,
+  OwnerProfileScreen,
+  VenueBookingsScreen,
+  RevenueDetailScreen,
+  EditVenueScreen,
+  AddCourtsScreen,
+  UpgradePlanScreen,
+  UpgradePaymentScreen,
+  UpgradeSuccessScreen,
+} from '../screens/owner';
 import { OwnerStackParamList } from './types';
 
 const Tab = createBottomTabNavigator();
@@ -84,6 +89,9 @@ function ProfileStack() {
     >
       <Stack.Screen name="Profile" component={OwnerProfileScreen} options={{ title: 'โปรไฟล์ของฉัน' }} />
       <Stack.Screen name="RevenueDetail" component={RevenueDetailScreen} options={{ title: 'รายละเอียดรายได้' }} />
+      <Stack.Screen name="UpgradePlan" component={UpgradePlanScreen} options={{ title: 'อัปเกรดแพ็กเกจ' }} />
+      <Stack.Screen name="UpgradePayment" component={UpgradePaymentScreen} options={{ title: 'ชำระเงินอัปเกรด' }} />
+      <Stack.Screen name="UpgradeSuccess" component={UpgradeSuccessScreen} options={{ headerShown: false }} />
     </Stack.Navigator>
   );
 }

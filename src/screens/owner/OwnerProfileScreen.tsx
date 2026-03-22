@@ -250,7 +250,10 @@ export default function OwnerProfileScreen() {
             </View>
 
             {/* Upgrade Card */}
-            <TouchableOpacity style={styles.upgradeCard}>
+            <TouchableOpacity 
+                style={styles.upgradeCard}
+                onPress={() => navigation.navigate('UpgradePlan')}
+            >
                 <View style={styles.upgradeLeft}>
                     <View style={styles.upgradePlanBadge}>
                         <Text>📦</Text>

@@ -42,4 +42,7 @@ export type OwnerStackParamList = {
     VenueBookings: { venueId: string };
     Profile: undefined;
     RevenueDetail: undefined;
+    UpgradePlan: undefined;
+    UpgradePayment: { planName: string; price: number };
+    UpgradeSuccess: { planName: string; paymentNo: string };
 };
