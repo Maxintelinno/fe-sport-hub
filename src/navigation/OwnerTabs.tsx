@@ -1,6 +1,7 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { CommonActions } from '@react-navigation/native';
 import { Text } from 'react-native';
 import {
   VenueListScreen,
@@ -21,6 +22,8 @@ import {
   UpgradePlanScreen,
   UpgradePaymentScreen,
   UpgradeSuccessScreen,
+  ConfirmTrialScreen,
+  TrialSuccessScreen,
 } from '../screens/owner';
 import { OwnerStackParamList } from './types';
 
@@ -92,6 +95,8 @@ function ProfileStack() {
       <Stack.Screen name="UpgradePlan" component={UpgradePlanScreen} options={{ title: 'อัปเกรดแพ็กเกจ' }} />
       <Stack.Screen name="UpgradePayment" component={UpgradePaymentScreen} options={{ title: 'ชำระเงินอัปเกรด' }} />
       <Stack.Screen name="UpgradeSuccess" component={UpgradeSuccessScreen} options={{ headerShown: false }} />
+      <Stack.Screen name="ConfirmTrial" component={ConfirmTrialScreen} options={{ title: 'เริ่มทดลองใช้' }} />
+      <Stack.Screen name="TrialSuccess" component={TrialSuccessScreen} options={{ headerShown: false }} />
     </Stack.Navigator>
   );
 }
@@ -151,6 +156,18 @@ export default function OwnerTabs() {
           tabBarIcon: () => <Text style={{ fontSize: 24 }}>👤</Text>,
           headerShown: false,
         }}
+        listeners={({ navigation }) => ({
+          tabPress: (e) => {
+            // By default, it will navigate to the tab. 
+            // If the user clicks, we also want to pop other screens to top
+            navigation.dispatch(
+              CommonActions.reset({
+                index: 0,
+                routes: [{ name: 'ProfileTab', state: { routes: [{ name: 'Profile' }] } }],
+              })
+            );
+          },
+        })}
       />
     </Tab.Navigator>
   );

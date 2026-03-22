@@ -45,4 +45,6 @@ export type OwnerStackParamList = {
     UpgradePlan: undefined;
     UpgradePayment: { planName: string; price: number };
     UpgradeSuccess: { planName: string; paymentNo: string };
+    ConfirmTrial: undefined;
+    TrialSuccess: { expiryDate: string };
 };

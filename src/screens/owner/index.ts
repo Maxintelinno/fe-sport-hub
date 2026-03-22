@@ -8,3 +8,5 @@ export { default as AddCourtsScreen } from './AddCourtsScreen';
 export { default as UpgradePlanScreen } from './UpgradePlanScreen';
 export { default as UpgradePaymentScreen } from './UpgradePaymentScreen';
 export { default as UpgradeSuccessScreen } from './UpgradeSuccessScreen';
+export { default as ConfirmTrialScreen } from './ConfirmTrialScreen';
+export { default as TrialSuccessScreen } from './TrialSuccessScreen';

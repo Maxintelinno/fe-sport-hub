@@ -195,7 +195,7 @@ export default function UpgradePlanScreen() {
                                     {item.isPro && (
                                         <TouchableOpacity 
                                             style={styles.selectPlanBtnPro}
-                                            onPress={() => navigation.navigate('UpgradePayment', { planName: 'Pro', price: 999 })}
+                                            onPress={() => navigation.navigate('ConfirmTrial')}
                                         >
                                             <Text style={styles.selectPlanTextPro}>🔥 เริ่มทดลองใช้ฟรี</Text>
                                         </TouchableOpacity>
@@ -279,7 +279,7 @@ export default function UpgradePlanScreen() {
                 </View>
                 <TouchableOpacity 
                     style={styles.ctaRightButton} 
-                    onPress={() => navigation.navigate('UpgradePayment', { planName: 'Pro', price: 999 })}
+                    onPress={() => navigation.navigate('ConfirmTrial')}
                 >
                     <Text style={styles.ctaButtonText}>🔥 เริ่มทดลองใช้ฟรี 7 วัน{"\n"}ไม่ต้องจ่ายตอนนี้</Text>
                 </TouchableOpacity>
