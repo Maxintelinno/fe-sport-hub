@@ -3,9 +3,11 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, Dimensions
 import { useAuth } from '../../context/AuthContext';
 import { getVenuesByOwner } from '../../data/venueStore';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
+import { getOwnerProfile, OwnerProfileResponse, getRevenueReport, RevenueReportResponse } from '../../services/profileService';
+import { ActivityIndicator } from 'react-native';
 
 const { width } = Dimensions.get('window');
-const PIE_SIZE = 180;
+const PIE_SIZE = 220;
 
 const PERIOD_TABS = [
     { key: 'all', label: 'รวม' },
@@ -143,69 +145,70 @@ export default function OwnerProfileScreen() {
     const navigation = useNavigation<any>();
     const [selectedPeriod, setSelectedPeriod] = useState('all');
     const [ownerVenues, setOwnerVenues] = useState<any[]>([]);
+    const [profile, setProfile] = useState<OwnerProfileResponse | null>(null);
+    const [revenueReport, setRevenueReport] = useState<RevenueReportResponse | null>(null);
+    const [loadingProfile, setLoadingProfile] = useState(true);
+    const [loadingRevenue, setLoadingRevenue] = useState(false);
 
     useFocusEffect(
         React.useCallback(() => {
+            const fetchData = async () => {
+                setLoadingProfile(true);
+                setLoadingRevenue(true);
+                try {
+                    const profData = await getOwnerProfile();
+                    setProfile(profData);
+                    
+                    const apiPeriod: any = selectedPeriod === 'all' ? 'total' : selectedPeriod;
+                    const revData = await getRevenueReport(apiPeriod);
+                    setRevenueReport(revData);
+                } catch (error) {
+                    console.error('Error fetching dashboard data:', error);
+                } finally {
+                    setLoadingProfile(false);
+                    setLoadingRevenue(false);
+                }
+            };
+
             if (user) {
                 setOwnerVenues(getVenuesByOwner(user.id));
+                fetchData();
             }
-        }, [user])
+        }, [user, selectedPeriod])
     );
 
-    const revenueData = useMemo(() => {
-        const now = new Date();
-        const todayStr = now.toISOString().slice(0, 10);
-        const monthStr = now.toISOString().slice(0, 7);
-        const yearStr = now.getFullYear().toString();
-
-        let totalBookings = 0;
-        let totalRevenue = 0;
-        const venueRevenues: { label: string; value: number; color: string; bookings: number }[] = [];
-
-        ownerVenues.forEach((venue, idx) => {
-            const vBookings: any[] = []; 
-            let venueRev = 0;
-            let venueBookCount = 0;
-
-            vBookings.forEach((b: any) => {
-                if (b.status !== 'confirmed') return;
-
-                let include = false;
-                switch (selectedPeriod) {
-                    case 'day':
-                        include = b.date === todayStr;
-                        break;
-                    case 'month':
-                        include = b.date?.startsWith(monthStr) ?? false;
-                        break;
-                    case 'year':
-                        include = b.date?.startsWith(yearStr) ?? false;
-                        break;
-                    default:
-                        include = true;
-                }
-
-                if (include) {
-                    venueRev += b.totalPrice;
-                    venueBookCount++;
-                }
-            });
-
-            totalBookings += venueBookCount;
-            totalRevenue += venueRev;
-
-            venueRevenues.push({
-                label: venue.name,
-                value: venueRev,
-                color: CHART_COLORS[idx % CHART_COLORS.length],
-                bookings: venueBookCount,
-            });
-        });
-
-        return { totalBookings, totalRevenue, venueRevenues };
-    }, [ownerVenues, selectedPeriod]);
+    const revenueChartData = useMemo(() => {
+        if (!revenueReport) return [];
+        return revenueReport.by_field.map((f: any, idx: number) => ({
+            label: f.field_name,
+            value: f.revenue,
+            color: CHART_COLORS[idx % CHART_COLORS.length],
+            bookings: f.booking_count,
+        }));
+    }, [revenueReport]);
 
     if (!user) return null;
+
+    if (loadingProfile && !profile) {
+        return (
+            <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+                <ActivityIndicator size="large" color="#1A5F2A" />
+            </View>
+        );
+    }
+
+    // Use profile data if available, fallback to Auth user
+    const displayName = profile?.user.name || user.name;
+    const displayPhone = profile?.user.phone || user.phone || 'ไม่มีข้อมูลการติดต่อ';
+    const fieldCount = profile?.stats.field_count ?? ownerVenues.length;
+    const bookingCount = profile?.stats.booking_count ?? 0;
+    const totalRevenue = profile?.stats.total_revenue ?? 0;
+    const planName = profile?.plan.name || 'Free Plan';
+    const fieldUsage = profile?.plan.field_usage || '0/1';
+    const courtUsage = profile?.plan.court_usage || '0/2';
+    
+    // Period-specific revenue from report
+    const currentPeriodRevenue = revenueReport?.total_revenue ?? 0;
 
     return (
         <ScrollView style={styles.container} contentContainerStyle={styles.content}>
@@ -221,8 +224,8 @@ export default function OwnerProfileScreen() {
                         <Text style={styles.crownIcon}>👑</Text>
                     </View>
                 </View>
-                <Text style={styles.name}>{user.name}</Text>
-                <Text style={styles.email}>{user.email || user.phone || 'ไม่มีข้อมูลการติดต่อ'}</Text>
+                <Text style={styles.name}>{displayName}</Text>
+                <Text style={styles.email}>{displayPhone}</Text>
                 <View style={styles.roleBadge}>
                     <Text style={styles.roleText}>🏆 เจ้าของสนาม</Text>
                 </View>
@@ -232,18 +235,18 @@ export default function OwnerProfileScreen() {
             <View style={styles.quickStatsRow}>
                 <View style={styles.quickStatCard}>
                     <Text style={styles.quickStatIcon}>🏟️</Text>
-                    <Text style={styles.quickStatValue}>{ownerVenues.length}</Text>
+                    <Text style={styles.quickStatValue}>{fieldCount}</Text>
                     <Text style={styles.quickStatLabel}>สนาม</Text>
                 </View>
                 <View style={styles.quickStatCard}>
                     <Text style={styles.quickStatIcon}>📋</Text>
-                    <Text style={styles.quickStatValue}>{revenueData.totalBookings}</Text>
+                    <Text style={styles.quickStatValue}>{bookingCount}</Text>
                     <Text style={styles.quickStatLabel}>การจอง</Text>
                 </View>
                 <View style={styles.quickStatCard}>
                     <Text style={styles.quickStatIcon}>💰</Text>
                     <Text style={[styles.quickStatValue, { color: '#C5A021' }]}>
-                        ฿{revenueData.totalRevenue.toLocaleString()}
+                        ฿{totalRevenue.toLocaleString()}
                     </Text>
                     <Text style={styles.quickStatLabel}>รายได้</Text>
                 </View>
@@ -257,11 +260,11 @@ export default function OwnerProfileScreen() {
                 <View style={styles.upgradeLeft}>
                     <View style={styles.upgradePlanBadge}>
                         <Text>📦</Text>
-                        <Text style={styles.upgradePlanText}>Free Plan</Text>
+                        <Text style={styles.upgradePlanText}>{planName}</Text>
                     </View>
                     <View style={styles.upgradeStatRow}>
-                        <Text style={styles.upgradeStatItem}>สนาม: 1/1</Text>
-                        <Text style={styles.upgradeStatItem}>คอร์ท: 2/2</Text>
+                        <Text style={styles.upgradeStatItem}>สนาม: {fieldUsage}</Text>
+                        <Text style={styles.upgradeStatItem}>คอร์ท: {courtUsage}</Text>
                     </View>
                 </View>
                 <View style={styles.upgradeAction}>
@@ -296,27 +299,62 @@ export default function OwnerProfileScreen() {
                     ))}
                 </View>
 
-                {/* Pie Chart */}
-                <PieChart data={revenueData.venueRevenues} />
+                {/* Pie Chart / Center Summary */}
+                {loadingRevenue ? (
+                    <View style={{ height: PIE_SIZE, justifyContent: 'center' }}>
+                        <ActivityIndicator color="#1A5F2A" />
+                    </View>
+                ) : (
+                    <PieChart data={revenueChartData} />
+                )}
 
                 {/* Revenue Breakdown by Venue */}
                 <View style={styles.breakdownSection}>
-                    <Text style={styles.breakdownTitle}>รายได้แยกตามสนาม</Text>
-                    {revenueData.venueRevenues.length === 0 ? (
-                        <Text style={styles.noDataText}>ยังไม่มีสนาม</Text>
+                    <Text style={styles.breakdownTitle}>🏟️ รายได้แยกตามสนาม</Text>
+                    {loadingRevenue ? (
+                         <ActivityIndicator size="small" color="#1A5F2A" style={{ marginVertical: 10 }} />
                     ) : (
-                        revenueData.venueRevenues.map((vr: any, idx: number) => (
-                            <View key={idx} style={styles.breakdownItem}>
-                                <View style={styles.breakdownLeft}>
-                                    <View style={[styles.colorDot, { backgroundColor: vr.color }]} />
-                                    <View>
-                                        <Text style={styles.breakdownName} numberOfLines={1}>{vr.label}</Text>
-                                        <Text style={styles.breakdownBookings}>{vr.bookings} การจอง</Text>
+                        revenueChartData.length === 0 ? (
+                            <Text style={styles.noDataText}>ยังไม่มีสนาม</Text>
+                        ) : (
+                            revenueChartData.map((vr: any, idx: number) => (
+                                <View key={idx} style={styles.breakdownItem}>
+                                    <View style={styles.breakdownLeft}>
+                                        <View style={[styles.colorDot, { backgroundColor: vr.color }]} />
+                                        <View>
+                                            <Text style={styles.breakdownName} numberOfLines={1}>{vr.label}</Text>
+                                            <Text style={styles.breakdownBookings}>{vr.bookings} การจอง</Text>
+                                        </View>
                                     </View>
+                                    <Text style={styles.breakdownValue}>฿{vr.value.toLocaleString()}</Text>
                                 </View>
-                                <Text style={styles.breakdownValue}>฿{vr.value.toLocaleString()}</Text>
-                            </View>
-                        ))
+                            ))
+                        )
+                    )}
+                </View>
+
+                {/* Revenue Breakdown by Sport Type */}
+                <View style={[styles.breakdownSection, { borderTopWidth: 0, marginTop: 0 }]}>
+                    <Text style={styles.breakdownTitle}>⚽ รายได้แยกตามประเภทกีฬา</Text>
+                    {loadingRevenue ? (
+                         <ActivityIndicator size="small" color="#1A5F2A" style={{ marginVertical: 10 }} />
+                    ) : (
+                        !revenueReport || revenueReport.by_sport_type.length === 0 ? (
+                            <Text style={styles.noDataText}>ยังไม่มีข้อมูลกีฬา</Text>
+                        ) : (
+                            revenueReport.by_sport_type.map((st: any, idx: number) => (
+                                <View key={idx} style={styles.breakdownItem}>
+                                    <View style={styles.breakdownLeft}>
+                                        <View style={[styles.colorDot, { backgroundColor: CHART_COLORS[(idx + 6) % CHART_COLORS.length] }]} />
+                                        <View>
+                                            <Text style={styles.breakdownName}>{st.sport_type}</Text>
+                                            <Text style={styles.breakdownBookings}>{st.booking_count} การจอง</Text>
+                                        </View>
+                                    </View>
+                                    <Text style={styles.breakdownValue}>฿{st.revenue.toLocaleString()}</Text>
+                                </View>
+                            ))
+                        )
                     )}
                 </View>
             </View>
@@ -691,7 +729,7 @@ const styles = StyleSheet.create({
     breakdownValue: {
         fontSize: 16,
         fontWeight: '900',
-        color: '#C5A021',
+        color: '#1A5F2A', // Changed to match theme more consistently
     },
 
     // Venue Section

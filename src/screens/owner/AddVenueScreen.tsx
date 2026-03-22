@@ -230,6 +230,7 @@ export default function AddVenueScreen({ navigation }: Props) {
                 district: district.name,
                 address_line: address,
                 description: description,
+                price_per_hour: 0, // Backend still requires this for now
                 images: uploadedImages
             });
 

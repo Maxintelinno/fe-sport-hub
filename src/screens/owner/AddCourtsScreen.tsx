@@ -11,7 +11,10 @@ import {
   Alert,
   Dimensions,
   ActivityIndicator,
+  Modal,
+  FlatList,
 } from 'react-native';
+import { SPORT_TYPES } from '../../data/locationData';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RouteProp } from '@react-navigation/native';
 import { OwnerStackParamList } from '../../navigation/types';
@@ -38,6 +41,8 @@ export default function AddCourtsScreen({ navigation, route }: Props) {
   const { fieldId, fieldName } = route.params;
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
+  const [sportModal, setSportModal] = useState(false);
+  const [activeCourtId, setActiveCourtId] = useState<string | null>(null);
 
   // Initialize with one empty court form
   const [courts, setCourts] = useState<CourtForm[]>([
@@ -120,6 +125,48 @@ export default function AddCourtsScreen({ navigation, route }: Props) {
     </View>
   );
 
+  const RoyaltyPicker = ({ label, value, placeholder, onPress, icon }: any) => (
+    <View style={styles.inputContainer}>
+      <Text style={styles.label}>{label}</Text>
+      <TouchableOpacity style={styles.pickerTrigger} onPress={onPress}>
+        <Text style={[styles.pickerValue, !value && { color: '#999' }]}>
+          {value || placeholder}
+        </Text>
+        <Text style={styles.pickerIcon}>{icon || '▼'}</Text>
+      </TouchableOpacity>
+    </View>
+  );
+
+  const SelectionModal = ({ visible, title, data, onSelect, onClose }: any) => (
+    <Modal visible={visible} transparent animationType="slide">
+      <View style={styles.modalOverlay}>
+        <View style={styles.modalContent}>
+          <View style={styles.modalHeader}>
+            <Text style={styles.modalTitle}>{title}</Text>
+            <TouchableOpacity onPress={onClose}>
+              <Text style={styles.closeBtnText}>ปิด</Text>
+            </TouchableOpacity>
+          </View>
+          <FlatList
+            data={data}
+            keyExtractor={(item, index) => index.toString()}
+            renderItem={({ item }) => (
+              <TouchableOpacity
+                style={styles.modalItem}
+                onPress={() => {
+                  onSelect(item);
+                  onClose();
+                }}
+              >
+                <Text style={styles.modalItemText}>{item}</Text>
+              </TouchableOpacity>
+            )}
+          />
+        </View>
+      </View>
+    </Modal>
+  );
+
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -152,11 +199,14 @@ export default function AddCourtsScreen({ navigation, route }: Props) {
               placeholder="เช่น สนาม A, พรีเมียม B"
             />
 
-            <InputField
+            <RoyaltyPicker
               label="ประเภทกีฬา *"
               value={court.court_type}
-              onChangeText={(val: string) => handleCourtChange(court.id, 'court_type', val)}
-              placeholder="เช่น ฟุตบอล, แบดมินตัน"
+              placeholder="เลือกกีฬา"
+              onPress={() => {
+                setActiveCourtId(court.id);
+                setSportModal(true);
+              }}
             />
 
             <View style={styles.row}>
@@ -197,6 +247,18 @@ export default function AddCourtsScreen({ navigation, route }: Props) {
             <Text style={styles.submitBtnText}>✨ บันทึกข้อมูลคอร์ททั้งหมด</Text>
           )}
         </TouchableOpacity>
+
+        <SelectionModal
+          visible={sportModal}
+          title="เลือกประเภทกีฬา"
+          data={SPORT_TYPES}
+          onSelect={(item: string) => {
+            if (activeCourtId) {
+              handleCourtChange(activeCourtId, 'court_type', item);
+            }
+          }}
+          onClose={() => setSportModal(false)}
+        />
       </ScrollView>
     </KeyboardAvoidingView>
   );
@@ -299,6 +361,69 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#E8EBE8',
     fontWeight: '600',
+  },
+  pickerTrigger: {
+    backgroundColor: '#F9FBF9',
+    borderRadius: 18,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    borderWidth: 1.5,
+    borderColor: '#E8EBE8',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  pickerValue: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#1a1a1a',
+  },
+  pickerIcon: {
+    fontSize: 12,
+    color: '#C5A021',
+  },
+  // Modal Styles
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'flex-end',
+  },
+  modalContent: {
+    backgroundColor: '#fff',
+    borderTopLeftRadius: 30,
+    borderTopRightRadius: 30,
+    maxHeight: '70%',
+    padding: 24,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 20,
+    paddingBottom: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: '900',
+    color: '#1A5F2A',
+  },
+  closeBtnText: {
+    fontSize: 16,
+    color: '#FF3B30',
+    fontWeight: '800',
+  },
+  modalItem: {
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F0F0F0',
+  },
+  modalItemText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#333',
   },
   row: {
     flexDirection: 'row',
