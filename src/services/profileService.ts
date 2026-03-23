@@ -49,6 +49,50 @@ export interface RevenueReportResponse {
     by_sport_type: RevenueBySport[];
 }
 
+export interface OwnerDashboardResponse {
+    status: string;
+    message: string;
+    data: {
+        owner: {
+            id: string;
+            fullname: string;
+            phone: string;
+            avatar_initial: string;
+        };
+        plan: {
+            code: string;
+            name: string;
+            status: string;
+            trial_days_left: number;
+            is_trial: boolean;
+            price_after_trial: number;
+        };
+        summary: {
+            total_revenue: number;
+            revenue_growth_pct: number;
+            booking_count: number;
+            field_count: number;
+        };
+        alerts: {
+            type: 'info' | 'warning' | 'error' | 'success';
+            title: string;
+            message: string;
+            action_text: string;
+            action_type: string;
+        }[];
+        next_actions: {
+            title: string;
+            message: string;
+            action_text: string;
+            action_type: string;
+        }[];
+        revenue_trend_7d: {
+            label: string;
+            amount: number;
+        }[];
+    };
+}
+
 export async function getOwnerProfile(): Promise<OwnerProfileResponse> {
     const response = await api.get(`${PROFILE_API_URL}/v1/profile`, {
         validateStatus: () => true,
@@ -56,6 +100,17 @@ export async function getOwnerProfile(): Promise<OwnerProfileResponse> {
 
     if (response.status >= 400) {
         throw new Error(response.data?.message || 'ไม่สามารถดึงข้อมูลโปรไฟล์ได้');
+    }
+    return response.data;
+}
+
+export async function getOwnerDashboard(): Promise<OwnerDashboardResponse> {
+    const response = await api.get(`${PROFILE_API_URL}/v1/owner/dashboard`, {
+        validateStatus: () => true,
+    });
+
+    if (response.status >= 400) {
+        throw new Error(response.data?.message || 'ไม่สามารถดึงข้อมูลแดชบอร์ดได้');
     }
     return response.data;
 }
