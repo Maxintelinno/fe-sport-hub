@@ -18,11 +18,12 @@ const { width } = Dimensions.get('window');
 
 // Enhanced Bar Chart showing 7 days
 function RevenueChart({ data }: { data: { label: string; amount: number }[] }) {
+  const isNoData = data.length === 0 || data.every(item => item.amount === 0);
   const maxVal = Math.max(...data.map(d => d.amount), 1000);
   
   return (
     <View style={chartStyles.container}>
-      {data.length === 0 ? (
+      {isNoData ? (
         <View style={chartStyles.emptyContainer}>
           <Text style={chartStyles.emptyText}>ยังไม่มีข้อมูลรายได้</Text>
         </View>
@@ -116,29 +117,30 @@ export default function OwnerHomeScreen() {
       const response = await getOwnerDashboard();
       setDashboard(response.data);
     } catch (error: any) {
-      // Fallback for non-UUID accounts in staging to avoid blank screen
-      if (error?.message?.toLowerCase().includes('uuid')) {
-        console.warn('Backend UUID error (likely non-uuid account). Falling back to Mock Dashboard.');
+      // Fallback for non-UUID accounts or uninitialized data in staging
+      const errorMsg = error?.message?.toLowerCase() || '';
+      if (errorMsg.includes('uuid') || errorMsg.includes('record not found')) {
+        console.warn('Dashboard data unavailable (UUID or Record Not Found). Using Zeroed initial state.');
         setDashboard({
-          owner: { id: user?.id || '', fullname: user?.name || 'Owner', phone: '', avatar_initial: 'O' },
-          plan: { code: 'free', name: 'Free Plan', status: 'active', trial_days_left: 3, is_trial: true, price_after_trial: 999 },
-          summary: { total_revenue: 27500, revenue_growth_pct: 20, booking_count: 15, field_count: 2 },
-          alerts: [
-            { type: 'warning', title: 'วันนี้ยังไม่มีการจอง', message: 'เปิดโปรเพื่อเพิ่มลูกค้าทันที', action_text: 'สร้างโปรโมชัน', action_type: 'open_promotion' }
-          ],
+          owner: { id: user?.id || '', fullname: user?.name || 'Owner', phone: '', avatar_initial: (user?.name || 'O').charAt(0).toUpperCase() },
+          plan: { code: 'free', name: 'Free Plan', status: 'active', trial_days_left: 7, is_trial: true, price_after_trial: 999 },
+          summary: { total_revenue: 0, revenue_growth_pct: 0, booking_count: 0, field_count: 0 },
+          total_revenue: 0,
+          revenue_growth_pct: 0,
+          booking_count: 0,
+          field_count: 0,
+          alerts: [],
           next_actions: [
-            { title: 'เปิดช่วงเวลาขายดี 18:00 – 21:00', message: '', action_text: 'เปิดขาย', action_type: 'open_time' },
-            { title: 'จัดโปรโมชั่นช่วงเช้าเพื่อดึงคน', message: '', action_text: 'จัดโปร', action_type: 'open_promotion' },
-            { title: 'เพิ่มสนามใหม่ เพื่อรับลูกค้าเพิ่ม', message: '', action_text: 'เพิ่มสนาม', action_type: 'create_field' }
+            { title: 'เพิ่มสนามใหม่ เพื่อรับลูกค้าเพิ่ม', message: 'คุณสามารถเพิ่มสนามได้อีก 1 สนาม', action_text: 'เพิ่มสนาม', action_type: 'create_field' }
           ],
           revenue_trend_7d: [
-            { label: 'จ.', amount: 1200 },
-            { label: 'อ.', amount: 1900 },
-            { label: 'พ.', amount: 1500 },
-            { label: 'พฤ.', amount: 2200 },
-            { label: 'ศ.', amount: 2800 },
-            { label: 'ส.', amount: 3500 },
-            { label: 'อา.', amount: 1800 },
+            { label: 'จ.', amount: 0 },
+            { label: 'อ.', amount: 0 },
+            { label: 'พ.', amount: 0 },
+            { label: 'พฤ.', amount: 0 },
+            { label: 'ศ.', amount: 0 },
+            { label: 'ส.', amount: 0 },
+            { label: 'อา.', amount: 0 },
           ]
         });
       } else {
@@ -192,15 +194,17 @@ export default function OwnerHomeScreen() {
             <View style={styles.heroCard}>
                 <View style={styles.heroHeader}>
                     <Text style={styles.heroLabel}>รายได้รวมทั้งหมด</Text>
-                    {dashboard?.summary.revenue_growth_pct !== undefined && (
+                    {dashboard?.revenue_growth_pct !== undefined && (
                         <View style={styles.heroTrend}>
                             <Text style={styles.heroTrendText}>
-                                📈 {dashboard.summary.revenue_growth_pct >= 0 ? '+' : ''}{dashboard.summary.revenue_growth_pct}% จากสัปดาห์ที่แล้ว
+                                📈 {dashboard.revenue_growth_pct >= 0 ? '+' : ''}{dashboard.revenue_growth_pct}% จากสัปดาห์ที่แล้ว
                             </Text>
                         </View>
                     )}
                 </View>
-                <Text style={styles.heroValue}>฿{(dashboard?.summary.total_revenue || 0).toLocaleString()}</Text>
+                <Text style={styles.heroValue}>
+                  {(dashboard?.total_revenue || 0) === 0 ? '0' : `฿${dashboard?.total_revenue.toLocaleString()}`}
+                </Text>
                 
                 <TouchableOpacity 
                     style={styles.heroAction}
@@ -215,12 +219,16 @@ export default function OwnerHomeScreen() {
             <View style={styles.statsRow}>
                 <View style={styles.statItem}>
                     <Text style={styles.statLabel}>การจอง</Text>
-                    <Text style={styles.statValue}>{dashboard?.summary.booking_count || 0}</Text>
+                    <Text style={[styles.statValue, (dashboard?.booking_count || 0) === 0 && { fontSize: 13, color: '#999' }]}>
+                      {(dashboard?.booking_count || 0) === 0 ? '0' : dashboard?.booking_count}
+                    </Text>
                 </View>
                 <View style={styles.divider} />
                 <View style={styles.statItem}>
                     <Text style={styles.statLabel}>สนามทั้งหมด</Text>
-                    <Text style={styles.statValue}>{dashboard?.summary.field_count || 0}</Text>
+                    <Text style={[styles.statValue, (dashboard?.field_count || 0) === 0 && { fontSize: 13, color: '#999' }]}>
+                      {(dashboard?.field_count || 0) === 0 ? '0' : dashboard?.field_count}
+                    </Text>
                 </View>
             </View>
 

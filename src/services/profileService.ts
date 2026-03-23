@@ -73,6 +73,10 @@ export interface OwnerDashboardResponse {
             booking_count: number;
             field_count: number;
         };
+        booking_count: number;
+        field_count: number;
+        revenue_growth_pct: number;
+        total_revenue: number;
         alerts: {
             type: 'info' | 'warning' | 'error' | 'success';
             title: string;
