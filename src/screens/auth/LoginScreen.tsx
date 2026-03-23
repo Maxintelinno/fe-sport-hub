@@ -50,7 +50,9 @@ export default function LoginScreen({ navigation, route }: Props) {
         password: password.trim(),
       });
 
-      const userData = response?.data;
+      // Handle both old and new nested response structure
+      const userData = response?.data?.user || response?.data;
+      const subscription = response?.data?.subscription;
       const userRole = (userData?.role || role) as any;
 
       // Fetch JWT Token from middleware
@@ -73,6 +75,7 @@ export default function LoginScreen({ navigation, route }: Props) {
         name: userData?.fullname || userData?.username || username.trim(),
         role: userRole,
         accessToken: accessToken,
+        subscription: subscription,
       });
     } catch (error) {
       Alert.alert('เข้าสู่ระบบไม่สำเร็จ', error instanceof Error ? error.message : 'กรุณาลองใหม่อีกครั้ง');

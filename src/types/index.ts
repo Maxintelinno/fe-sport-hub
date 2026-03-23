@@ -7,6 +7,11 @@ export interface User {
   name: string;
   role: UserRole;
   accessToken?: string;
+  subscription?: {
+    plan_name: string;
+    billing_cycle: string;
+    status: string;
+  };
 }
 
 export interface FieldImage {

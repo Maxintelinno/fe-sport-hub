@@ -34,6 +34,10 @@ export type OwnerStackParamList = {
     Payment: { bookingId: string; venueName: string; totalPrice: number; bookingNo: string };
     PaymentSuccess: { bookingId: string; venueName: string; totalPrice: number; paymentNo: string; bookingNo: string };
     SportsInsights: undefined;
+    InsightDetail: { insightId: string };
+    Ads: undefined;
+    AllPromotions: undefined;
+    OwnerHome: undefined;
     // Owner Management
     MyVenues: undefined;
     AddVenue: undefined;

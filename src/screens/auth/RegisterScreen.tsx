@@ -42,6 +42,10 @@ export default function RegisterScreen({ navigation, route }: Props) {
         role: role,
       });
 
+      const registeredUser = response?.data?.user;
+      const registeredSubscription = response?.data?.subscription;
+      const registeredId = registeredUser?.id || `user-${Date.now()}`;
+
       Alert.alert('สำเร็จ', 'สมัครสมาชิกเรียบร้อยแล้ว', [
         {
           text: 'ตกลง',
@@ -50,7 +54,7 @@ export default function RegisterScreen({ navigation, route }: Props) {
             let accessToken = '';
             try {
               const tokenResponse = await getAuthToken({
-                id: response?.id || `user-${Date.now()}`,
+                id: registeredId,
                 phone: phoneNumber,
                 username: username.trim()
               });
@@ -61,11 +65,12 @@ export default function RegisterScreen({ navigation, route }: Props) {
 
             // Auto-login and let AppNavigator handle redirection to Home
             await register({
-              id: response?.id || `user-${Date.now()}`,
+              id: registeredId,
               phone: phoneNumber,
               name: name.trim(),
               role: role,
               accessToken: accessToken,
+              subscription: registeredSubscription,
             });
           }
         }
