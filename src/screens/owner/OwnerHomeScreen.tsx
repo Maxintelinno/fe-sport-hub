@@ -257,6 +257,18 @@ export default function OwnerHomeScreen() {
                 <Text style={styles.sectionTitle}>📌 สิ่งที่ควรทำตอนนี้</Text>
             </View>
             <View style={styles.todoList}>
+                {dashboard?.booking_count !== undefined && dashboard.booking_count > 0 && (
+                    <TouchableOpacity 
+                        style={[styles.todoItem, { borderLeftWidth: 4, borderLeftColor: '#C5A021', paddingLeft: 12 }]} 
+                        onPress={() => navigation.navigate('ManagementTab')}
+                    >
+                        <View style={{ flex: 1 }}>
+                            <Text style={styles.todoText}>📋 ตรวจสอบการจองล่าสุด</Text>
+                            <Text style={styles.todoSubtext}>เพื่อเตรียมสนามให้พร้อม</Text>
+                            <Text style={[styles.todoText, { color: '#1A5F2A', marginTop: 4 }]}>👉 [ ดูการจอง ]</Text>
+                        </View>
+                    </TouchableOpacity>
+                )}
                 {dashboard?.next_actions.map((action, idx) => (
                     <TouchableOpacity 
                         key={idx} 

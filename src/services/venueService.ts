@@ -69,7 +69,6 @@ export interface CreateFieldRequest {
     owner_id: string;
     name: string;
     sport_type: string;
-    price_per_hour?: number;
     open_time: string;
     close_time: string;
     province: string;
@@ -80,7 +79,9 @@ export interface CreateFieldRequest {
 }
 
 export async function createField(data: CreateFieldRequest) {
-    const response = await api.post(`${API_URL}/v1/fields`, data, {
+    const payload = { ...data, price_per_hour: 0 };
+    console.log('API Request: POST /v1/fields', JSON.stringify(payload, null, 2));
+    const response = await api.post(`${API_URL}/v1/fields`, payload, {
         validateStatus: () => true,
     });
 
@@ -105,7 +106,7 @@ export function getVenuesByOwner(ownerId: string): Venue[] {
 }
 
 export async function getOwnerFields(ownerId: string): Promise<Venue[]> {
-    const response = await api.get(`${API_URL}/v1/owner/fields?owner_id=${ownerId}`, {
+    const response = await api.get(`${API_URL}/v1/owner/fields?owner_id=${ownerId}&t=${Date.now()}`, {
         validateStatus: () => true,
     });
 
@@ -131,7 +132,9 @@ export async function updateFieldStatus(owner_id: string, field_id: string, stat
 }
 
 export async function updateField(fieldId: string, data: Partial<CreateFieldRequest>) {
-    const response = await api.put(`${API_URL}/v1/fields/${fieldId}`, data, {
+    const payload = { ...data, price_per_hour: 0 };
+    console.log(`API Request: PUT /v1/fields/${fieldId}`, JSON.stringify(payload, null, 2));
+    const response = await api.put(`${API_URL}/v1/fields/${fieldId}`, payload, {
         validateStatus: () => true,
     });
 
@@ -142,7 +145,7 @@ export async function updateField(fieldId: string, data: Partial<CreateFieldRequ
 }
 
 export async function getFieldById(fieldId: string): Promise<Venue> {
-    const response = await api.get(`${API_URL}/v1/fields/${fieldId}`, {
+    const response = await api.get(`${API_URL}/v1/fields/${fieldId}?t=${Date.now()}`, {
         validateStatus: () => true,
     });
 
@@ -172,7 +175,7 @@ export async function getFilteredFields(params: GetFilteredFieldsParams): Promis
     console.log('province =', province);
 
 
-    let url = `${API_URL}/v1/fields?section=${section}&limit=${limit}&offset=${offset}`;
+    let url = `${API_URL}/v1/fields?section=${section}&limit=${limit}&offset=${offset}&t=${Date.now()}`;
 
     if (lat !== undefined && lng !== undefined) {
         url += `&lat=${lat}&lng=${lng}`;

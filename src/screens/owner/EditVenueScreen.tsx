@@ -336,7 +336,6 @@ export default function EditVenueScreen({ navigation, route }: Props) {
                 owner_id: user.id,
                 name,
                 sport_type: sportType,
-                price_per_hour: venue.price_per_hour,
                 open_time: openingTime.length === 5 ? `${openingTime}:00` : openingTime,
                 close_time: closingTime.length === 5 ? `${closingTime}:00` : closingTime,
                 province: province.name,

@@ -105,8 +105,18 @@ export default function AddCourtsScreen({ navigation, route }: Props) {
       ]);
     } catch (error: any) {
       console.error('Error creating courts:', error);
-      Alert.alert('เกิดข้อผิดพลาด', error.message || 'ไม่สามารถเพิ่มสนามได้ในขณะนี้');
-    } finally {
+      const errorMessage = error.message || '';
+      if (errorMessage.includes('SQLSTATE') || errorMessage.includes('cached plan')) {
+        Alert.alert(
+          'กำลังปรับปรุงระบบ', 
+          'ระบบฐานข้อมูลกำลังได้รับการปรับปรุง (Stale Cache) กรุณาลองใหม่อีกครั้งใน 1-2 นาที',
+          [{ text: 'ตกลง' }]
+        );
+      } else {
+        Alert.alert('เกิดข้อผิดพลาด', errorMessage || 'ไม่สามารถเพิ่มสนามได้ในขณะนี้');
+      }
+    }
+ finally {
       setLoading(false);
     }
   };

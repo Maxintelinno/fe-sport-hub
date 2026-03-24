@@ -224,13 +224,12 @@ export default function AddVenueScreen({ navigation }: Props) {
                 owner_id: user.id,
                 name,
                 sport_type: sportType,
-                open_time: openingTime,
-                close_time: closingTime,
+                open_time: openingTime.length === 5 ? `${openingTime}:00` : openingTime,
+                close_time: closingTime.length === 5 ? `${closingTime}:00` : closingTime,
                 province: province.name,
                 district: district.name,
                 address_line: address,
                 description: description,
-                price_per_hour: 0, // Backend still requires this for now
                 images: uploadedImages
             });
 
@@ -424,9 +423,9 @@ export default function AddVenueScreen({ navigation }: Props) {
                     />
 
                     <TouchableOpacity
-                        style={[styles.submitBtn, loading && styles.submitBtnDisabled]}
+                        style={[styles.submitBtn, (loading || uploadingImages) && styles.submitBtnDisabled]}
                         onPress={handleAddVenue}
-                        disabled={loading}
+                        disabled={loading || uploadingImages}
                     >
                         <Text style={styles.submitBtnText}>
                             {loading ? 'กำลังส่งข้อมูล...' : '✨ สร้างสนามพรีเมียม'}

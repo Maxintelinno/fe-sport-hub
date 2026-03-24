@@ -253,7 +253,16 @@ export default function VenueListScreen({ navigation }: Props) {
           ]
         );
       } else {
-        Alert.alert('เกิดข้อผิดพลาด', error.message || 'ไม่สามารถโหลดข้อมูลสนามได้');
+        const errorMessage = error.message || '';
+        if (errorMessage.includes('SQLSTATE') || errorMessage.includes('cached plan')) {
+          Alert.alert(
+            'กำลังปรับปรุงระบบ', 
+            'ระบบฐานข้อมูลกำลังได้รับการปรับปรุง (Stale Cache) กรุณาลองใหม่อีกครั้งใน 1-2 นาที หรือติดต่อเจ้าหน้าที่หากยังพบปัญหา',
+            [{ text: 'ตกลง' }]
+          );
+        } else {
+          Alert.alert('เกิดข้อผิดพลาด', errorMessage || 'ไม่สามารถโหลดข้อมูลสนามได้');
+        }
       }
     } finally {
       setRefreshing(false);
