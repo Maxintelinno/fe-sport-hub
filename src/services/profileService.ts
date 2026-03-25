@@ -97,6 +97,13 @@ export interface OwnerDashboardResponse {
     };
 }
 
+export interface BankAccountsResponse {
+    status: string;
+    message: string;
+    has_bank_account: boolean;
+    data: any;
+}
+
 export async function getOwnerProfile(): Promise<OwnerProfileResponse> {
     const response = await api.get(`${PROFILE_API_URL}/v1/profile`, {
         validateStatus: () => true,
@@ -126,6 +133,60 @@ export async function getRevenueReport(groupBy: 'total' | 'day' | 'month' | 'yea
 
     if (response.status >= 400) {
         throw new Error(response.data?.message || 'ไม่สามารถดึงรายงานรายได้ได้');
+    }
+    return response.data;
+}
+
+export async function getBankAccounts(): Promise<BankAccountsResponse> {
+    const response = await api.get(`${PROFILE_API_URL}/v1/owner/bank-accounts`, {
+        validateStatus: () => true,
+    });
+
+    if (response.status >= 400) {
+        throw new Error(response.data?.message || 'ไม่สามารถดึงข้อมูลบัญชีธนาคารได้');
+    }
+    return response.data;
+}
+
+export async function addBankAccount(data: {
+    bank_code: string;
+    bank_name: string;
+    account_name: string;
+    account_number: string;
+    is_default?: boolean;
+    prompt_pay?: string;
+}): Promise<any> {
+    const response = await api.post(`${PROFILE_API_URL}/v1/owner/bank-accounts`, data, {
+        validateStatus: () => true,
+    });
+
+    if (response.status >= 400) {
+        throw new Error(response.data?.message || 'ไม่สามารถบันทึกข้อมูลบัญชีธนาคารได้');
+    }
+    return response.data;
+}
+
+export async function getWithdrawalBalance(): Promise<{ status: string; available_balance: number }> {
+    const response = await api.get(`${PROFILE_API_URL}/v1/owner/withdrawal-balance`, {
+        validateStatus: () => true,
+    });
+
+    if (response.status >= 400) {
+        throw new Error(response.data?.message || 'ไม่สามารถดึงข้อมูลยอดเงินคงเหลือได้');
+    }
+    return response.data;
+}
+
+export async function requestWithdrawal(data: {
+    amount: number;
+    bank_account_id?: string;
+}): Promise<any> {
+    const response = await api.post(`${PROFILE_API_URL}/v1/owner/withdrawals`, data, {
+        validateStatus: () => true,
+    });
+
+    if (response.status >= 400) {
+        throw new Error(response.data?.message || 'ไม่สามารถส่งคำขอถอนเงินได้');
     }
     return response.data;
 }

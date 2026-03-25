@@ -1,10 +1,9 @@
 import React, { useMemo, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, Dimensions } from 'react-native';
 import { useAuth } from '../../context/AuthContext';
-import { getVenuesByOwner } from '../../data/venueStore';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
-import { getOwnerProfile, OwnerProfileResponse, getRevenueReport, RevenueReportResponse } from '../../services/profileService';
-import { ActivityIndicator } from 'react-native';
+import { getOwnerProfile, OwnerProfileResponse, getRevenueReport, RevenueReportResponse, getBankAccounts, BankAccountsResponse } from '../../services/profileService';
+import { ActivityIndicator, Alert } from 'react-native';
 
 const { width } = Dimensions.get('window');
 const PIE_SIZE = 220;
@@ -144,17 +143,19 @@ export default function OwnerProfileScreen() {
     const { user, logout } = useAuth();
     const navigation = useNavigation<any>();
     const [selectedPeriod, setSelectedPeriod] = useState('all');
-    const [ownerVenues, setOwnerVenues] = useState<any[]>([]);
     const [profile, setProfile] = useState<OwnerProfileResponse | null>(null);
     const [revenueReport, setRevenueReport] = useState<RevenueReportResponse | null>(null);
+    const [bankAccountStatus, setBankAccountStatus] = useState<BankAccountsResponse | null>(null);
     const [loadingProfile, setLoadingProfile] = useState(true);
     const [loadingRevenue, setLoadingRevenue] = useState(false);
+    const [loadingBank, setLoadingBank] = useState(false);
 
     useFocusEffect(
         React.useCallback(() => {
             const fetchData = async () => {
                 setLoadingProfile(true);
                 setLoadingRevenue(true);
+                setLoadingBank(true);
                 try {
                     const profData = await getOwnerProfile();
                     setProfile(profData);
@@ -162,16 +163,19 @@ export default function OwnerProfileScreen() {
                     const apiPeriod: any = selectedPeriod === 'all' ? 'total' : selectedPeriod;
                     const revData = await getRevenueReport(apiPeriod);
                     setRevenueReport(revData);
+
+                    const bankData = await getBankAccounts();
+                    setBankAccountStatus(bankData);
                 } catch (error) {
                     console.error('Error fetching dashboard data:', error);
                 } finally {
                     setLoadingProfile(false);
                     setLoadingRevenue(false);
+                    setLoadingBank(false);
                 }
             };
 
             if (user) {
-                setOwnerVenues(getVenuesByOwner(user.id));
                 fetchData();
             }
         }, [user, selectedPeriod])
@@ -200,7 +204,7 @@ export default function OwnerProfileScreen() {
     // Use profile data if available, fallback to Auth user
     const displayName = profile?.user.name || user.name;
     const displayPhone = profile?.user.phone || user.phone || 'ไม่มีข้อมูลการติดต่อ';
-    const fieldCount = profile?.stats.field_count ?? ownerVenues.length;
+    const fieldCount = profile?.stats.field_count ?? 0;
     const bookingCount = profile?.stats.booking_count ?? 0;
     const totalRevenue = profile?.stats.total_revenue ?? 0;
     const planName = profile?.plan.name || 'Free Plan';
@@ -359,52 +363,57 @@ export default function OwnerProfileScreen() {
                 </View>
             </View>
 
-            {/* Venue List */}
-            <View style={styles.venueSection}>
-                <View style={styles.venueSectionHeader}>
-                    <Text style={styles.venueSectionTitle}>สนามของคุณ ({ownerVenues.length})</Text>
-                    <TouchableOpacity
-                        style={styles.addButton}
-                        onPress={() => navigation.navigate('AddVenueTab')}
+            {/* Finance Section */}
+            <View style={styles.financeSection}>
+                <View style={styles.sectionHeaderRow}>
+                    <Text style={styles.sectionTitle}>💎 การเงินของฉัน</Text>
+                </View>
+                
+                <View style={styles.financeGrid}>
+                    <TouchableOpacity 
+                        style={styles.financeCard}
+                        onPress={() => navigation.navigate('BankAccounts')}
                     >
-                        <Text style={styles.addButtonText}>+ เพิ่มสนาม</Text>
+                        <View style={styles.financeCardIconContainer}>
+                            <Text style={styles.financeCardIcon}>💳</Text>
+                        </View>
+                        <View style={styles.financeCardContent}>
+                            <Text style={styles.financeCardTitle}>บัญชีรับเงิน</Text>
+                            <Text style={styles.financeCardSubtitle}>
+                                {loadingBank ? 'กำลังโหลด...' : (bankAccountStatus?.has_bank_account ? 'ตรวจสอบสถานะ' : 'เพิ่มบัญชีรับเงิน')}
+                            </Text>
+                        </View>
+                        <Text style={styles.chevronIcon}>→</Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity 
+                        style={styles.financeCard}
+                        onPress={() => navigation.navigate('Withdraw')}
+                    >
+                        <View style={[styles.financeCardIconContainer, { backgroundColor: 'rgba(76, 175, 80, 0.1)' }]}>
+                            <Text style={styles.financeCardIcon}>💸</Text>
+                        </View>
+                        <View style={styles.financeCardContent}>
+                            <Text style={styles.financeCardTitle}>ถอนเงิน</Text>
+                            <Text style={styles.financeCardSubtitle}>โอนเข้าบัญชีธนาคาร</Text>
+                        </View>
+                        <Text style={styles.chevronIcon}>→</Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity 
+                        style={styles.financeCard}
+                        onPress={() => navigation.navigate('TransactionHistory')}
+                    >
+                        <View style={[styles.financeCardIconContainer, { backgroundColor: 'rgba(33, 150, 243, 0.1)' }]}>
+                            <Text style={styles.financeCardIcon}>📄</Text>
+                        </View>
+                        <View style={styles.financeCardContent}>
+                            <Text style={styles.financeCardTitle}>ประวัติการโอน</Text>
+                            <Text style={styles.financeCardSubtitle}>ดูรายการย้อนหลัง</Text>
+                        </View>
+                        <Text style={styles.chevronIcon}>→</Text>
                     </TouchableOpacity>
                 </View>
-
-                {ownerVenues.map((venue) => {
-                    const displayImage = venue.imageUrls && venue.imageUrls.length > 0
-                        ? venue.imageUrls[0]
-                        : venue.imageUrl;
-
-                    return (
-                        <View key={venue.id} style={styles.venueCard}>
-                            {displayImage ? (
-                                <Image source={{ uri: displayImage }} style={styles.venueThumb} />
-                            ) : (
-                                <View style={[styles.venueThumb, styles.placeholderThumb]}>
-                                    <Text style={styles.placeholderText}>🏟️</Text>
-                                </View>
-                            )}
-                            <View style={styles.venueInfo}>
-                                <View style={styles.venueHeaderRow}>
-                                    <Text style={styles.venueName} numberOfLines={1}>{venue.name}</Text>
-                                    <View style={styles.venueTag}>
-                                        <Text style={styles.venueTagText}>{venue.sportType}</Text>
-                                    </View>
-                                </View>
-                                <Text style={styles.venueAddress} numberOfLines={1}>📍 {venue.address}</Text>
-                                <Text style={styles.venuePrice}>฿{venue.pricePerHour} / ชม.</Text>
-                            </View>
-                        </View>
-                    );
-                })}
-
-                {ownerVenues.length === 0 && (
-                    <View style={styles.emptyVenue}>
-                        <Text style={styles.emptyVenueIcon}>🏟️</Text>
-                        <Text style={styles.emptyVenueText}>ยังไม่มีสนาม — เพิ่มสนามแรกของคุณ!</Text>
-                    </View>
-                )}
             </View>
 
             {/* Logout */}
@@ -855,5 +864,74 @@ const styles = StyleSheet.create({
         color: '#c00',
         fontSize: 16,
         fontWeight: '700',
+    },
+
+    // Finance Section
+    financeSection: {
+        backgroundColor: '#fff',
+        borderRadius: 24,
+        padding: 20,
+        marginBottom: 16,
+        borderWidth: 1,
+        borderColor: 'rgba(26, 95, 42, 0.06)',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.04,
+        shadowRadius: 10,
+        elevation: 3,
+    },
+    sectionHeaderRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 16,
+    },
+    sectionTitle: {
+        fontSize: 20,
+        fontWeight: '900',
+        color: '#1A5F2A',
+    },
+    financeGrid: {
+        gap: 12,
+    },
+    financeCard: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#F9FBF9',
+        borderRadius: 16,
+        padding: 14,
+        borderWidth: 1,
+        borderColor: 'rgba(26, 95, 42, 0.04)',
+    },
+    financeCardIconContainer: {
+        width: 48,
+        height: 48,
+        borderRadius: 12,
+        backgroundColor: 'rgba(26, 95, 42, 0.08)',
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginRight: 14,
+    },
+    financeCardIcon: {
+        fontSize: 24,
+    },
+    financeCardContent: {
+        flex: 1,
+    },
+    financeCardTitle: {
+        fontSize: 16,
+        fontWeight: '800',
+        color: '#1A5F2A',
+        marginBottom: 2,
+    },
+    financeCardSubtitle: {
+        fontSize: 13,
+        color: '#777',
+        fontWeight: '500',
+    },
+    chevronIcon: {
+        fontSize: 18,
+        color: 'rgba(26, 95, 42, 0.3)',
+        fontWeight: '900',
     },
 });

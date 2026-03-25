@@ -45,6 +45,10 @@ export type OwnerStackParamList = {
     EditVenue: { venue: Venue };
     VenueBookings: { venueId: string };
     Profile: undefined;
+    BankAccounts: undefined;
+    AddBankAccount: undefined;
+    Withdraw: undefined;
+    WithdrawSuccess: { amount: number; netAmount: number; bankName: string; accountNumber: string };
     RevenueDetail: undefined;
     UpgradePlan: undefined;
     UpgradePayment: { planName: string; price: number };

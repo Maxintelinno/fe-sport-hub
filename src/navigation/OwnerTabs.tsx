@@ -28,7 +28,11 @@ import {
   ConfirmTrialScreen,
   TrialSuccessScreen,
   OwnerHomeScreen,
+  BankAccountsScreen,
+  AddBankAccountScreen,
 } from '../screens/owner';
+import WithdrawScreen from '../screens/owner/WithdrawScreen';
+import WithdrawSuccessScreen from '../screens/owner/WithdrawSuccessScreen';
 import { OwnerStackParamList } from './types';
 
 const Tab = createBottomTabNavigator();
@@ -111,6 +115,10 @@ function ProfileStack() {
       }}
     >
       <Stack.Screen name="Profile" component={OwnerProfileScreen} options={{ title: 'โปรไฟล์ของฉัน' }} />
+      <Stack.Screen name="BankAccounts" component={BankAccountsScreen} options={{ title: 'บัญชีรับเงิน' }} />
+      <Stack.Screen name="AddBankAccount" component={AddBankAccountScreen} options={{ title: 'เพิ่มบัญชีรับเงิน' }} />
+      <Stack.Screen name="Withdraw" component={WithdrawScreen} options={{ title: 'ถอนเงิน' }} />
+      <Stack.Screen name="WithdrawSuccess" component={WithdrawSuccessScreen} options={{ headerShown: false }} />
       <Stack.Screen name="RevenueDetail" component={RevenueDetailScreen} options={{ title: 'รายละเอียดรายได้' }} />
       <Stack.Screen name="UpgradePlan" component={UpgradePlanScreen} options={{ title: 'อัปเกรดแพ็กเกจ' }} />
       <Stack.Screen name="UpgradePayment" component={UpgradePaymentScreen} options={{ title: 'ชำระเงินอัปเกรด' }} />
