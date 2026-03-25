@@ -108,12 +108,138 @@ const MOCK_INSIGHTS = [
   { id: '3', title: 'สุขภาพ: ยืดเหยียดหลังเล่น', description: '5 ท่าโยคะช่วยคลายกล้ามเนื้อหลังออกกำลังกาย', bg: '#6D28D9', image: '🧘' },
 ];
 
+const MOCK_SPONSORED_VENUES: Venue[] = [
+  {
+    id: 'sp1',
+    owner_id: 'o1',
+    name: 'สเตเดียม พรีเมียม บาย โปร',
+    sport_type: 'ฟุตบอล',
+    address_line: 'เลขที่ 123 ถ.รัชดาภิเษก, ดินแดง',
+    district: 'ดินแดง',
+    province: 'กรุงเทพมหานคร',
+    open_time: '08:00',
+    close_time: '23:00',
+    price_per_hour: 1200,
+    description: 'สนามหญ้าเทียมระดับฟีฟ่า ใจกลางเมือง',
+    imageUrl: 'https://images.unsplash.com/photo-1574629810360-7efbbe195018?q=80&w=800&auto=format&fit=crop',
+    status: 'active',
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+    images: [],
+  },
+  {
+    id: 'sp2',
+    owner_id: 'o2',
+    name: 'แกรนด์ แบดมินตัน คลับ',
+    sport_type: 'แบดมินตัน',
+    address_line: 'ซอยสุขุมวิท 39, คลองตันเหนือ',
+    district: 'วัฒนา',
+    province: 'กรุงเทพมหานคร',
+    open_time: '06:00',
+    close_time: '22:00',
+    price_per_hour: 350,
+    description: 'สนามแบดมินตันมาตรฐานสากล 10 คอร์ท',
+    imageUrl: 'https://images.unsplash.com/photo-1626225967045-944f177fc2fb?q=80&w=800&auto=format&fit=crop',
+    status: 'active',
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+    images: [],
+  }
+];
+
+const MOCK_EQUIPMENT = [
+  {
+    id: 'e1',
+    title: 'Nike Air Zoom Pegasus',
+    message: 'รองเท้าวิ่งลด 20% สำหรับสมาชิก',
+    actionText: 'ดูสินค้า',
+    imageUrl: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?q=80&w=800&auto=format&fit=crop',
+    brand: 'Nike',
+    price: '฿3,200',
+    phone: '02-123-4567',
+    branches: 'สยามพารากอน, เซ็นทรัลเวิลด์, ไอคอนสยาม',
+    description: 'รองเท้าวิ่งยอดนิยมที่มาพร้อมเทคโนโลยี Air Zoom รองรับแรงกระแทกได้ดีเยี่ยม เหมาะสำหรับการวิ่งทุกระยะทาง'
+  },
+  {
+    id: 'e2',
+    title: 'Yonex Astrox 88D Pro',
+    message: 'แถมฟรี กริปพันด้ามและเอ็น',
+    actionText: 'ดูสินค้า',
+    imageUrl: 'https://images.unsplash.com/photo-1626225967045-944f177fc2fb?q=80&w=800&auto=format&fit=crop',
+    brand: 'Yonex',
+    price: '฿2,800',
+    phone: '02-987-6543',
+    branches: 'เอ็มควอเทียร์, เซ็นทรัลพระราม 9',
+    description: 'ไม้แบดมินตันซีรีส์เรือธง ออกแบบมาเพื่อพลังการตบที่หนักหน่วงและการควบคุมที่แม่นยำ'
+  },
+  {
+    id: 'e3',
+    title: 'Wilson Blade 98 V8',
+    message: 'รับฟรี ลูกเทนนิส 1 กระป๋อง',
+    actionText: 'ดูสินค้า',
+    imageUrl: 'https://images.unsplash.com/photo-1617083277661-807d4b2e817a?q=80&w=800&auto=format&fit=crop',
+    brand: 'Wilson',
+    price: '฿4,500',
+    phone: '02-444-5555',
+    branches: 'เซ็นทรัลลาดพร้าว, เมกาบางนา',
+    description: 'ไม้เทนนิสระดับท็อปที่ให้ความรู้สึกและการควบคุมที่ยอดเยี่ยม เหมาะสำหรับผู้เล่นระดับแข่งขัน'
+  }
+];
+
 const QUICK_MENU = [
   { id: '1', title: 'จองสนาม', icon: '⚽', color: '#E8F5E9', target: 'Venues' },
   { id: '2', title: 'การจอง', icon: '📋', color: '#FFF8E1', target: 'MyBookings' },
   { id: '3', title: 'โปรโมชั่น', icon: '🎁', color: '#E3F2FD', target: 'AllPromotions' },
   { id: '4', title: 'สาระกีฬา', icon: '💡', color: '#F3E5F5', target: 'SportsInsights' },
 ];
+
+function EquipmentCard({ item, onPress }: { item: typeof MOCK_EQUIPMENT[0]; onPress: () => void }) {
+  return (
+    <TouchableOpacity style={styles.equipmentCard} activeOpacity={0.9} onPress={onPress}>
+      <View style={styles.equipmentImageContainer}>
+        <Image source={{ uri: item.imageUrl }} style={styles.equipmentImage} />
+        <View style={styles.equipmentBrandBadge}>
+          <Text style={styles.equipmentBrandText}>{item.brand}</Text>
+        </View>
+      </View>
+      <View style={styles.equipmentContent}>
+        <Text style={styles.equipmentTitle} numberOfLines={1}>{item.title}</Text>
+        <Text style={styles.equipmentMessage} numberOfLines={1}>{item.message}</Text>
+        <View style={styles.equipmentFooter}>
+          <Text style={styles.equipmentPrice}>{item.price}</Text>
+          <View style={styles.equipmentButton}>
+            <Text style={styles.equipmentButtonText}>[ {item.actionText} ]</Text>
+          </View>
+        </View>
+      </View>
+      <View style={styles.equipmentGoldAccent} />
+    </TouchableOpacity>
+  );
+}
+
+function SponsoredVenueCard({ venue, onPress }: { venue: Venue; onPress: () => void }) {
+  const imageUrl = venue.imageUrl || (venue.images && venue.images[0]?.image_url);
+  
+  return (
+    <TouchableOpacity style={styles.sponsoredCard} onPress={onPress} activeOpacity={0.9}>
+      <Image source={{ uri: imageUrl }} style={styles.sponsoredImage} />
+      <View style={styles.sponsoredBadge}>
+        <Text style={styles.sponsoredBadgeText}>SPONSORED</Text>
+      </View>
+      <View style={styles.sponsoredContent}>
+        <Text style={styles.sponsoredName} numberOfLines={1}>{venue.name}</Text>
+        <Text style={styles.sponsoredLocation} numberOfLines={1}>📍 {venue.district}, {venue.province}</Text>
+        <View style={styles.sponsoredFooter}>
+          <Text style={styles.sponsoredPrice}>฿{venue.price_per_hour}<Text style={styles.sponsoredUnit}>/ชม.</Text></Text>
+          <View style={styles.sponsoredRating}>
+            <Text style={styles.sponsoredStar}>⭐</Text>
+            <Text style={styles.sponsoredRatingText}>4.9</Text>
+          </View>
+        </View>
+      </View>
+    </TouchableOpacity>
+  );
+}
 
 export default function VenueListScreen({ navigation }: Props) {
   const { isLoggedIn, user, loading: authLoading } = useAuth();
@@ -127,6 +253,10 @@ export default function VenueListScreen({ navigation }: Props) {
   // Gallery State
   const [galleryVisible, setGalleryVisible] = React.useState(false);
   const [galleryImages, setGalleryImages] = React.useState<any[]>([]);
+
+  // Equipment Detail State
+  const [productModalVisible, setProductModalVisible] = React.useState(false);
+  const [selectedProduct, setSelectedProduct] = React.useState<typeof MOCK_EQUIPMENT[0] | null>(null);
 
   const allVenues = useMemo(() => getAllVenues(), []);
 
@@ -276,6 +406,11 @@ export default function VenueListScreen({ navigation }: Props) {
     } else {
       Alert.alert('ขออภัย', 'ไม่มีรูปภาพเพิ่มเติมสำหรับสนามนี้');
     }
+  };
+
+  const handleProductPress = (product: typeof MOCK_EQUIPMENT[0]) => {
+    setSelectedProduct(product);
+    setProductModalVisible(true);
   };
 
   // Trigger initial load when auth is ready
@@ -429,6 +564,29 @@ export default function VenueListScreen({ navigation }: Props) {
           />
         </View>
 
+        {/* SECTION 1.5: Sponsored Venues */}
+        <View style={styles.adsSection}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>⭐ สนามแนะนำ (Sponsored)</Text>
+          </View>
+          <FlatList
+            data={MOCK_SPONSORED_VENUES}
+            keyExtractor={(item) => item.id}
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            renderItem={({ item }) => (
+              <SponsoredVenueCard 
+                venue={item} 
+                onPress={() => handleBookPress(item)} 
+              />
+            )}
+            contentContainerStyle={styles.adsList}
+            snapToAlignment="start"
+            snapToInterval={width * 0.7 + 16}
+            decelerationRate="fast"
+          />
+        </View>
+
         {/* SECTION 2: All Venues */}
         <View
           style={styles.venuesSection}
@@ -539,8 +697,57 @@ export default function VenueListScreen({ navigation }: Props) {
           </View>
         </Modal>
 
+        {/* Equipment Detail Modal */}
+        <Modal
+          visible={productModalVisible}
+          transparent={true}
+          animationType="slide"
+          onRequestClose={() => setProductModalVisible(false)}
+        >
+          <View style={styles.modalOverlay}>
+            <View style={[styles.modalContent, { height: '70%', backgroundColor: '#fff', borderTopLeftRadius: 30, borderTopRightRadius: 30 }]}>
+              <View style={[styles.modalHeader, { paddingVertical: 20, borderBottomWidth: 1, borderBottomColor: '#f0f0f0' }]}>
+                <Text style={[styles.modalTitle, { color: '#1A5F2A' }]}>รายละเอียดสินค้า</Text>
+                <TouchableOpacity
+                  style={[styles.closeBtn, { backgroundColor: '#f5f5f5', borderColor: '#ddd' }]}
+                  onPress={() => setProductModalVisible(false)}
+                >
+                  <Text style={[styles.closeBtnText, { color: '#666' }]}>✕</Text>
+                </TouchableOpacity>
+              </View>
+
+              {selectedProduct && (
+                <ScrollView contentContainerStyle={{ padding: 24 }}>
+                  <Image source={{ uri: selectedProduct.imageUrl }} style={{ width: '100%', height: 200, borderRadius: 20, marginBottom: 20 }} resizeMode="cover" />
+                  
+                  <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                    <Text style={{ fontSize: 24, fontWeight: '900', color: '#1a1a1a', flex: 1 }}>{selectedProduct.title}</Text>
+                    <Text style={{ fontSize: 22, fontWeight: '900', color: '#1A5F2A' }}>{selectedProduct.price}</Text>
+                  </View>
+
+                  <View style={{ backgroundColor: '#e8f5e9', alignSelf: 'flex-start', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 10, marginBottom: 20 }}>
+                    <Text style={{ fontSize: 12, fontWeight: '900', color: '#1A5F2A' }}>{selectedProduct.brand}</Text>
+                  </View>
+
+                  <Text style={{ fontSize: 15, color: '#444', lineHeight: 24, marginBottom: 24 }}>{selectedProduct.description}</Text>
+
+                  <View style={{ backgroundColor: '#fcf8e8', padding: 20, borderRadius: 20, borderWidth: 1, borderColor: '#f0e6c0' }}>
+                    <Text style={{ fontSize: 16, fontWeight: '900', color: '#1a1a1a', marginBottom: 12 }}>📞 ข้อมูลการติดต่อ</Text>
+                    <Text style={{ fontSize: 15, color: '#666', marginBottom: 8 }}>เบอร์โทรศัพท์: <Text style={{ fontWeight: '700', color: '#1A5F2A' }}>{selectedProduct.phone}</Text></Text>
+                    <Text style={{ fontSize: 15, color: '#666' }}>สาขาที่วางจำหน่าย: <Text style={{ fontWeight: '700' }}>{selectedProduct.branches}</Text></Text>
+                  </View>
+
+                  <View style={{ marginTop: 30, padding: 16, backgroundColor: '#f5f5f5', borderRadius: 12 }}>
+                    <Text style={{ fontSize: 12, color: '#999', textAlign: 'center', fontStyle: 'italic' }}>* ขั้นตอนนี้ยังไม่รองรับการสั่งซื้อผ่านแอปพลิเคชัน</Text>
+                  </View>
+                </ScrollView>
+              )}
+            </View>
+          </View>
+        </Modal>
+
         {/* SECTION 3: Knowledge & Sports Techniques */}
-        <View style={[styles.adsSection, { marginTop: 10, marginBottom: 40 }]}>
+        <View style={[styles.adsSection, { marginTop: 10 }]}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>สาระน่ารู้ & เทคนิคกีฬา</Text>
             <TouchableOpacity onPress={() => navigation.navigate('SportsInsights')}>
@@ -553,6 +760,29 @@ export default function VenueListScreen({ navigation }: Props) {
             horizontal
             showsHorizontalScrollIndicator={false}
             renderItem={renderInsightItem}
+            contentContainerStyle={styles.adsList}
+            snapToAlignment="start"
+            snapToInterval={width * 0.8 + 16}
+            decelerationRate="fast"
+          />
+        </View>
+
+        {/* SECTION 4: Recommended Equipment */}
+        <View style={[styles.adsSection, { marginTop: 10, marginBottom: 40 }]}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>👟 แนะนำอุปกรณ์</Text>
+          </View>
+          <FlatList
+            data={MOCK_EQUIPMENT}
+            keyExtractor={(item) => item.id}
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            renderItem={({ item }) => (
+              <EquipmentCard 
+                item={item} 
+                onPress={() => handleProductPress(item)} 
+              />
+            )}
             contentContainerStyle={styles.adsList}
             snapToAlignment="start"
             snapToInterval={width * 0.8 + 16}
@@ -1063,5 +1293,174 @@ const styles = StyleSheet.create({
   cardImageTouch: {
     width: '100%',
     height: '100%',
+  },
+  // Sponsored Styles
+  sponsoredCard: {
+    width: width * 0.7,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
+    marginRight: 16,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 10,
+    elevation: 4,
+    borderWidth: 1,
+    borderColor: 'rgba(197, 160, 33, 0.2)',
+  },
+  sponsoredImage: {
+    width: '100%',
+    height: 120,
+    resizeMode: 'cover',
+  },
+  sponsoredBadge: {
+    position: 'absolute',
+    top: 10,
+    right: 10,
+    backgroundColor: 'rgba(26, 95, 42, 0.9)',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+  },
+  sponsoredBadgeText: {
+    color: '#C5A021',
+    fontSize: 9,
+    fontWeight: '900',
+    letterSpacing: 0.5,
+  },
+  sponsoredContent: {
+    padding: 12,
+  },
+  sponsoredName: {
+    fontSize: 15,
+    fontWeight: '800',
+    color: '#1a1a1a',
+    marginBottom: 4,
+  },
+  sponsoredLocation: {
+    fontSize: 11,
+    color: '#666',
+    fontWeight: '600',
+    marginBottom: 8,
+  },
+  sponsoredFooter: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingTop: 8,
+    borderTopWidth: 1,
+    borderTopColor: '#f0f0f0',
+  },
+  sponsoredPrice: {
+    fontSize: 16,
+    fontWeight: '900',
+    color: '#1A5F2A',
+  },
+  sponsoredUnit: {
+    fontSize: 10,
+    color: '#888',
+    fontWeight: '600',
+  },
+  sponsoredRating: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  sponsoredStar: {
+    fontSize: 10,
+    marginRight: 2,
+  },
+  sponsoredRatingText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#444',
+  },
+  // Equipment Styles
+  equipmentCard: {
+    width: width * 0.75,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 24,
+    marginRight: 16,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.1,
+    shadowRadius: 12,
+    elevation: 5,
+    borderWidth: 1,
+    borderColor: 'rgba(26, 95, 42, 0.05)',
+  },
+  equipmentImageContainer: {
+    width: '100%',
+    height: 140,
+    position: 'relative',
+    backgroundColor: '#F5F5F5',
+  },
+  equipmentImage: {
+    width: '100%',
+    height: '100%',
+    resizeMode: 'cover',
+  },
+  equipmentBrandBadge: {
+    position: 'absolute',
+    top: 12,
+    right: 12,
+    backgroundColor: 'rgba(255,255,255,0.9)',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  equipmentBrandText: {
+    color: '#1A5F2A',
+    fontSize: 10,
+    fontWeight: '900',
+    letterSpacing: 1,
+    textTransform: 'uppercase',
+  },
+  equipmentContent: {
+    padding: 16,
+  },
+  equipmentTitle: {
+    fontSize: 16,
+    fontWeight: '900',
+    color: '#1a1a1a',
+    marginBottom: 4,
+  },
+  equipmentMessage: {
+    fontSize: 12,
+    color: '#666',
+    fontWeight: '600',
+    marginBottom: 12,
+  },
+  equipmentFooter: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: '#f0f0f0',
+  },
+  equipmentPrice: {
+    fontSize: 18,
+    fontWeight: '900',
+    color: '#1A5F2A',
+  },
+  equipmentButton: {
+    paddingVertical: 4,
+  },
+  equipmentButtonText: {
+    fontSize: 14,
+    fontWeight: '900',
+    color: '#C5A021',
+  },
+  equipmentGoldAccent: {
+    height: 4,
+    backgroundColor: '#C5A021',
+    opacity: 0.5,
   },
 });

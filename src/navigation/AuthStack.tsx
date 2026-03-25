@@ -6,6 +6,9 @@ import RegisterScreen from '../screens/auth/RegisterScreen';
 import RoleSelectScreen from '../screens/auth/RoleSelectScreen';
 import PhoneVerifyScreen from '../screens/auth/PhoneVerifyScreen';
 import OTPVerifyScreen from '../screens/auth/OTPVerifyScreen';
+import ForgotPasswordScreen from '../screens/auth/ForgotPasswordScreen';
+import ForgotPasswordOTPScreen from '../screens/auth/ForgotPasswordOTPScreen';
+import ResetPasswordScreen from '../screens/auth/ResetPasswordScreen';
 
 export type AuthStackParamList = {
   Welcome: undefined;
@@ -14,6 +17,9 @@ export type AuthStackParamList = {
   Register: { role: 'cust' | 'owner'; phoneNumber: string };
   PhoneVerify: undefined;
   OTPVerify: { phoneNumber: string };
+  ForgotPassword: undefined;
+  ForgotPasswordOTP: { phoneNumber: string };
+  ResetPassword: { phoneNumber: string };
 };
 
 const Stack = createNativeStackNavigator<AuthStackParamList>();
@@ -34,6 +40,9 @@ export default function AuthStack() {
       <Stack.Screen name="Register" component={RegisterScreen} options={{ title: 'สมัครสมาชิก' }} />
       <Stack.Screen name="PhoneVerify" component={PhoneVerifyScreen} options={{ title: 'ยืนยันเบอร์โทรศัพท์' }} />
       <Stack.Screen name="OTPVerify" component={OTPVerifyScreen} options={{ title: 'ยืนยัน OTP' }} />
+      <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} options={{ title: 'ลืมรหัสผ่าน' }} />
+      <Stack.Screen name="ForgotPasswordOTP" component={ForgotPasswordOTPScreen} options={{ title: 'ยืนยัน OTP' }} />
+      <Stack.Screen name="ResetPassword" component={ResetPasswordScreen} options={{ title: 'ตั้งรหัสผ่านใหม่' }} />
     </Stack.Navigator>
   );
 }

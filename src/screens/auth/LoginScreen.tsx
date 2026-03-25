@@ -121,6 +121,12 @@ export default function LoginScreen({ navigation, route }: Props) {
                 onChangeText={setPassword}
                 secureTextEntry
               />
+              <TouchableOpacity
+                style={styles.forgotPasswordLink}
+                onPress={() => navigation.navigate('ForgotPassword')}
+              >
+                <Text style={styles.forgotPasswordText}>ลืมรหัสผ่าน?</Text>
+              </TouchableOpacity>
             </View>
 
             <TouchableOpacity
@@ -249,6 +255,16 @@ const styles = StyleSheet.create({
   registerLinkHighlight: {
     color: '#1A5F2A',
     fontWeight: '800',
+  },
+  forgotPasswordLink: {
+    alignSelf: 'flex-end',
+    marginTop: 8,
+    marginRight: 4,
+  },
+  forgotPasswordText: {
+    color: '#1A5F2A',
+    fontSize: 14,
+    fontWeight: '700',
   },
   bottomGlow: {
     position: 'absolute',
