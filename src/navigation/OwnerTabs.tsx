@@ -30,6 +30,7 @@ import {
   OwnerHomeScreen,
   BankAccountsScreen,
   AddBankAccountScreen,
+  EditBankAccountScreen,
 } from '../screens/owner';
 import WithdrawScreen from '../screens/owner/WithdrawScreen';
 import WithdrawSuccessScreen from '../screens/owner/WithdrawSuccessScreen';
@@ -117,6 +118,7 @@ function ProfileStack() {
       <Stack.Screen name="Profile" component={OwnerProfileScreen} options={{ title: 'โปรไฟล์ของฉัน' }} />
       <Stack.Screen name="BankAccounts" component={BankAccountsScreen} options={{ title: 'บัญชีรับเงิน' }} />
       <Stack.Screen name="AddBankAccount" component={AddBankAccountScreen} options={{ title: 'เพิ่มบัญชีรับเงิน' }} />
+      <Stack.Screen name="EditBankAccount" component={EditBankAccountScreen} options={{ title: 'แก้ไขบัญชีรับเงิน' }} />
       <Stack.Screen name="Withdraw" component={WithdrawScreen} options={{ title: 'ถอนเงิน' }} />
       <Stack.Screen name="WithdrawSuccess" component={WithdrawSuccessScreen} options={{ headerShown: false }} />
       <Stack.Screen name="RevenueDetail" component={RevenueDetailScreen} options={{ title: 'รายละเอียดรายได้' }} />

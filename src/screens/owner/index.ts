@@ -15,3 +15,4 @@ export { default as BankAccountsScreen } from './BankAccountsScreen';
 export { default as AddBankAccountScreen } from './AddBankAccountScreen';
 export { default as WithdrawScreen } from './WithdrawScreen';
 export { default as WithdrawSuccessScreen } from './WithdrawSuccessScreen';
+export { default as EditBankAccountScreen } from './EditBankAccountScreen';

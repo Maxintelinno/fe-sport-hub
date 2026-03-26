@@ -153,7 +153,7 @@ export async function addBankAccount(data: {
     bank_name: string;
     account_name: string;
     account_number: string;
-    is_default?: boolean;
+    is_default: boolean;
     prompt_pay?: string;
 }): Promise<any> {
     const response = await api.post(`${PROFILE_API_URL}/v1/owner/bank-accounts`, data, {
@@ -161,7 +161,47 @@ export async function addBankAccount(data: {
     });
 
     if (response.status >= 400) {
-        throw new Error(response.data?.message || 'ไม่สามารถบันทึกข้อมูลบัญชีธนาคารได้');
+        throw new Error(response.data?.message || 'ไม่สามารถเพิ่มบัญชีได้');
+    }
+    return response.data;
+}
+
+export async function updateBankAccount(id: string, data: {
+    bank_code: string;
+    bank_name: string;
+    account_name: string;
+    account_number: string;
+    is_default: boolean;
+    prompt_pay?: string;
+}): Promise<any> {
+    const response = await api.put(`${PROFILE_API_URL}/v1/owner/bank-accounts/${id}`, data, {
+        validateStatus: () => true,
+    });
+
+    if (response.status >= 400) {
+        throw new Error(response.data?.message || 'ไม่สามารถแก้ไขข้อมูลบัญชีได้');
+    }
+    return response.data;
+}
+
+export async function setDefaultBankAccount(id: string): Promise<any> {
+    const response = await api.post(`${PROFILE_API_URL}/v1/owner/bank-accounts/${id}/set-default`, {}, {
+        validateStatus: () => true,
+    });
+
+    if (response.status >= 400) {
+        throw new Error(response.data?.message || 'ไม่สามารถตั้งเป็นบัญชีหลักได้');
+    }
+    return response.data;
+}
+
+export async function deleteBankAccount(id: string): Promise<any> {
+    const response = await api.delete(`${PROFILE_API_URL}/v1/owner/bank-accounts/${id}`, {
+        validateStatus: () => true,
+    });
+
+    if (response.status >= 400) {
+        throw new Error(response.data?.message || 'ไม่สามารถลบบัญชีได้');
     }
     return response.data;
 }

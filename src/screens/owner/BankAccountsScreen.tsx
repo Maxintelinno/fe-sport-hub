@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, Dimensions, Platform } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, Dimensions, Platform, Alert } from 'react-native';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
-import { getBankAccounts, BankAccountsResponse } from '../../services/profileService';
+import { getBankAccounts, setDefaultBankAccount, deleteBankAccount, BankAccountsResponse } from '../../services/profileService';
 
 const { width } = Dimensions.get('window');
 
@@ -10,23 +10,63 @@ export default function BankAccountsScreen() {
     const [bankData, setBankData] = useState<BankAccountsResponse | null>(null);
     const [loading, setLoading] = useState(true);
 
+    const fetchData = async () => {
+        // Only show loading indicator on first load
+        if (!bankData) setLoading(true);
+        try {
+            const data = await getBankAccounts();
+            setBankData(data);
+        } catch (error) {
+            console.error('Error fetching bank accounts:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
     useFocusEffect(
         React.useCallback(() => {
-            const fetchData = async () => {
-                // Only show loading indicator on first load
-                if (!bankData) setLoading(true);
-                try {
-                    const data = await getBankAccounts();
-                    setBankData(data);
-                } catch (error) {
-                    console.error('Error fetching bank accounts:', error);
-                } finally {
-                    setLoading(false);
-                }
-            };
             fetchData();
         }, [])
     );
+
+    const handleSetDefault = async (id: string) => {
+        try {
+            setLoading(true);
+            await setDefaultBankAccount(id);
+            Alert.alert('✅ สำเร็จ', 'ตั้งค่าเป็นบัญชีหลักเรียบร้อยแล้ว');
+            await fetchData();
+        } catch (error) {
+            Alert.alert('เกิดข้อผิดพลาด', error instanceof Error ? error.message : 'ไม่สามารถเปลี่ยนบัญชีหลักได้');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleDelete = async (id: string) => {
+        Alert.alert(
+            'ยืนยันการลบ',
+            'คุณแน่ใจหรือไม่ว่าต้องการลบบัญชีนี้?',
+            [
+                { text: 'ยกเลิก', style: 'cancel' },
+                { 
+                    text: 'ลบ', 
+                    style: 'destructive',
+                    onPress: async () => {
+                        try {
+                            setLoading(true);
+                            await deleteBankAccount(id);
+                            Alert.alert('✅ สำเร็จ', 'ลบบัญชีเรียบร้อยแล้ว');
+                            await fetchData();
+                        } catch (error) {
+                            Alert.alert('เกิดข้อผิดพลาด', error instanceof Error ? error.message : 'ไม่สามารถลบบัญชีได้');
+                        } finally {
+                            setLoading(false);
+                        }
+                    }
+                }
+            ]
+        );
+    };
 
     if (loading && !bankData) {
         return (
@@ -97,7 +137,14 @@ export default function BankAccountsScreen() {
                     {accounts.map((acc: any, index: number) => (
                         <View key={index} style={styles.accountItemCard}>
                             <View style={styles.accountItemHeader}>
-                                <Text style={styles.checkIcon}>{acc.is_default ? '[✓]' : '[ ]'}</Text>
+                                <TouchableOpacity 
+                                    onPress={() => !acc.is_default && handleSetDefault(acc.id)}
+                                    style={styles.checkIconWrapper}
+                                >
+                                    <Text style={[styles.checkIcon, acc.is_default && styles.checkIconActive]}>
+                                        {acc.is_default ? '[✓]' : '[ ]'}
+                                    </Text>
+                                </TouchableOpacity>
                                 <Text style={styles.accountItemTitle}>{acc.bank_code} - {acc.account_number}</Text>
                             </View>
                             <View style={styles.accountItemBody}>
@@ -108,11 +155,25 @@ export default function BankAccountsScreen() {
                             </View>
                             <View style={styles.accountItemActions}>
                                 {!acc.is_default && (
-                                    <TouchableOpacity style={styles.actionLink}>
-                                        <Text style={styles.actionLinkText}>[ ตั้งเป็นบัญชีหลัก ]</Text>
-                                    </TouchableOpacity>
+                                    <>
+                                        <TouchableOpacity 
+                                            style={styles.actionLink}
+                                            onPress={() => handleSetDefault(acc.id)}
+                                        >
+                                            <Text style={styles.actionLinkText}>[ ตั้งเป็นบัญชีหลัก ]</Text>
+                                        </TouchableOpacity>
+                                        <TouchableOpacity 
+                                            style={styles.actionLink}
+                                            onPress={() => handleDelete(acc.id)}
+                                        >
+                                            <Text style={[styles.actionLinkText, { color: '#D32F2F' }]}>[ ลบ ]</Text>
+                                        </TouchableOpacity>
+                                    </>
                                 )}
-                                <TouchableOpacity style={styles.actionLink}>
+                                <TouchableOpacity 
+                                    style={styles.actionLink}
+                                    onPress={() => navigation.navigate('EditBankAccount', { account: acc })}
+                                >
                                     <Text style={styles.actionLinkText}>[ แก้ไข ]</Text>
                                 </TouchableOpacity>
                             </View>
@@ -371,6 +432,13 @@ const styles = StyleSheet.create({
     primaryAddButtonText: {
         color: '#fff',
         fontSize: 18,
+        fontWeight: '900',
+    },
+    checkIconWrapper: {
+        paddingRight: 10,
+    },
+    checkIconActive: {
+        color: '#1A5F2A',
         fontWeight: '900',
     },
 });

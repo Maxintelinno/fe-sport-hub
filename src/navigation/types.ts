@@ -47,6 +47,7 @@ export type OwnerStackParamList = {
     Profile: undefined;
     BankAccounts: undefined;
     AddBankAccount: undefined;
+    EditBankAccount: { account: any };
     Withdraw: undefined;
     WithdrawSuccess: { amount: number; netAmount: number; bankName: string; accountNumber: string };
     RevenueDetail: undefined;
