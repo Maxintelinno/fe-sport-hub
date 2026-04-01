@@ -128,3 +128,43 @@ export async function getFieldAvailability(fieldId: string, date: string): Promi
   }
   return response.data.data;
 }
+
+export interface OwnerBookingSlot {
+  start_time: string;
+  end_time: string;
+  type: 'booked' | 'available';
+  booking_source?: 'online' | 'offline';
+  customer_name?: string;
+  payment_status?: 'paid' | 'pending';
+  status?: string;
+}
+
+export interface OwnerCourtBookings {
+  court_id: string;
+  court_name: string;
+  booked_slots: OwnerBookingSlot[];
+  available_slots: OwnerBookingSlot[];
+}
+
+export interface OwnerBookingsResponse {
+  status: string;
+  message: string;
+  data: {
+    field_id: string;
+    date: string;
+    open_time: string;
+    close_time: string;
+    courts: OwnerCourtBookings[];
+  };
+}
+
+export async function getOwnerBookings(fieldId: string): Promise<OwnerBookingsResponse['data']> {
+  const response = await api.get(`${API_URL}/v1/owner/bookings?field_id=${fieldId}`, {
+    validateStatus: () => true,
+  });
+
+  if (response.status >= 400) {
+    throw new Error(response.data?.message || 'ไม่สามารถดึงข้อมูลการจองได้');
+  }
+  return response.data.data;
+}

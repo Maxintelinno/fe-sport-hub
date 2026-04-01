@@ -56,4 +56,12 @@ export type OwnerStackParamList = {
     UpgradeSuccess: { planName: string; paymentNo: string };
     ConfirmTrial: undefined;
     TrialSuccess: { expiryDate: string };
+    AddOfflineBooking: { 
+        fieldId?: string; 
+        courtId?: string; 
+        courtName?: string; 
+        startTime?: string; 
+        endTime?: string; 
+        date?: string; 
+    };
 };

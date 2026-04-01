@@ -31,6 +31,7 @@ import {
   BankAccountsScreen,
   AddBankAccountScreen,
   EditBankAccountScreen,
+  AddOfflineBookingScreen,
 } from '../screens/owner';
 import WithdrawScreen from '../screens/owner/WithdrawScreen';
 import WithdrawSuccessScreen from '../screens/owner/WithdrawSuccessScreen';
@@ -73,6 +74,7 @@ function OwnerHomeStack() {
       <Stack.Screen name="UpgradeSuccess" component={UpgradeSuccessScreen} options={{ headerShown: false }} />
       <Stack.Screen name="ConfirmTrial" component={ConfirmTrialScreen} options={{ title: 'เริ่มทดลองใช้' }} />
       <Stack.Screen name="TrialSuccess" component={TrialSuccessScreen} options={{ headerShown: false }} />
+      <Stack.Screen name="AddOfflineBooking" component={AddOfflineBookingScreen} options={{ title: 'เพิ่มการจองออฟไลน์' }} />
     </Stack.Navigator>
   );
 }

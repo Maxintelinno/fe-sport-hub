@@ -13,6 +13,8 @@ import {
 import { useAuth } from '../../context/AuthContext';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { getOwnerDashboard, OwnerDashboardResponse } from '../../services/profileService';
+import { getOwnerBookings, OwnerBookingSlot } from '../../services/bookingService';
+import { getOwnerFields } from '../../services/venueService';
 
 const { width } = Dimensions.get('window');
 
@@ -111,11 +113,23 @@ export default function OwnerHomeScreen() {
   const navigation = useNavigation<any>();
   const [dashboard, setDashboard] = useState<OwnerDashboardResponse['data'] | null>(null);
   const [loading, setLoading] = useState(true);
+  const [ownerBookings, setOwnerBookings] = useState<(OwnerBookingSlot & { court_name: string })[]>([]);
+  const [bookingLoading, setBookingLoading] = useState(false);
+  const [activeFieldId, setActiveFieldId] = useState<string | null>(null);
 
   const fetchData = async () => {
     try {
       const response = await getOwnerDashboard();
       setDashboard(response.data);
+
+      // Fetch bookings for the first field
+      if (user?.id) {
+        const fields = await getOwnerFields(user.id);
+        if (fields && fields.length > 0) {
+          setActiveFieldId(fields[0].id);
+          await fetchBookings(fields[0].id);
+        }
+      }
     } catch (error: any) {
       // Fallback for non-UUID accounts or uninitialized data in staging
       const errorMsg = error?.message?.toLowerCase() || '';
@@ -148,6 +162,31 @@ export default function OwnerHomeScreen() {
       }
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchBookings = async (fieldId: string) => {
+    try {
+      setBookingLoading(true);
+      const data = await getOwnerBookings(fieldId);
+      
+      const allSlots: (OwnerBookingSlot & { court_name: string })[] = [];
+      data.courts.forEach(court => {
+        court.booked_slots.forEach(slot => {
+          allSlots.push({ ...slot, court_name: court.court_name });
+        });
+        court.available_slots.forEach(slot => {
+          allSlots.push({ ...slot, court_name: court.court_name, type: 'available' });
+        });
+      });
+
+      // Sort by start_time
+      allSlots.sort((a, b) => a.start_time.localeCompare(b.start_time));
+      setOwnerBookings(allSlots);
+    } catch (error) {
+      console.error('Error fetching bookings:', error);
+    } finally {
+      setBookingLoading(false);
     }
   };
 
@@ -286,6 +325,107 @@ export default function OwnerHomeScreen() {
                         </View>
                     </TouchableOpacity>
                 ))}
+            </View>
+
+            {/* Today's Bookings Section */}
+            <View style={styles.sectionHeader}>
+                <View>
+                    <Text style={styles.sectionTitle}>📅 การจองวันนี้</Text>
+                    <Text style={styles.sectionSubtitle}>
+                        วันนี้มี {ownerBookings.filter(s => s.type === 'booked').length} การจอง
+                    </Text>
+                </View>
+                {ownerBookings.some(s => s.type === 'booked') && (
+                    <View style={styles.statusBadge}>
+                        <Text style={styles.statusBadgeText}>
+                            ถัดไป {ownerBookings.find(s => s.type === 'booked')?.start_time.substring(0, 5)} - {ownerBookings.find(s => s.type === 'booked')?.court_name}
+                        </Text>
+                    </View>
+                )}
+            </View>
+
+            {bookingLoading ? (
+                <View style={{ height: 160, justifyContent: 'center', alignItems: 'center' }}>
+                    <ActivityIndicator size="small" color="#1A5F2A" />
+                </View>
+            ) : ownerBookings.length > 0 ? (
+                <ScrollView 
+                    horizontal 
+                    showsHorizontalScrollIndicator={false} 
+                    style={styles.bookingScroll}
+                    contentContainerStyle={styles.bookingScrollContent}
+                >
+                    {ownerBookings.map((slot, idx) => (
+                        <TouchableOpacity 
+                            key={idx} 
+                            style={[
+                                styles.bookingCard,
+                                slot.type === 'available' && styles.availableCard
+                            ]}
+                            onPress={() => navigation.navigate('AddOfflineBooking', {
+                                courtName: slot.court_name,
+                                startTime: slot.start_time,
+                                endTime: slot.end_time,
+                                fieldId: activeFieldId,
+                            })}
+                            disabled={slot.type === 'booked'}
+                        >
+                            <View style={styles.bookingTimeRow}>
+                                <Text style={styles.bookingTimeText}>
+                                    {slot.start_time.substring(0, 5)} - {slot.end_time.substring(0, 5)}
+                                </Text>
+                            </View>
+                            <Text style={styles.bookingCourtText}>{slot.court_name}</Text>
+                            
+                            {slot.type === 'booked' ? (
+                                <>
+                                    <View style={styles.bookingCustomerRow}>
+                                        <Text style={styles.bookingCustomerText} numberOfLines={1}>
+                                            {slot.customer_name} · {slot.booking_source === 'online' ? 'ออนไลน์' : 'ออฟไลน์'}
+                                        </Text>
+                                    </View>
+                                    <View style={[
+                                        styles.paymentBadge, 
+                                        { backgroundColor: slot.payment_status === 'paid' ? '#E8F5E9' : '#FFF3E0' }
+                                    ]}>
+                                        <Text style={[
+                                            styles.paymentBadgeText,
+                                            { color: slot.payment_status === 'paid' ? '#2E7D32' : '#E65100' }
+                                        ]}>
+                                            {slot.payment_status === 'paid' ? 'ชำระแล้ว' : 'รอชำระ'}
+                                        </Text>
+                                    </View>
+                                </>
+                            ) : (
+                                <View style={styles.availableContent}>
+                                    <View style={styles.availableBadge}>
+                                        <Text style={styles.availableText}>ว่าง</Text>
+                                    </View>
+                                    <Text style={styles.availableSubtext}>เพิ่มการจองออฟไลน์</Text>
+                                </View>
+                            )}
+                        </TouchableOpacity>
+                    ))}
+                </ScrollView>
+            ) : (
+                <View style={styles.emptyBookings}>
+                    <Text style={styles.emptyBookingsText}>ไม่มีข้อมูลการจองสำหรับวันนี้</Text>
+                </View>
+            )}
+
+            <View style={styles.bookingActionRow}>
+                <TouchableOpacity 
+                    style={styles.addOfflineBtn}
+                    onPress={() => navigation.navigate('AddOfflineBooking', { fieldId: activeFieldId })}
+                >
+                    <Text style={styles.addOfflineBtnText}>+ เพิ่มการจองออฟไลน์</Text>
+                </TouchableOpacity>
+                <TouchableOpacity 
+                    style={styles.viewAllBtn}
+                    onPress={() => navigation.navigate('ManagementTab')}
+                >
+                    <Text style={styles.viewAllBtnText}>ดูทั้งหมด</Text>
+                </TouchableOpacity>
             </View>
 
             {/* Chart Section */}
@@ -743,5 +883,147 @@ const styles = StyleSheet.create({
     color: '#1A5F2A',
     fontSize: 13,
     fontWeight: '900',
+  },
+
+  // Today's Bookings Styles
+  statusBadge: {
+    backgroundColor: '#FFF8E1',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#FFECB3',
+  },
+  statusBadgeText: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: '#F57F17',
+  },
+  bookingScroll: {
+    marginBottom: 16,
+  },
+  bookingScrollContent: {
+    paddingRight: 20,
+    paddingVertical: 8,
+  },
+  bookingCard: {
+    width: width * 0.48,
+    backgroundColor: '#fff',
+    borderRadius: 20,
+    padding: 16,
+    marginRight: 14,
+    borderWidth: 1,
+    borderColor: '#f0f0f0',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.05,
+    shadowRadius: 10,
+    elevation: 3,
+  },
+  availableCard: {
+    backgroundColor: '#fff',
+    borderStyle: 'dashed',
+    borderColor: '#FFE0B2',
+  },
+  bookingTimeRow: {
+    marginBottom: 4,
+  },
+  bookingTimeText: {
+    fontSize: 16,
+    fontWeight: '900',
+    color: '#1a1a1a',
+  },
+  bookingCourtText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#666',
+    marginBottom: 10,
+  },
+  bookingCustomerRow: {
+    marginBottom: 12,
+  },
+  bookingCustomerText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#888',
+  },
+  paymentBadge: {
+    alignSelf: 'flex-start',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+  },
+  paymentBadgeText: {
+    fontSize: 10,
+    fontWeight: '800',
+  },
+  availableContent: {
+    flex: 1,
+    justifyContent: 'flex-end',
+  },
+  availableBadge: {
+    backgroundColor: '#FFF3E0',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+    alignSelf: 'flex-start',
+    marginBottom: 4,
+  },
+  availableText: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: '#E65100',
+  },
+  availableSubtext: {
+    fontSize: 10,
+    color: '#999',
+    fontWeight: '600',
+  },
+  emptyBookings: {
+    backgroundColor: '#fff',
+    borderRadius: 20,
+    padding: 24,
+    alignItems: 'center',
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: '#f0f0f0',
+  },
+  emptyBookingsText: {
+    fontSize: 14,
+    color: '#999',
+    fontWeight: '600',
+  },
+  bookingActionRow: {
+    flexDirection: 'row',
+    gap: 12,
+    marginBottom: 24,
+  },
+  addOfflineBtn: {
+    flex: 1.5,
+    backgroundColor: '#1A5F2A',
+    borderRadius: 12,
+    paddingVertical: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  addOfflineBtnText: {
+    color: '#fff',
+    fontSize: 13,
+    fontWeight: '800',
+  },
+  viewAllBtn: {
+    flex: 1,
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    paddingVertical: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#eee',
+  },
+  viewAllBtnText: {
+    color: '#666',
+    fontSize: 13,
+    fontWeight: '800',
   },
 });

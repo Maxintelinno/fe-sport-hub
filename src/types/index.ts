@@ -12,6 +12,8 @@ export interface User {
     billing_cycle: string;
     status: string;
   };
+  booking_credit?: number;
+  credit_expiry_days?: number;
 }
 
 export interface FieldImage {
@@ -72,11 +74,15 @@ export interface CourtAvailability {
   court_id: string;
   court_name: string;
   price_per_hour: number;
+  capacity?: number;
+  court_type?: string;
   booked_slots: BookedSlot[];
 }
 
 export interface FieldAvailability {
   field_id: string;
+  field_name?: string;
+  address?: string;
   date: string;
   open_time: string;
   close_time: string;

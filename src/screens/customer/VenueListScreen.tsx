@@ -511,7 +511,19 @@ export default function VenueListScreen({ navigation }: Props) {
           <View style={styles.headerTop}>
             <View>
               {isLoggedIn && user && (
-                <Text style={styles.userGreeting}>สวัสดี, {user.name}</Text>
+                <View>
+                  <Text style={styles.userGreeting}>สวัสดี, {user.name}</Text>
+                  
+                  {/* Booking Credit Card */}
+                  <View style={styles.creditCardContainer}>
+                    <View style={styles.creditCardHeader}>
+                      <Text style={styles.creditCardIcon}>💳</Text>
+                      <Text style={styles.creditCardLabel}>เครดิตการจอง:</Text>
+                      <Text style={styles.creditCardValue}>฿{user.booking_credit ?? 700}</Text>
+                    </View>
+                    <Text style={styles.creditCardExpiry}>ใช้ได้ภายใน {user.credit_expiry_days ?? 90} วัน</Text>
+                  </View>
+                </View>
               )}
               <Text style={styles.welcomeText}>ROYAL SPORTS</Text>
             </View>
@@ -896,6 +908,44 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: 'rgba(255,255,255,0.7)',
     fontWeight: '600',
+  },
+  
+  // Booking Credit Card Styles
+  creditCardContainer: {
+    backgroundColor: 'rgba(255, 255, 255, 0.12)',
+    padding: 14,
+    borderRadius: 18,
+    marginTop: 12,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(197, 160, 33, 0.25)',
+    width: width * 0.65,
+  },
+  creditCardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  creditCardIcon: {
+    fontSize: 14,
+    marginRight: 8,
+  },
+  creditCardLabel: {
+    fontSize: 14,
+    color: '#FFFFFF',
+    fontWeight: '600',
+    marginRight: 6,
+  },
+  creditCardValue: {
+    fontSize: 16,
+    color: '#C5A021', // Gold
+    fontWeight: '900',
+  },
+  creditCardExpiry: {
+    fontSize: 11,
+    color: 'rgba(255, 255, 255, 0.6)',
+    fontWeight: '600',
+    marginLeft: 22,
   },
 
   // Ads Slider
