@@ -15,14 +15,16 @@ import {
   Dimensions,
 } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
-import { getFieldAvailability } from '../../services/bookingService';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { OwnerStackParamList } from '../../navigation/types';
+import { getFieldAvailability, createOfflineBooking } from '../../services/bookingService';
 import { getFieldById } from '../../services/venueService';
 import { FieldAvailability, Venue } from '../../types';
 
 const { width } = Dimensions.get('window');
 
 export default function AddOfflineBookingScreen() {
-  const navigation = useNavigation();
+  const navigation = useNavigation<NativeStackNavigationProp<OwnerStackParamList>>();
   const route = useRoute<any>();
   const { courtName: initialCourtName, startTime: initialStartTime, fieldId } = route.params || {};
 
@@ -30,6 +32,7 @@ export default function AddOfflineBookingScreen() {
   const [availability, setAvailability] = useState<FieldAvailability | null>(null);
   const [loading, setLoading] = useState(true);
   const [availabilityLoading, setAvailabilityLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [selectedCourtId, setSelectedCourtId] = useState<string | null>(null);
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [selectedSlots, setSelectedSlots] = useState<{ start: string, end: string }[]>(
@@ -148,14 +151,50 @@ export default function AddOfflineBookingScreen() {
     });
   }, []);
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!customerName || !price || selectedSlots.length === 0 || !selectedCourtId) {
       Alert.alert('ข้อมูลไม่ครบถ้วน', 'กรุณากรอกชื่อลูกค้าและราคาให้ครบถ้วน');
       return;
     }
-    Alert.alert('สำเร็จ', 'เพิ่มการจองออฟไลน์เรียบร้อยแล้ว', [
-      { text: 'ตกลง', onPress: () => navigation.goBack() }
-    ]);
+
+    try {
+      setSaving(true);
+      
+      const court = availability?.courts.find(c => c.court_id === selectedCourtId);
+      
+      const payload = {
+        field_id: fieldId || '',
+        booking_date: selectedDate,
+        customer_name: customerName,
+        customer_tel: phoneNumber.replace(/-/g, ''),
+        customer_paid_source: paymentMethod || 'เงินสด',
+        customer_remark: note,
+        items: selectedSlots.map(slot => ({
+          court_id: selectedCourtId!,
+          start_time: slot.start.substring(0, 5),
+          end_time: slot.end.substring(0, 5),
+        }))
+      };
+
+      const response = await createOfflineBooking(payload);
+      
+      // Navigate to success screen
+      navigation.navigate('OfflineBookingSuccess', {
+        bookingNo: response.booking_no,
+        venueName: availability?.field_name || venue?.name || '',
+        courtName: court?.court_name || '',
+        date: selectedDate,
+        timeRange: `${selectedSlots[0].start.substring(0, 5)} - ${selectedSlots[selectedSlots.length - 1].end.substring(0, 5)}`,
+        customerName: customerName,
+        totalPrice: price,
+      });
+
+    } catch (error: any) {
+      console.error('Error creating offline booking:', error);
+      Alert.alert('เกิดข้อผิดพลาด', error.message || 'ไม่สามารถบันทึกการจองได้');
+    } finally {
+      setSaving(false);
+    }
   };
 
   if (loading) {
@@ -342,8 +381,16 @@ export default function AddOfflineBookingScreen() {
             </View>
           </View>
 
-          <TouchableOpacity style={styles.submitBtn} onPress={handleSave}>
-            <Text style={styles.submitBtnText}>ยืนยันการเพิ่มการจอง</Text>
+          <TouchableOpacity 
+            style={[styles.submitBtn, saving && styles.submitBtnDisabled]} 
+            onPress={handleSave}
+            disabled={saving}
+          >
+            {saving ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <Text style={styles.submitBtnText}>ยืนยันการเพิ่มการจอง</Text>
+            )}
           </TouchableOpacity>
           
           <View style={{ height: 40 }} />
@@ -431,5 +478,6 @@ const styles = StyleSheet.create({
   miniChipText: { fontSize: 12, fontWeight: '700', color: '#666' },
   textArea: { height: 80, textAlignVertical: 'top' },
   submitBtn: { marginHorizontal: 20, marginTop: 30, backgroundColor: '#1A5F2A', paddingVertical: 18, borderRadius: 18, alignItems: 'center', shadowColor: '#1A5F2A', shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.2, shadowRadius: 10, elevation: 5 },
+  submitBtnDisabled: { backgroundColor: '#A5D6A7', shadowOpacity: 0 },
   submitBtnText: { color: '#fff', fontSize: 16, fontWeight: '900' },
 });

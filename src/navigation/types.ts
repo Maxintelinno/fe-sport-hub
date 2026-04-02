@@ -64,4 +64,15 @@ export type OwnerStackParamList = {
         endTime?: string; 
         date?: string; 
     };
+    OfflineBookingSuccess: {
+        bookingNo: string;
+        venueName: string;
+        courtName: string;
+        date: string;
+        timeRange: string;
+        customerName: string;
+        totalPrice: string;
+    };
+    MyEmployees: undefined;
+    AddEmployee: undefined;
 };

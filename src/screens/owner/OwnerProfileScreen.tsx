@@ -416,6 +416,43 @@ export default function OwnerProfileScreen() {
                 </View>
             </View>
 
+            {/* Team Management Section */}
+            <View style={[styles.financeSection, { marginTop: 16 }]}>
+                <View style={styles.sectionHeaderRow}>
+                    <Text style={styles.sectionTitle}>💼 การจัดการทีม</Text>
+                </View>
+                
+                <View style={styles.financeGrid}>
+                    <TouchableOpacity 
+                        style={styles.financeCard}
+                        onPress={() => navigation.navigate('MyEmployees')}
+                    >
+                        <View style={[styles.financeCardIconContainer, { backgroundColor: 'rgba(26, 95, 42, 0.1)' }]}>
+                            <Text style={styles.financeCardIcon}>👥</Text>
+                        </View>
+                        <View style={styles.financeCardContent}>
+                            <Text style={styles.financeCardTitle}>พนักงานของฉัน</Text>
+                            <Text style={styles.financeCardSubtitle}>ดูและจัดการพนักงานในทีม</Text>
+                        </View>
+                        <Text style={styles.chevronIcon}>→</Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity 
+                        style={styles.financeCard}
+                        onPress={() => navigation.navigate('AddEmployee')}
+                    >
+                        <View style={[styles.financeCardIconContainer, { backgroundColor: 'rgba(197, 160, 33, 0.1)' }]}>
+                            <Text style={styles.financeCardIcon}>👤+</Text>
+                        </View>
+                        <View style={styles.financeCardContent}>
+                            <Text style={styles.financeCardTitle}>เพิ่มพนักงาน</Text>
+                            <Text style={styles.financeCardSubtitle}>ลงทะเบียนพนักงานใหม่</Text>
+                        </View>
+                        <Text style={styles.chevronIcon}>→</Text>
+                    </TouchableOpacity>
+                </View>
+            </View>
+
             {/* Logout */}
             <TouchableOpacity
                 style={styles.logoutButton}

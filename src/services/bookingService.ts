@@ -15,6 +15,28 @@ export interface CreateBookingRequest {
   }[];
 }
 
+export interface CreateOfflineBookingRequest {
+  field_id: string;
+  booking_date: string;
+  customer_name: string;
+  customer_tel?: string;
+  customer_paid_source?: string;
+  customer_remark?: string;
+  items: {
+    court_id: string;
+    start_time: string;
+    end_time: string;
+  }[];
+}
+
+export interface OfflineBookingResponse {
+  status: string;
+  message: string;
+  data: {
+    booking_no: string;
+  };
+}
+
 export interface CreateCourtRequest {
   field_id: string;
   name: string;
@@ -165,6 +187,17 @@ export async function getOwnerBookings(fieldId: string): Promise<OwnerBookingsRe
 
   if (response.status >= 400) {
     throw new Error(response.data?.message || 'ไม่สามารถดึงข้อมูลการจองได้');
+  }
+  return response.data.data;
+}
+
+export async function createOfflineBooking(data: CreateOfflineBookingRequest): Promise<OfflineBookingResponse['data']> {
+  const response = await api.post(`${API_URL}/v1/owner/bookings/offline`, data, {
+    validateStatus: () => true,
+  });
+
+  if (response.status >= 400) {
+    throw new Error(response.data?.message || 'ไม่สามารถบันทึกการจองออฟไลน์ได้');
   }
   return response.data.data;
 }
