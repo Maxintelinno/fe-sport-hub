@@ -17,12 +17,13 @@ import { useNavigation } from '@react-navigation/native';
 export default function AddEmployeeScreen() {
   const navigation = useNavigation();
   const [name, setName] = useState('');
+  const [username, setUsername] = useState('');
   const [phone, setPhone] = useState('');
   const [role, setRole] = useState('Staff');
 
   const handleSave = () => {
-    if (!name || !phone) {
-      Alert.alert('ข้อมูลไม่ครบถ้วน', 'กรุณากรอกชื่อและเบอร์โทรศัพท์');
+    if (!name || !username || !phone) {
+      Alert.alert('ข้อมูลไม่ครบถ้วน', 'กรุณากรอกข้อมูลให้ครบถ้วนทุกช่อง');
       return;
     }
     Alert.alert('สำเร็จ', 'เพิ่มพนักงานเรียบร้อยแล้ว', [
@@ -59,6 +60,17 @@ export default function AddEmployeeScreen() {
               placeholder="ระบุชื่อพนักงาน" 
               value={name} 
               onChangeText={setName} 
+            />
+          </View>
+
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Username *</Text>
+            <TextInput 
+              style={styles.input} 
+              placeholder="ระบุ username" 
+              value={username} 
+              onChangeText={setUsername} 
+              autoCapitalize="none"
             />
           </View>
 
