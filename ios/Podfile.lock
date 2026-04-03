@@ -61,6 +61,8 @@ PODS:
     - ExpoModulesCore
   - ExpoKeepAwake (15.0.8):
     - ExpoModulesCore
+  - ExpoLinearGradient (15.0.8):
+    - ExpoModulesCore
   - ExpoLocation (55.1.2):
     - ExpoModulesCore
   - ExpoModulesCore (3.0.29):
@@ -1847,6 +1849,7 @@ DEPENDENCIES:
   - ExpoFont (from `../node_modules/expo/node_modules/expo-font/ios`)
   - ExpoImagePicker (from `../node_modules/expo-image-picker/ios`)
   - ExpoKeepAwake (from `../node_modules/expo/node_modules/expo-keep-awake/ios`)
+  - ExpoLinearGradient (from `../node_modules/expo-linear-gradient/ios`)
   - ExpoLocation (from `../node_modules/expo-location/ios`)
   - ExpoModulesCore (from `../node_modules/expo-modules-core`)
   - FBLazyVector (from `../node_modules/react-native/Libraries/FBLazyVector`)
@@ -1939,6 +1942,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/expo-image-picker/ios"
   ExpoKeepAwake:
     :path: "../node_modules/expo/node_modules/expo-keep-awake/ios"
+  ExpoLinearGradient:
+    :path: "../node_modules/expo-linear-gradient/ios"
   ExpoLocation:
     :path: "../node_modules/expo-location/ios"
   ExpoModulesCore:
@@ -2093,6 +2098,7 @@ SPEC CHECKSUMS:
   ExpoFont: f543ce20a228dd702813668b1a07b46f51878d47
   ExpoImagePicker: 1af3e4e31512d2f34c95c2a3018a3edc40aee748
   ExpoKeepAwake: 55f75eca6499bb9e4231ebad6f3e9cb8f99c0296
+  ExpoLinearGradient: 809102bdb979f590083af49f7fa4805cd931bd58
   ExpoLocation: ac9ed9d974a7370210a215a2b09e81ae7a6ad724
   ExpoModulesCore: f3da4f1ab5a8375d0beafab763739dbee8446583
   FBLazyVector: e95a291ad2dadb88e42b06e0c5fb8262de53ec12
@@ -2165,6 +2171,6 @@ SPEC CHECKSUMS:
   RNScreens: d8d6f1792f6e7ac12b0190d33d8d390efc0c1845
   Yoga: 5934998fbeaef7845dbf698f698518695ab4cd1a
 
-PODFILE CHECKSUM: 87237f9e5c326dc24874033d8a7efd0058fb9957
+PODFILE CHECKSUM: 6425a254a994d6313ca98532aefb23517c8a76b6
 
 COCOAPODS: 1.16.2

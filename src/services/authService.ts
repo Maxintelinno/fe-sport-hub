@@ -138,3 +138,43 @@ export async function checkPhone(phone: string) {
   }
   return responseData;
 }
+
+export async function updatePassword(data: { phone: string; password: string }) {
+  const response = await fetch(`${PROFILE_URL}/auth/update-password`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      phone: data.phone,
+      new_password: data.password
+    }),
+  });
+
+  const responseData = await response.json();
+
+  if (!response.ok) {
+    throw new Error(responseData?.message || 'ไม่สามารถอัปเดตรหัสผ่านได้');
+  }
+  return responseData;
+}
+
+export async function updatePin(data: { phone: string; pin: string }) {
+  const response = await fetch(`${PROFILE_URL}/auth/update-pin`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      phone: data.phone,
+      new_pin: data.pin
+    }),
+  });
+
+  const responseData = await response.json();
+
+  if (!response.ok) {
+    throw new Error(responseData?.message || 'ไม่สามารถอัปเดต PIN ได้');
+  }
+  return responseData;
+}

@@ -69,6 +69,22 @@ export default function LoginScreen({ navigation, route }: Props) {
         // We continue for now, but in a real app we might want to block login
       }
 
+      // Check if user should be forced to update password (non-cust and non-owner roles)
+      if (userRole !== 'cust' && userRole !== 'owner') {
+        navigation.navigate('UpdatePassword', {
+          userData: {
+            id: userData?.id,
+            phone: userData?.phone || username.trim(),
+            username: userData?.username || username.trim(),
+            fullname: userData?.fullname,
+            role: userRole,
+            subscription: subscription,
+          },
+          accessToken: accessToken,
+        });
+        return;
+      }
+
       login({
         id: userData?.id,
         phone: userData?.phone || username.trim(),

@@ -9,6 +9,7 @@ import OTPVerifyScreen from '../screens/auth/OTPVerifyScreen';
 import ForgotPasswordScreen from '../screens/auth/ForgotPasswordScreen';
 import ForgotPasswordOTPScreen from '../screens/auth/ForgotPasswordOTPScreen';
 import ResetPasswordScreen from '../screens/auth/ResetPasswordScreen';
+import UpdatePasswordScreen from '../screens/auth/UpdatePasswordScreen';
 
 export type AuthStackParamList = {
   Welcome: undefined;
@@ -20,6 +21,7 @@ export type AuthStackParamList = {
   ForgotPassword: undefined;
   ForgotPasswordOTP: { phoneNumber: string };
   ResetPassword: { phoneNumber: string };
+  UpdatePassword: { userData: any; accessToken: string };
 };
 
 const Stack = createNativeStackNavigator<AuthStackParamList>();
@@ -43,6 +45,7 @@ export default function AuthStack() {
       <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} options={{ title: 'ลืมรหัสผ่าน' }} />
       <Stack.Screen name="ForgotPasswordOTP" component={ForgotPasswordOTPScreen} options={{ title: 'ยืนยัน OTP' }} />
       <Stack.Screen name="ResetPassword" component={ResetPasswordScreen} options={{ title: 'ตั้งรหัสผ่านใหม่' }} />
+      <Stack.Screen name="UpdatePassword" component={UpdatePasswordScreen} options={{ title: 'อัปเดตรหัสผ่านใหม่' }} />
     </Stack.Navigator>
   );
 }
