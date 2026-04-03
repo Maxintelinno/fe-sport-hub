@@ -10,9 +10,11 @@ import {
   StatusBar,
   KeyboardAvoidingView,
   Platform,
-  Alert
+  Alert,
+  ActivityIndicator
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import { addStaff } from '../../services/profileService';
 
 export default function AddEmployeeScreen() {
   const navigation = useNavigation();
@@ -20,15 +22,32 @@ export default function AddEmployeeScreen() {
   const [username, setUsername] = useState('');
   const [phone, setPhone] = useState('');
   const [role, setRole] = useState('Staff');
+  const [loading, setLoading] = useState(false);
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!name || !username || !phone) {
       Alert.alert('ข้อมูลไม่ครบถ้วน', 'กรุณากรอกข้อมูลให้ครบถ้วนทุกช่อง');
       return;
     }
-    Alert.alert('สำเร็จ', 'เพิ่มพนักงานเรียบร้อยแล้ว', [
-      { text: 'ตกลง', onPress: () => navigation.goBack() }
-    ]);
+
+    setLoading(true);
+    try {
+      await addStaff({
+        fullname: name,
+        username: username,
+        phone: phone.replace(/-/g, ''), // Send phone without dashes
+        role: role.toLowerCase()
+      });
+
+      Alert.alert('สำเร็จ', 'เพิ่มพนักงานเรียบร้อยแล้ว', [
+        { text: 'ตกลง', onPress: () => navigation.goBack() }
+      ]);
+    } catch (error: any) {
+      console.error('Add staff error:', error);
+      Alert.alert('ข้อผิดพลาด', error.message || 'ไม่สามารถเพิ่มพนักงานได้');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const formatPhone = (text: string) => {
@@ -60,6 +79,7 @@ export default function AddEmployeeScreen() {
               placeholder="ระบุชื่อพนักงาน" 
               value={name} 
               onChangeText={setName} 
+              editable={!loading}
             />
           </View>
 
@@ -71,6 +91,7 @@ export default function AddEmployeeScreen() {
               value={username} 
               onChangeText={setUsername} 
               autoCapitalize="none"
+              editable={!loading}
             />
           </View>
 
@@ -82,6 +103,7 @@ export default function AddEmployeeScreen() {
               keyboardType="phone-pad"
               value={phone} 
               onChangeText={(text) => setPhone(formatPhone(text))} 
+              editable={!loading}
             />
           </View>
 
@@ -93,6 +115,7 @@ export default function AddEmployeeScreen() {
                         key={r}
                         style={[styles.roleChip, role === r && styles.roleChipActive]}
                         onPress={() => setRole(r)}
+                        disabled={loading}
                     >
                         <Text style={[styles.roleChipText, role === r && styles.roleChipTextActive]}>{r}</Text>
                     </TouchableOpacity>
@@ -100,8 +123,16 @@ export default function AddEmployeeScreen() {
             </View>
           </View>
 
-          <TouchableOpacity style={styles.submitBtn} onPress={handleSave}>
-            <Text style={styles.submitBtnText}>บันทึกข้อมูลพนักงาน</Text>
+          <TouchableOpacity 
+            style={[styles.submitBtn, loading && { opacity: 0.8 }]} 
+            onPress={handleSave}
+            disabled={loading}
+          >
+            {loading ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <Text style={styles.submitBtnText}>บันทึกข้อมูลพนักงาน</Text>
+            )}
           </TouchableOpacity>
         </ScrollView>
       </KeyboardAvoidingView>

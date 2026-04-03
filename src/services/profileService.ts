@@ -1,6 +1,7 @@
 import api from './api';
 
 const PROFILE_API_URL = 'https://sport-hub-profile-staging.up.railway.app';
+const REGISTER_API_URL = 'https://sport-hub-register-staging.up.railway.app';
 
 export interface OwnerProfileResponse {
     user: {
@@ -227,6 +228,57 @@ export async function requestWithdrawal(data: {
 
     if (response.status >= 400) {
         throw new Error(response.data?.message || 'ไม่สามารถส่งคำขอถอนเงินได้');
+    }
+    return response.data;
+}
+
+export interface StaffListItem {
+    id: string;
+    owner_user_id: string;
+    staff_user_id: string;
+    username: string;
+    fullname: string;
+    phone: string;
+    role_code: string;
+    status: string;
+    created_at: string;
+    updated_at: string;
+}
+
+export async function getStaffList(): Promise<StaffListItem[]> {
+    const response = await api.get(`${PROFILE_API_URL}/v1/owner/staff`, {
+        validateStatus: () => true,
+    });
+
+    if (response.status >= 400) {
+        throw new Error(response.data?.message || 'ไม่สามารถดึงข้อมูลพนักงานได้');
+    }
+    return response.data;
+}
+
+export async function deactivateStaff(staffUserId: string): Promise<any> {
+    const response = await api.put(`${PROFILE_API_URL}/v1/owner/staff/${staffUserId}/deactivate`, {}, {
+        validateStatus: () => true,
+    });
+
+    if (response.status >= 400) {
+        throw new Error(response.data?.message || 'ไม่สามารถยกเลิกการใช้งานพนักงานได้');
+    }
+    return response.data;
+}
+
+export async function addStaff(data: {
+    fullname: string;
+    phone: string;
+    username: string;
+    role: string;
+}): Promise<any> {
+    const response = await api.post(`${REGISTER_API_URL}/v1/owner/staffs`, data, {
+        validateStatus: () => true,
+    });
+
+    if (response.status >= 400) {
+        throw new Error(response.data?.message || 'ไม่สามารถเพิ่มพนักงานได้');
     }
     return response.data;
 }
