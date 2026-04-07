@@ -119,7 +119,7 @@ export default function OwnerHomeScreen() {
 
   const fetchData = async () => {
     try {
-      const response = await getOwnerDashboard();
+      const response = await getOwnerDashboard(user?.role);
       setDashboard(response.data);
 
       // Fetch bookings for the first field using the Owner's ID from dashboard context

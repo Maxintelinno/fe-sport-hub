@@ -5,6 +5,8 @@ import { RouteProp } from '@react-navigation/native';
 import { AuthStackParamList } from '../../navigation/AuthStack';
 import { useAuth } from '../../context/AuthContext';
 import { loginUser, getAuthToken } from '../../services/authService';
+import { getOwnerDashboard } from '../../services/profileService';
+import { setAuthToken } from '../../services/api';
 
 const { width } = Dimensions.get('window');
 
@@ -73,6 +75,25 @@ export default function LoginScreen({ navigation, route }: Props) {
       // Check if user should be forced to update password (non-cust and non-owner roles)
       const isRestrictedRole = ['staff', 'manager', 'accountant'].includes(userRole);
       
+      // PRE-FETCH DASHBOARD CONTEXT FOR RESTRICTED ROLES
+      // This ensures we have the correct Owner Name and Stats immediately
+      let displayName = userData?.fullname || userData?.username || username.trim();
+      
+      if (isRestrictedRole && accessToken) {
+        try {
+          // Set token for this specific dashboard call
+          setAuthToken(accessToken);
+          const dashResponse = await getOwnerDashboard(userRole);
+          if (dashResponse.status === 'success') {
+            // Use owner's fullname for staff to match owner's experience
+            displayName = dashResponse.data.owner.fullname;
+            console.log('Successfully initialized dashboard context for role:', userRole);
+          }
+        } catch (dashError) {
+          console.error('Failed to pre-fetch dashboard context:', dashError);
+        }
+      }
+
       if (userRole !== 'cust' && userRole !== 'owner') {
         // If it's a restricted role, only force change if mustChangePassword is true
         // Otherwise (for other potential future roles), maintain force update
@@ -95,7 +116,7 @@ export default function LoginScreen({ navigation, route }: Props) {
       login({
         id: userData?.id,
         phone: userData?.phone || username.trim(),
-        name: userData?.fullname || userData?.username || username.trim(),
+        name: displayName,
         role: userRole,
         accessToken: accessToken,
         subscription: subscription,

@@ -116,11 +116,14 @@ export async function getOwnerProfile(): Promise<OwnerProfileResponse> {
     return response.data;
 }
 
-export async function getOwnerDashboard(): Promise<OwnerDashboardResponse> {
-    const response = await api.get(`${PROFILE_API_URL}/v1/owner/dashboard`, {
+export async function getOwnerDashboard(role?: string): Promise<OwnerDashboardResponse> {
+    const isRestrictedRole = ['staff', 'manager', 'accountant'].includes(role?.toLowerCase() || '');
+    const endpoint = isRestrictedRole ? '/v1/staff/dashboard' : '/v1/owner/dashboard';
+    
+    const response = await api.get(`${PROFILE_API_URL}${endpoint}?t=${Date.now()}`, {
         validateStatus: () => true,
     });
-
+ 
     if (response.status >= 400) {
         throw new Error(response.data?.message || 'ไม่สามารถดึงข้อมูลแดชบอร์ดได้');
     }
