@@ -201,3 +201,14 @@ export async function createOfflineBooking(data: CreateOfflineBookingRequest): P
   }
   return response.data.data;
 }
+
+export async function cancelBooking(bookingId: string): Promise<{ status: string; message: string }> {
+  const response = await api.patch(`${API_URL}/v1/bookings/${bookingId}/cancel`, {}, {
+    validateStatus: () => true,
+  });
+
+  if (response.status >= 400) {
+    throw new Error(response.data?.message || 'ไม่สามารถยกเลิกการจองได้');
+  }
+  return response.data;
+}

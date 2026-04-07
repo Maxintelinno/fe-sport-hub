@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, Image, ActivityIndicator, RefreshControl, Text as RNText } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, Image, ActivityIndicator, RefreshControl, Text as RNText, Alert } from 'react-native';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { useAuth } from '../../context/AuthContext';
-import { getMyBookings } from '../../services/bookingService';
+import { getMyBookings, cancelBooking } from '../../services/bookingService';
 import { Booking } from '../../types';
 
 export default function MyBookingsScreen() {
@@ -12,6 +12,7 @@ export default function MyBookingsScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [cancellingId, setCancellingId] = useState<string | null>(null);
 
   const fetchBookings = async () => {
     if (!user) return;
@@ -59,6 +60,42 @@ export default function MyBookingsScreen() {
     if (!timeStr) return '-';
     // API might return "18:00:00" or "18:00"
     return timeStr.substring(0, 5);
+  };
+
+  // A booking is "future" if the booking date is today or later
+  const isFutureBooking = (booking: Booking): boolean => {
+    if (!booking.booking_date) return false;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const bookingDate = new Date(booking.booking_date);
+    bookingDate.setHours(0, 0, 0, 0);
+    return bookingDate >= today;
+  };
+
+  const handleCancel = (booking: Booking) => {
+    Alert.alert(
+      'ยืนยันการยกเลิก',
+      `คุณต้องการยกเลิกการจอง\nหมายเลข: ${booking.booking_no}\nวันที่: ${formatDate(booking.booking_date)}\n\nการยกเลิกนี้ไม่สามารถเรียกคืนได้`,
+      [
+        { text: 'ปิด', style: 'cancel' },
+        {
+          text: 'ยกเลิกการจอง',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              setCancellingId(booking.id);
+              await cancelBooking(booking.id);
+              Alert.alert('ยกเลิกสำเร็จ', 'การจองของคุณถูกยกเลิกเรียบร้อยแล้ว');
+              fetchBookings(); // Refresh list
+            } catch (err: any) {
+              Alert.alert('เกิดข้อผิดพลาด', err.message || 'ไม่สามารถยกเลิกการจองได้');
+            } finally {
+              setCancellingId(null);
+            }
+          },
+        },
+      ]
+    );
   };
 
   if (loading && !refreshing) {
@@ -114,7 +151,7 @@ export default function MyBookingsScreen() {
                   <Text style={styles.date}>{formatDate(item.booking_date)}</Text>
                 </View>
                 <View style={[styles.badge, item.status === 'confirmed' || item.status === 'pending' ? styles.badgeActive : styles.badgeCancelled]}>
-                  <Text style={styles.badgeText}>
+                  <Text style={[styles.badgeText, item.status === 'cancelled' && styles.badgeCancelledText]}>
                     {item.status === 'pending' ? 'รอดำเนินการ' : item.status === 'confirmed' ? 'ยืนยันแล้ว' : 'ยกเลิก'}
                   </Text>
                 </View>
@@ -145,6 +182,21 @@ export default function MyBookingsScreen() {
                   <Text style={styles.price}>฿{item.total_amount}</Text>
                 </View>
               </View>
+
+              {/* Cancel button: only for future bookings that are NOT cancelled */}
+              {isFutureBooking(item) && item.status !== 'cancelled' && (
+                <TouchableOpacity
+                  style={[styles.cancelBtn, cancellingId === item.id && styles.cancelBtnDisabled]}
+                  onPress={() => handleCancel(item)}
+                  disabled={cancellingId === item.id}
+                >
+                  {cancellingId === item.id ? (
+                    <ActivityIndicator size="small" color="#dc2626" />
+                  ) : (
+                    <Text style={styles.cancelBtnText}>ยกเลิกการจอง</Text>
+                  )}
+                </TouchableOpacity>
+              )}
             </View>
           </View>
         )}
@@ -336,5 +388,25 @@ const styles = StyleSheet.create({
     color: '#dc2626',
     fontSize: 16,
     fontWeight: '700',
+  },
+  cancelBtn: {
+    marginTop: 14,
+    paddingVertical: 11,
+    borderRadius: 12,
+    alignItems: 'center',
+    borderWidth: 1.5,
+    borderColor: '#dc2626',
+    backgroundColor: '#fff5f5',
+  },
+  cancelBtnDisabled: {
+    opacity: 0.5,
+  },
+  cancelBtnText: {
+    color: '#dc2626',
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  badgeCancelledText: {
+    color: '#dc2626',
   },
 });
