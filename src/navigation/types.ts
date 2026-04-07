@@ -17,6 +17,9 @@ export type CustomerStackParamList = {
     InsightDetail: { insightId: string };
     Ads: undefined;
     AllPromotions: undefined;
+    CancelBooking: { bookingId: string };
+    MyBookingsList: undefined;
+    ValidatePin: { bookingId: string, phone: string };
 };
 
 export type OwnerStackParamList = {

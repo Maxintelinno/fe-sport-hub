@@ -12,7 +12,6 @@ export default function MyBookingsScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
-  const [cancellingId, setCancellingId] = useState<string | null>(null);
 
   const fetchBookings = async () => {
     if (!user) return;
@@ -70,32 +69,6 @@ export default function MyBookingsScreen() {
     const bookingDate = new Date(booking.booking_date);
     bookingDate.setHours(0, 0, 0, 0);
     return bookingDate >= today;
-  };
-
-  const handleCancel = (booking: Booking) => {
-    Alert.alert(
-      'ยืนยันการยกเลิก',
-      `คุณต้องการยกเลิกการจอง\nหมายเลข: ${booking.booking_no}\nวันที่: ${formatDate(booking.booking_date)}\n\nการยกเลิกนี้ไม่สามารถเรียกคืนได้`,
-      [
-        { text: 'ปิด', style: 'cancel' },
-        {
-          text: 'ยกเลิกการจอง',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              setCancellingId(booking.id);
-              await cancelBooking(booking.id);
-              Alert.alert('ยกเลิกสำเร็จ', 'การจองของคุณถูกยกเลิกเรียบร้อยแล้ว');
-              fetchBookings(); // Refresh list
-            } catch (err: any) {
-              Alert.alert('เกิดข้อผิดพลาด', err.message || 'ไม่สามารถยกเลิกการจองได้');
-            } finally {
-              setCancellingId(null);
-            }
-          },
-        },
-      ]
-    );
   };
 
   if (loading && !refreshing) {
@@ -186,15 +159,10 @@ export default function MyBookingsScreen() {
               {/* Cancel button: only for future bookings that are NOT cancelled */}
               {isFutureBooking(item) && item.status !== 'cancelled' && (
                 <TouchableOpacity
-                  style={[styles.cancelBtn, cancellingId === item.id && styles.cancelBtnDisabled]}
-                  onPress={() => handleCancel(item)}
-                  disabled={cancellingId === item.id}
+                  style={styles.cancelBtn}
+                  onPress={() => navigation.navigate('CancelBooking', { bookingId: item.id })}
                 >
-                  {cancellingId === item.id ? (
-                    <ActivityIndicator size="small" color="#dc2626" />
-                  ) : (
-                    <Text style={styles.cancelBtnText}>ยกเลิกการจอง</Text>
-                  )}
+                  <Text style={styles.cancelBtnText}>ยกเลิกการจอง</Text>
                 </TouchableOpacity>
               )}
             </View>

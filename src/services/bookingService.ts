@@ -202,8 +202,41 @@ export async function createOfflineBooking(data: CreateOfflineBookingRequest): P
   return response.data.data;
 }
 
+export interface CancelBookingDetailResponse {
+  status: string;
+  message: string;
+  data: {
+    booking_no: string;
+    booking_date: string;
+    created_at: string;
+    total_amount: number;
+    refund_policy: string;
+    refund_percent: number;
+    refund_amount: number;
+    hours_until_play: number;
+    status: string;
+    payment_status: string;
+    courts: {
+        court_name: string;
+        start_time: string;
+        end_time: string;
+    }[];
+  };
+}
+
+export async function getCancelBookingDetail(bookingId: string): Promise<CancelBookingDetailResponse['data']> {
+  const response = await api.get(`${API_URL}/v1/bookings/${bookingId}/detail/cancel`, {
+    validateStatus: () => true,
+  });
+
+  if (response.status >= 400) {
+    throw new Error(response.data?.message || 'ไม่สามารถดึงข้อมูลรายละเอียดการยกเลิกได้');
+  }
+  return response.data.data;
+}
+
 export async function cancelBooking(bookingId: string): Promise<{ status: string; message: string }> {
-  const response = await api.patch(`${API_URL}/v1/bookings/${bookingId}/cancel`, {}, {
+  const response = await api.post(`${API_URL}/v1/bookings/${bookingId}/cancel`, {}, {
     validateStatus: () => true,
   });
 

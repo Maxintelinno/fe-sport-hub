@@ -8,3 +8,5 @@ export { default as AdsScreen } from './AdsScreen';
 export { default as AllPromotionsScreen } from './AllPromotionsScreen';
 export { default as InsightDetailScreen } from './InsightDetailScreen';
 export { default as PaymentSuccessScreen } from './PaymentSuccessScreen';
+export { default as CancelBookingScreen } from './CancelBookingScreen';
+export { default as ValidatePinScreen } from './ValidatePinScreen';

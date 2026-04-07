@@ -11,7 +11,9 @@ import {
   AdsScreen,
   AllPromotionsScreen,
   InsightDetailScreen,
-  PaymentSuccessScreen
+  PaymentSuccessScreen,
+  CancelBookingScreen,
+  ValidatePinScreen
 } from '../screens/customer';
 import { Text as RNText, TouchableOpacity, View } from 'react-native';
 import { CustomerStackParamList } from './types';
@@ -51,6 +53,23 @@ function VenueStack() {
       <Stack.Screen name="AllPromotions" component={AllPromotionsScreen} options={{ title: 'โปรโมชั่นพิเศษ' }} />
       <Stack.Screen name="InsightDetail" component={InsightDetailScreen} options={{ headerShown: false }} />
       <Stack.Screen name="PaymentSuccess" component={PaymentSuccessScreen} options={{ headerShown: false }} />
+      <Stack.Screen name="CancelBooking" component={CancelBookingScreen} options={{ title: 'ยืนยันการยกเลิก' }} />
+      <Stack.Screen name="ValidatePin" component={ValidatePinScreen} options={{ title: 'ยืนยัน PIN' }} />
+    </Stack.Navigator>
+  );
+}
+
+function MyBookingsStack() {
+  return (
+    <Stack.Navigator
+      screenOptions={{
+        headerStyle: { backgroundColor: '#1a5f2a' },
+        headerTintColor: '#fff',
+      }}
+    >
+      <Stack.Screen name="MyBookingsList" component={MyBookingsScreen} options={{ title: 'การจองของฉัน' }} />
+      <Stack.Screen name="CancelBooking" component={CancelBookingScreen} options={{ title: 'ยืนยันการยกเลิก' }} />
+      <Stack.Screen name="ValidatePin" component={ValidatePinScreen} options={{ title: 'ยืนยัน PIN' }} />
     </Stack.Navigator>
   );
 }
@@ -77,14 +96,10 @@ export default function CustomerTabs() {
       />
       <Tab.Screen
         name="MyBookings"
-        component={MyBookingsScreen}
+        component={MyBookingsStack}
         options={{
           tabBarLabel: 'การจองของฉัน',
           tabBarIcon: () => <RNText style={{ fontSize: 20 }}>📋</RNText>,
-          headerShown: true,
-          headerTitle: 'การจองของฉัน',
-          headerStyle: { backgroundColor: '#1a5f2a' },
-          headerTintColor: '#fff',
         }}
         listeners={{
           tabPress: (e) => {

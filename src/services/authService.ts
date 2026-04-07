@@ -178,3 +178,20 @@ export async function updatePin(data: { phone: string; pin: string }) {
   }
   return responseData;
 }
+
+export async function validatePin(phone: string, pin: string) {
+  const response = await fetch(`${PROFILE_URL}/auth/validate-pin`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ phone, pin }),
+  });
+
+  const responseData = await response.json();
+
+  if (!response.ok) {
+    throw new Error(responseData?.message || 'PIN ไม่ถูกต้อง กรุณาลองใหม่อีกครั้ง');
+  }
+  return responseData;
+}
