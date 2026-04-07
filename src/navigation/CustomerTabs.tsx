@@ -41,7 +41,6 @@ function VenueStack() {
         component={VenueListScreen}
         options={{
           title: 'หน้าหลัก',
-          headerRight: () => <HomeHeaderRight />,
         }}
       />
       <Stack.Screen name="VenueDetail" component={VenueDetailScreen} options={{ title: 'รายละเอียดสนาม' }} />

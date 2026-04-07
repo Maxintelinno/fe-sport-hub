@@ -54,6 +54,7 @@ export default function LoginScreen({ navigation, route }: Props) {
       const userData = response?.data?.user || response?.data;
       const subscription = response?.data?.subscription;
       const userRole = (userData?.role || role) as any;
+      const mustChangePassword = userData?.must_change_password === false;
 
       // Fetch JWT Token from middleware
       let accessToken = '';
@@ -70,19 +71,25 @@ export default function LoginScreen({ navigation, route }: Props) {
       }
 
       // Check if user should be forced to update password (non-cust and non-owner roles)
+      const isRestrictedRole = ['staff', 'manager', 'accountant'].includes(userRole);
+      
       if (userRole !== 'cust' && userRole !== 'owner') {
-        navigation.navigate('UpdatePassword', {
-          userData: {
-            id: userData?.id,
-            phone: userData?.phone || username.trim(),
-            username: userData?.username || username.trim(),
-            fullname: userData?.fullname,
-            role: userRole,
-            subscription: subscription,
-          },
-          accessToken: accessToken,
-        });
-        return;
+        // If it's a restricted role, only force change if mustChangePassword is true
+        // Otherwise (for other potential future roles), maintain force update
+        if (!isRestrictedRole || (isRestrictedRole && mustChangePassword)) {
+          navigation.navigate('UpdatePassword', {
+            userData: {
+              id: userData?.id,
+              phone: userData?.phone || username.trim(),
+              username: userData?.username || username.trim(),
+              fullname: userData?.fullname,
+              role: userRole,
+              subscription: subscription,
+            },
+            accessToken: accessToken,
+          });
+          return;
+        }
       }
 
       login({

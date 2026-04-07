@@ -33,7 +33,8 @@ export default function AppNavigator() {
       <Stack.Navigator screenOptions={{ headerShown: false }}>
         {isLoggedIn ? (
           // Logged in state
-          user?.role === 'owner' ? (
+          // Direct owner, staff, manager, and accountant to OwnerTabs
+          (user?.role === 'owner' || user?.role === 'staff' || user?.role === 'manager' || user?.role === 'accountant') ? (
             <Stack.Screen name="OwnerMain" component={OwnerTabs} />
           ) : (
             <Stack.Screen name="CustomerMain" component={CustomerTabs} />

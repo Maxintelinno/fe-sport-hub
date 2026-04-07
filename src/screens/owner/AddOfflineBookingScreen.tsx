@@ -47,37 +47,51 @@ export default function AddOfflineBookingScreen() {
   const [price, setPrice] = useState('');
   const [note, setNote] = useState('');
 
-  const fetchVenueData = async () => {
+  const fetchInitialData = async () => {
     if (!fieldId) return;
     try {
       setLoading(true);
-      const data = await getFieldById(fieldId);
-      setVenue(data);
+      // Fetch both venue and availability in parallel
+      const [venueData, availabilityData] = await Promise.all([
+        getFieldById(fieldId),
+        getFieldAvailability(fieldId, selectedDate)
+      ]);
+      
+      setVenue(venueData);
+      setAvailability(availabilityData);
+      
+      // Auto-select court logic
+      const activeCourtId = selectedCourtId || (initialCourtName 
+        ? availabilityData.courts.find(c => c.court_name === initialCourtName)?.court_id
+        : availabilityData.courts[0]?.court_id);
+      
+      if (activeCourtId) {
+        setSelectedCourtId(activeCourtId);
+        const court = availabilityData.courts.find(c => c.court_id === activeCourtId);
+        if (court && !price) {
+          const currentSlotsCount = selectedSlots.length || 1;
+          setPrice((court.price_per_hour * currentSlotsCount).toString());
+        }
+      }
     } catch (error) {
-      console.error('Error fetching venue:', error);
+      console.error('Error fetching initial data:', error);
     } finally {
       setLoading(false);
     }
   };
 
   const fetchAvailability = async () => {
-    if (!fieldId) return;
+    if (!fieldId || loading) return; // Skip if initial loading is already happening
     try {
       setAvailabilityLoading(true);
       const data = await getFieldAvailability(fieldId, selectedDate);
       setAvailability(data);
       
-      // Auto-select court if passed from params or select first court
-      const activeCourtId = selectedCourtId || (initialCourtName 
-        ? data.courts.find(c => c.court_name === initialCourtName)?.court_id
-        : data.courts[0]?.court_id);
-      
-      if (activeCourtId) {
-        setSelectedCourtId(activeCourtId);
-        const court = data.courts.find(c => c.court_id === activeCourtId);
-        if (court && !price) {
-          const currentSlotsCount = selectedSlots.length || 1;
-          setPrice((court.price_per_hour * currentSlotsCount).toString());
+      // Update price if court is already selected
+      if (selectedCourtId) {
+        const court = data.courts.find(c => c.court_id === selectedCourtId);
+        if (court) {
+          setPrice((court.price_per_hour * (selectedSlots.length || 1)).toString());
         }
       }
     } catch (error) {
@@ -88,12 +102,15 @@ export default function AddOfflineBookingScreen() {
   };
 
   useEffect(() => {
-    fetchVenueData();
+    fetchInitialData();
   }, [fieldId]);
 
   useEffect(() => {
-    fetchAvailability();
-  }, [fieldId, selectedDate]);
+    // Only fetch availability separately if it's not the first load
+    if (!loading && venue) {
+      fetchAvailability();
+    }
+  }, [selectedDate]);
 
   const availableHours = useMemo(() => {
     if (!availability || !selectedCourtId) return [];

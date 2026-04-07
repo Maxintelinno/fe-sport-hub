@@ -2,7 +2,7 @@ import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { CommonActions } from '@react-navigation/native';
-import { Text } from 'react-native';
+import { Text, View, TouchableOpacity, Alert } from 'react-native';
 import {
   VenueListScreen,
   VenueDetailScreen,
@@ -38,6 +38,7 @@ import {
 } from '../screens/owner';
 import WithdrawScreen from '../screens/owner/WithdrawScreen';
 import WithdrawSuccessScreen from '../screens/owner/WithdrawSuccessScreen';
+import { useAuth } from '../context/AuthContext';
 import { OwnerStackParamList } from './types';
 
 const Tab = createBottomTabNavigator();
@@ -140,6 +141,27 @@ function ProfileStack() {
 }
 
 export default function OwnerTabs() {
+  const { user, logout } = useAuth();
+  const role = user?.role?.toLowerCase();
+  const isRestricted = role === 'staff' || role === 'manager' || role === 'accountant';
+
+  const handleLogout = () => {
+    Alert.alert(
+      'ออกจากระบบ',
+      'คุณต้องการออกจากระบบใช่หรือไม่?',
+      [
+        { text: 'ยกเลิก', style: 'cancel' },
+        { 
+          text: 'ออกจากระบบ', 
+          style: 'destructive',
+          onPress: async () => {
+            await logout();
+          }
+        }
+      ]
+    );
+  };
+
   return (
     <Tab.Navigator
       screenOptions={{
@@ -177,36 +199,67 @@ export default function OwnerTabs() {
           tabBarIcon: () => <Text style={{ fontSize: 24 }}>📋</Text>,
         }}
       />
-      <Tab.Screen
-        name="AddVenueTab"
-        component={AddVenueStack}
-        options={{
-          tabBarLabel: 'เพิ่มสนาม',
-          tabBarIcon: () => <Text style={{ fontSize: 24 }}>➕</Text>,
-          headerShown: false,
-        }}
-      />
-      <Tab.Screen
-        name="ProfileTab"
-        component={ProfileStack}
-        options={{
-          tabBarLabel: 'โปรไฟล์',
-          tabBarIcon: () => <Text style={{ fontSize: 24 }}>👤</Text>,
-          headerShown: false,
-        }}
-        listeners={({ navigation }) => ({
-          tabPress: (e) => {
-            // By default, it will navigate to the tab. 
-            // If the user clicks, we also want to pop other screens to top
-            navigation.dispatch(
-              CommonActions.reset({
-                index: 0,
-                routes: [{ name: 'ProfileTab', state: { routes: [{ name: 'Profile' }] } }],
-              })
-            );
-          },
-        })}
-      />
+      
+      {!isRestricted && (
+        <Tab.Screen
+          name="AddVenueTab"
+          component={AddVenueStack}
+          options={{
+            tabBarLabel: 'เพิ่มสนาม',
+            tabBarIcon: () => <Text style={{ fontSize: 24 }}>➕</Text>,
+            headerShown: false,
+          }}
+        />
+      )}
+
+      {/* Logout button for Restricted Roles - far right */}
+      {isRestricted && (
+        <Tab.Screen
+          name="LogoutTab"
+          component={View}
+          options={{
+            tabBarLabel: 'ออกจากระบบ',
+            tabBarIcon: () => <Text style={{ fontSize: 24 }}>🚪</Text>,
+            tabBarButton: (props: any) => (
+              <TouchableOpacity 
+                {...props} 
+                onPress={handleLogout}
+                style={[props.style, { alignItems: 'center', justifyContent: 'center' }]}
+              >
+                <Text style={{ fontSize: 24 }}>🚪</Text>
+                <Text style={{ 
+                  fontSize: 12, 
+                  fontWeight: '700', 
+                  color: '#666',
+                  marginTop: 2 
+                }}>ออกจากระบบ</Text>
+              </TouchableOpacity>
+            )
+          }}
+        />
+      )}
+
+      {!isRestricted && (
+        <Tab.Screen
+          name="ProfileTab"
+          component={ProfileStack}
+          options={{
+            tabBarLabel: 'โปรไฟล์',
+            tabBarIcon: () => <Text style={{ fontSize: 24 }}>👤</Text>,
+            headerShown: false,
+          }}
+          listeners={({ navigation }) => ({
+            tabPress: (e: any) => {
+              navigation.dispatch(
+                CommonActions.reset({
+                  index: 0,
+                  routes: [{ name: 'ProfileTab', state: { routes: [{ name: 'Profile' }] } }],
+                })
+              );
+            },
+          })}
+        />
+      )}
     </Tab.Navigator>
   );
 }

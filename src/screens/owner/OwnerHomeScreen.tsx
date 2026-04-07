@@ -122,9 +122,9 @@ export default function OwnerHomeScreen() {
       const response = await getOwnerDashboard();
       setDashboard(response.data);
 
-      // Fetch bookings for the first field
-      if (user?.id) {
-        const fields = await getOwnerFields(user.id);
+      // Fetch bookings for the first field using the Owner's ID from dashboard context
+      if (response.data?.owner?.id) {
+        const fields = await getOwnerFields(response.data.owner.id);
         if (fields && fields.length > 0) {
           setActiveFieldId(fields[0].id);
           await fetchBookings(fields[0].id);
@@ -183,8 +183,14 @@ export default function OwnerHomeScreen() {
       // Sort by start_time
       allSlots.sort((a, b) => a.start_time.localeCompare(b.start_time));
       setOwnerBookings(allSlots);
-    } catch (error) {
-      console.error('Error fetching bookings:', error);
+    } catch (error: any) {
+      const errorMsg = error?.message?.toLowerCase() || '';
+      if (errorMsg.includes('unauthorized') || errorMsg.includes('permission')) {
+        console.warn('Unauthorized to fetch bookings for this field. Probably a restricted role.');
+        setOwnerBookings([]); // Clean state for restricted access
+      } else {
+        console.error('Error fetching bookings:', error);
+      }
     } finally {
       setBookingLoading(false);
     }
@@ -222,11 +228,13 @@ export default function OwnerHomeScreen() {
                         <Text style={styles.planText}>🟢 {dashboard?.plan.name || user?.subscription?.plan_name || 'Free Plan'}</Text>
                     </View>
                 </View>
-                <TouchableOpacity onPress={() => navigation.navigate('ProfileTab')}>
-                    <View style={styles.avatar}>
-                        <Text style={styles.avatarText}>{ dashboard?.owner.avatar_initial || (user?.name || 'O').charAt(0).toUpperCase() }</Text>
-                    </View>
-                </TouchableOpacity>
+                {!['staff', 'manager', 'accountant'].includes(user?.role?.toLowerCase() || '') && (
+                  <TouchableOpacity onPress={() => navigation.navigate('ProfileTab')}>
+                      <View style={styles.avatar}>
+                          <Text style={styles.avatarText}>{ dashboard?.owner.avatar_initial || (user?.name || 'O').charAt(0).toUpperCase() }</Text>
+                      </View>
+                  </TouchableOpacity>
+                )}
             </View>
 
             {/* Revenue Hero Card */}
@@ -437,51 +445,55 @@ export default function OwnerHomeScreen() {
             </View>
             <RevenueChart data={dashboard?.revenue_trend_7d || []} />
 
-            {/* Quick Actions Grid */}
-            <View style={styles.actionGrid}>
-                <TouchableOpacity 
-                    style={styles.actionBtn}
-                    onPress={() => navigation.navigate('AddVenueTab')}
-                >
-                    <View style={[styles.actionIconBg, { backgroundColor: '#E8F5E9' }]}>
-                        <Text style={styles.actionEmoji}>➕</Text>
-                    </View>
-                    <Text style={styles.actionLabel}>เพิ่มสนาม</Text>
-                </TouchableOpacity>
-                
-                <TouchableOpacity 
-                    style={styles.actionBtn}
-                    onPress={() => navigation.navigate('ManagementTab')}
-                >
-                    <View style={[styles.actionIconBg, { backgroundColor: '#FFF8E1' }]}>
-                        <Text style={styles.actionEmoji}>📋</Text>
-                    </View>
-                    <Text style={styles.actionLabel}>จัดการสนาม</Text>
-                </TouchableOpacity>
-            </View>
+            {/* Quick Actions Grid - Hide for restricted roles */}
+            {!['staff', 'manager', 'accountant'].includes(user?.role?.toLowerCase() || '') && (
+              <View style={styles.actionGrid}>
+                  <TouchableOpacity 
+                      style={styles.actionBtn}
+                      onPress={() => navigation.navigate('AddVenueTab')}
+                  >
+                      <View style={[styles.actionIconBg, { backgroundColor: '#E8F5E9' }]}>
+                          <Text style={styles.actionEmoji}>➕</Text>
+                      </View>
+                      <Text style={styles.actionLabel}>เพิ่มสนาม</Text>
+                  </TouchableOpacity>
+                  
+                  <TouchableOpacity 
+                      style={styles.actionBtn}
+                      onPress={() => navigation.navigate('ManagementTab')}
+                  >
+                      <View style={[styles.actionIconBg, { backgroundColor: '#FFF8E1' }]}>
+                          <Text style={styles.actionEmoji}>📋</Text>
+                      </View>
+                      <Text style={styles.actionLabel}>จัดการสนาม</Text>
+                  </TouchableOpacity>
+              </View>
+            )}
 
-            {/* PRO Revenue Banner */}
-            <TouchableOpacity 
-                style={styles.proBanner}
-                onPress={() => navigation.navigate('UpgradePlan')}
-            >
-                <View style={styles.proInfo}>
-                    <Text style={styles.proImpactText}>💰 เพิ่มรายได้ +27,000/เดือน</Text>
-                    <Text style={styles.proPriceText}>จ่ายแค่ ฿999/เดือน • <Text style={styles.proProfit}>กำไรเพิ่ม ~฿26k+</Text></Text>
-                </View>
-                <TouchableOpacity 
-                    style={styles.proGhostBtn}
-                    onPress={() => navigation.navigate('UpgradePlan')}
-                >
-                    <Text style={styles.proGhostBtnText}>ดูรายละเอียด</Text>
-                </TouchableOpacity>
-            </TouchableOpacity>
+            {/* PRO Revenue Banner - Hide for restricted roles */}
+            {!['staff', 'manager', 'accountant'].includes(user?.role?.toLowerCase() || '') && (
+              <TouchableOpacity 
+                  style={styles.proBanner}
+                  onPress={() => navigation.navigate('UpgradePlan')}
+              >
+                  <View style={styles.proInfo}>
+                      <Text style={styles.proImpactText}>💰 เพิ่มรายได้ +27,000/เดือน</Text>
+                      <Text style={styles.proPriceText}>จ่ายแค่ ฿999/เดือน • <Text style={styles.proProfit}>กำไรเพิ่ม ~฿26k+</Text></Text>
+                  </View>
+                  <TouchableOpacity 
+                      style={styles.proGhostBtn}
+                      onPress={() => navigation.navigate('UpgradePlan')}
+                  >
+                      <Text style={styles.proGhostBtnText}>ดูรายละเอียด</Text>
+                  </TouchableOpacity>
+              </TouchableOpacity>
+            )}
 
             <View style={{ height: 100 }} />
         </ScrollView>
 
-        {/* Sticky Bottom CTA */}
-        {isFreePlan && (
+        {/* Sticky Bottom CTA - Hide for restricted roles */}
+        {isFreePlan && !['staff', 'manager', 'accountant'].includes(user?.role?.toLowerCase() || '') && (
             <View style={styles.stickyContainer}>
                 <TouchableOpacity 
                     style={styles.stickyBtn}
