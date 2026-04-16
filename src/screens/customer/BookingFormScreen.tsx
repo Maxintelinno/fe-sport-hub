@@ -4,7 +4,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RouteProp } from '@react-navigation/native';
 import { CustomerStackParamList } from '../../navigation/types';
 import { getFieldById } from '../../services/venueService';
-import { createBooking } from '../../services/bookingService';
+import { createBooking, checkoutCreditPreview } from '../../services/bookingService';
 import { Venue, Court } from '../../types';
 import { useAuth } from '../../context/AuthContext';
 
@@ -20,6 +20,12 @@ export default function BookingFormScreen({ navigation, route }: Props) {
   const [loading, setLoading] = useState(true);
   const [bookingLoading, setBookingLoading] = useState(false);
   const [timeLeft, setTimeLeft] = useState(600); // 10 minutes in seconds
+  const [creditPreview, setCreditPreview] = useState<{
+    total_amount: number;
+    credit_balance: number;
+    credit_to_use: number;
+    remaining_to_pay: number;
+  } | null>(null);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -43,18 +49,25 @@ export default function BookingFormScreen({ navigation, route }: Props) {
     });
   };
 
+  const hours = selectedSlots.length;
+  const totalPrice = pricePerHour * hours;
+
   useEffect(() => {
-    fetchVenue();
+    fetchData();
   }, [venueId]);
 
-  const fetchVenue = async () => {
+  const fetchData = async () => {
     try {
       setLoading(true);
-      const data = await getFieldById(venueId);
-      setVenue(data);
+      const [venueData, creditData] = await Promise.all([
+        getFieldById(venueId),
+        checkoutCreditPreview(totalPrice)
+      ]);
+      setVenue(venueData);
+      setCreditPreview(creditData);
     } catch (error: any) {
-      console.error('Error fetching venue for booking:', error);
-      Alert.alert('ข้อผิดพลาด', 'ไม่สามารถโหลดข้อมูลสนามได้');
+      console.error('Error fetching data for booking:', error);
+      Alert.alert('ข้อผิดพลาด', 'ไม่สามารถโหลดข้อมูลได้');
     } finally {
       setLoading(false);
     }
@@ -69,19 +82,16 @@ export default function BookingFormScreen({ navigation, route }: Props) {
     );
   }
 
-  if (!venue || !user) {
+  if (!venue || !user || !creditPreview) {
     return (
       <View style={[styles.container, styles.center]}>
         <Text style={styles.errorText}>ไม่สามารถเตรียมการจองได้</Text>
         <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
-            <Text style={styles.backBtnText}>กลับไปแก้ไข</Text>
+          <Text style={styles.backBtnText}>กลับไปแก้ไข</Text>
         </TouchableOpacity>
       </View>
     );
   }
-
-  const hours = selectedSlots.length;
-  const totalPrice = pricePerHour * hours;
 
   const handleConfirm = async () => {
     try {
@@ -102,11 +112,12 @@ export default function BookingFormScreen({ navigation, route }: Props) {
       });
 
       console.log('Booking created successfully:', bookingResponse.booking_no);
-      
-      navigation.replace('Payment', { 
-        bookingId: bookingResponse.id, 
-        venueName: venue.name, 
-        totalPrice: totalPrice,
+
+      navigation.replace('Payment', {
+        bookingId: bookingResponse.id,
+        venueName: venue.name,
+        totalPrice: creditPreview.remaining_to_pay,
+        originalPrice: totalPrice,
         bookingNo: bookingResponse.booking_no
       });
     } catch (error: any) {
@@ -144,19 +155,37 @@ export default function BookingFormScreen({ navigation, route }: Props) {
           <Text style={styles.label}>ราคาต่อชั่วโมง</Text>
           <Text style={styles.value}>฿{pricePerHour}</Text>
         </View>
-        
-        <View style={styles.totalRow}>
-          <Text style={styles.totalLabel}>ราคารวม</Text>
-          <View style={{ alignItems: 'flex-end' }}>
-            <Text style={styles.totalPrice}>฿{totalPrice}</Text>
-            <Text style={styles.priceBreakdown}>{hours} ชั่วโมง x ฿{pricePerHour}</Text>
+
+        {/* Total Original Price */}
+        <View style={[styles.row, { borderBottomWidth: 0 }]}>
+          <Text style={styles.label}>ราคารวม</Text>
+          <Text style={styles.value}>฿{totalPrice}</Text>
+        </View>
+
+        {/* Credit Section */}
+        <View style={styles.creditContainer}>
+          <View style={styles.creditRow}>
+            <Text style={styles.creditLabel}>ยอดเครดิตที่ใช้ได้</Text>
+            <Text style={styles.creditValue}>฿{creditPreview.credit_balance.toLocaleString()}</Text>
+          </View>
+          <View style={styles.creditRow}>
+            <Text style={styles.creditLabel}>เครดิตที่ใช้ครั้งนี้</Text>
+            <Text style={styles.creditUsage}>- ฿{creditPreview.credit_to_use.toLocaleString()}</Text>
           </View>
         </View>
-        
+
+        {/* Remaining to Pay Row */}
+        <View style={styles.totalRow}>
+          <Text style={styles.totalLabel}>ชำระยอดรวม</Text>
+          <View style={{ alignItems: 'flex-end' }}>
+            <Text style={styles.totalPrice}>฿{creditPreview.remaining_to_pay.toLocaleString()}</Text>
+          </View>
+        </View>
+
         <Text style={styles.timerHint}>⏳ เหลือเวลา {formatTime(timeLeft)}</Text>
 
-        <TouchableOpacity 
-          style={[styles.button, bookingLoading && { opacity: 0.7 }]} 
+        <TouchableOpacity
+          style={[styles.button, bookingLoading && { opacity: 0.7 }]}
           onPress={handleConfirm}
           disabled={bookingLoading}
         >
@@ -278,4 +307,30 @@ const styles = StyleSheet.create({
   errorText: { fontSize: 18, color: '#666', marginBottom: 20 },
   backBtn: { backgroundColor: '#1a5f2a', paddingHorizontal: 20, paddingVertical: 10, borderRadius: 8 },
   backBtnText: { color: '#fff', fontWeight: 'bold' },
+  creditContainer: {
+    marginTop: 16,
+    paddingTop: 16,
+    borderTopWidth: 1,
+    borderTopColor: '#f0f0f0',
+  },
+  creditRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingVertical: 4,
+  },
+  creditLabel: {
+    fontSize: 14,
+    color: '#666',
+    fontWeight: '600',
+  },
+  creditValue: {
+    fontSize: 14,
+    color: '#333',
+    fontWeight: '700',
+  },
+  creditUsage: {
+    fontSize: 14,
+    color: '#d32f2f',
+    fontWeight: '700',
+  },
 });

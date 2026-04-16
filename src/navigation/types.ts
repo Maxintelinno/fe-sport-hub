@@ -11,7 +11,7 @@ export type CustomerStackParamList = {
         selectedSlots: { start: string, end: string, label: string }[];
         pricePerHour: number;
     };
-    Payment: { bookingId: string; venueName: string; totalPrice: number; bookingNo: string };
+    Payment: { bookingId: string; venueName: string; totalPrice: number; originalPrice?: number; bookingNo: string };
     PaymentSuccess: { bookingId: string; venueName: string; totalPrice: number; paymentNo: string; bookingNo: string };
     SportsInsights: undefined;
     InsightDetail: { insightId: string };
@@ -34,7 +34,7 @@ export type OwnerStackParamList = {
         selectedSlots: { start: string, end: string, label: string }[];
         pricePerHour: number;
     };
-    Payment: { bookingId: string; venueName: string; totalPrice: number; bookingNo: string };
+    Payment: { bookingId: string; venueName: string; totalPrice: number; originalPrice?: number; bookingNo: string };
     PaymentSuccess: { bookingId: string; venueName: string; totalPrice: number; paymentNo: string; bookingNo: string };
     SportsInsights: undefined;
     InsightDetail: { insightId: string };

@@ -245,3 +245,27 @@ export async function cancelBooking(bookingId: string): Promise<{ status: string
   }
   return response.data;
 }
+
+export interface CheckoutCreditPreviewResponse {
+  status: string;
+  message: string;
+  data: {
+    total_amount: number;
+    credit_balance: number;
+    credit_to_use: number;
+    remaining_to_pay: number;
+  };
+}
+
+export async function checkoutCreditPreview(totalAmount: number): Promise<CheckoutCreditPreviewResponse['data']> {
+  const response = await api.post(`${API_URL}/v1/bookings/checkout/credit`, {
+    total_amount: totalAmount
+  }, {
+    validateStatus: () => true,
+  });
+
+  if (response.status >= 400) {
+    throw new Error(response.data?.message || 'ไม่สามารถโหลดข้อมูลเครดิตได้');
+  }
+  return response.data.data;
+}

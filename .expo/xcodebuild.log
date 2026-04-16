@@ -2994,13 +2994,13 @@ PhaseScriptExecution [CP-User]\ [RN]Check\ FBReactNativeSpec /Users/thakrit.ratc
     /bin/sh -c /Users/thakrit.ratchakote/Library/Developer/Xcode/DerivedData/sportapp-dleifjnqlgpdpwgcdxwnoiiszqgm/Build/Intermediates.noindex/Pods.build/Debug-iphonesimulator/React-RCTFBReactNativeSpec.build/Script-46EB2E00018D40.sh
 Checking whether Codegen has run...
 
-ProcessInfoPlistFile /Users/thakrit.ratchakote/Library/Developer/Xcode/DerivedData/sportapp-dleifjnqlgpdpwgcdxwnoiiszqgm/Build/Products/Debug-iphonesimulator/ExpoFileSystem/ExpoFileSystem_privacy.bundle/Info.plist /Users/thakrit.ratchakote/Documents/my-document/1.MaxIntelligentInnovation/1.Project/sport-hub-fe/fe-sport-hub/ios/Pods/Target\ Support\ Files/ExpoFileSystem/ResourceBundle-ExpoFileSystem_privacy-ExpoFileSystem-Info.plist (in target 'ExpoFileSystem-ExpoFileSystem_privacy' from project 'Pods')
-    cd /Users/thakrit.ratchakote/Documents/my-document/1.MaxIntelligentInnovation/1.Project/sport-hub-fe/fe-sport-hub/ios/Pods
-    builtin-infoPlistUtility /Users/thakrit.ratchakote/Documents/my-document/1.MaxIntelligentInnovation/1.Project/sport-hub-fe/fe-sport-hub/ios/Pods/Target\ Support\ Files/ExpoFileSystem/ResourceBundle-ExpoFileSystem_privacy-ExpoFileSystem-Info.plist -producttype com.apple.product-type.bundle -expandbuildsettings -format binary -platform iphonesimulator -o /Users/thakrit.ratchakote/Library/Developer/Xcode/DerivedData/sportapp-dleifjnqlgpdpwgcdxwnoiiszqgm/Build/Products/Debug-iphonesimulator/ExpoFileSystem/ExpoFileSystem_privacy.bundle/Info.plist
-
 ProcessInfoPlistFile /Users/thakrit.ratchakote/Library/Developer/Xcode/DerivedData/sportapp-dleifjnqlgpdpwgcdxwnoiiszqgm/Build/Products/Debug-iphonesimulator/AsyncStorage/AsyncStorage_resources.bundle/Info.plist /Users/thakrit.ratchakote/Documents/my-document/1.MaxIntelligentInnovation/1.Project/sport-hub-fe/fe-sport-hub/ios/Pods/Target\ Support\ Files/AsyncStorage/ResourceBundle-AsyncStorage_resources-AsyncStorage-Info.plist (in target 'AsyncStorage-AsyncStorage_resources' from project 'Pods')
     cd /Users/thakrit.ratchakote/Documents/my-document/1.MaxIntelligentInnovation/1.Project/sport-hub-fe/fe-sport-hub/ios/Pods
     builtin-infoPlistUtility /Users/thakrit.ratchakote/Documents/my-document/1.MaxIntelligentInnovation/1.Project/sport-hub-fe/fe-sport-hub/ios/Pods/Target\ Support\ Files/AsyncStorage/ResourceBundle-AsyncStorage_resources-AsyncStorage-Info.plist -producttype com.apple.product-type.bundle -expandbuildsettings -format binary -platform iphonesimulator -o /Users/thakrit.ratchakote/Library/Developer/Xcode/DerivedData/sportapp-dleifjnqlgpdpwgcdxwnoiiszqgm/Build/Products/Debug-iphonesimulator/AsyncStorage/AsyncStorage_resources.bundle/Info.plist
+
+ProcessInfoPlistFile /Users/thakrit.ratchakote/Library/Developer/Xcode/DerivedData/sportapp-dleifjnqlgpdpwgcdxwnoiiszqgm/Build/Products/Debug-iphonesimulator/ExpoFileSystem/ExpoFileSystem_privacy.bundle/Info.plist /Users/thakrit.ratchakote/Documents/my-document/1.MaxIntelligentInnovation/1.Project/sport-hub-fe/fe-sport-hub/ios/Pods/Target\ Support\ Files/ExpoFileSystem/ResourceBundle-ExpoFileSystem_privacy-ExpoFileSystem-Info.plist (in target 'ExpoFileSystem-ExpoFileSystem_privacy' from project 'Pods')
+    cd /Users/thakrit.ratchakote/Documents/my-document/1.MaxIntelligentInnovation/1.Project/sport-hub-fe/fe-sport-hub/ios/Pods
+    builtin-infoPlistUtility /Users/thakrit.ratchakote/Documents/my-document/1.MaxIntelligentInnovation/1.Project/sport-hub-fe/fe-sport-hub/ios/Pods/Target\ Support\ Files/ExpoFileSystem/ResourceBundle-ExpoFileSystem_privacy-ExpoFileSystem-Info.plist -producttype com.apple.product-type.bundle -expandbuildsettings -format binary -platform iphonesimulator -o /Users/thakrit.ratchakote/Library/Developer/Xcode/DerivedData/sportapp-dleifjnqlgpdpwgcdxwnoiiszqgm/Build/Products/Debug-iphonesimulator/ExpoFileSystem/ExpoFileSystem_privacy.bundle/Info.plist
 
 ProcessInfoPlistFile /Users/thakrit.ratchakote/Library/Developer/Xcode/DerivedData/sportapp-dleifjnqlgpdpwgcdxwnoiiszqgm/Build/Products/Debug-iphonesimulator/EXConstants/EXConstants.bundle/Info.plist /Users/thakrit.ratchakote/Documents/my-document/1.MaxIntelligentInnovation/1.Project/sport-hub-fe/fe-sport-hub/ios/Pods/Target\ Support\ Files/EXConstants/ResourceBundle-EXConstants-EXConstants-Info.plist (in target 'EXConstants-EXConstants' from project 'Pods')
     cd /Users/thakrit.ratchakote/Documents/my-document/1.MaxIntelligentInnovation/1.Project/sport-hub-fe/fe-sport-hub/ios/Pods
@@ -4197,15 +4197,14 @@ PrecompileSwiftBridgingHeader normal arm64 (in target 'sportapp' from project 's
 
 SwiftDriverJobDiscovery normal arm64 Compiling bridging header (in target 'sportapp' from project 'sportapp')
 
-SwiftEmitModule normal arm64 Emitting\ module\ for\ sportapp (in target 'sportapp' from project 'sportapp')
-
-EmitSwiftModule normal arm64 (in target 'sportapp' from project 'sportapp')
-    cd /Users/thakrit.ratchakote/Documents/my-document/1.MaxIntelligentInnovation/1.Project/sport-hub-fe/fe-sport-hub/ios
-    
-
 SwiftCompile normal arm64 Compiling\ ExpoModulesProvider.swift /Users/thakrit.ratchakote/Documents/my-document/1.MaxIntelligentInnovation/1.Project/sport-hub-fe/fe-sport-hub/ios/Pods/Target\ Support\ Files/Pods-sportapp/ExpoModulesProvider.swift (in target 'sportapp' from project 'sportapp')
 
 SwiftCompile normal arm64 /Users/thakrit.ratchakote/Documents/my-document/1.MaxIntelligentInnovation/1.Project/sport-hub-fe/fe-sport-hub/ios/Pods/Target\ Support\ Files/Pods-sportapp/ExpoModulesProvider.swift (in target 'sportapp' from project 'sportapp')
+    cd /Users/thakrit.ratchakote/Documents/my-document/1.MaxIntelligentInnovation/1.Project/sport-hub-fe/fe-sport-hub/ios
+    
+
+SwiftEmitModule normal arm64 Emitting\ module\ for\ sportapp (in target 'sportapp' from project 'sportapp')
+EmitSwiftModule normal arm64 (in target 'sportapp' from project 'sportapp')
     cd /Users/thakrit.ratchakote/Documents/my-document/1.MaxIntelligentInnovation/1.Project/sport-hub-fe/fe-sport-hub/ios
     
 
@@ -4861,7 +4860,7 @@ PhaseScriptExecution [CP]\ Copy\ Pods\ Resources /Users/thakrit.ratchakote/Libra
 Transfer starting: 18 files
 EXConstants.bundle/app.config
 
-sent 2962 bytes  received 42 bytes  969032 bytes/sec
+sent 2962 bytes  received 42 bytes  423098 bytes/sec
 total size is 9809  speedup is 3.27
 
 CopySwiftLibs /Users/thakrit.ratchakote/Library/Developer/Xcode/DerivedData/sportapp-dleifjnqlgpdpwgcdxwnoiiszqgm/Build/Products/Debug-iphonesimulator/sportapp.app (in target 'sportapp' from project 'sportapp')
@@ -4871,8 +4870,8 @@ CopySwiftLibs /Users/thakrit.ratchakote/Library/Developer/Xcode/DerivedData/spor
 ExtractAppIntentsMetadata (in target 'sportapp' from project 'sportapp')
     cd /Users/thakrit.ratchakote/Documents/my-document/1.MaxIntelligentInnovation/1.Project/sport-hub-fe/fe-sport-hub/ios
     /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/appintentsmetadataprocessor --toolchain-dir /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain --module-name sportapp --sdk-root /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator26.4.sdk --xcode-version 17E192 --platform-family iOS --deployment-target 15.1 --bundle-identifier com.anonymous.sport-hub --output /Users/thakrit.ratchakote/Library/Developer/Xcode/DerivedData/sportapp-dleifjnqlgpdpwgcdxwnoiiszqgm/Build/Products/Debug-iphonesimulator/sportapp.app --target-triple arm64-apple-ios15.1-simulator --binary-file /Users/thakrit.ratchakote/Library/Developer/Xcode/DerivedData/sportapp-dleifjnqlgpdpwgcdxwnoiiszqgm/Build/Products/Debug-iphonesimulator/sportapp.app/sportapp --dependency-file /Users/thakrit.ratchakote/Library/Developer/Xcode/DerivedData/sportapp-dleifjnqlgpdpwgcdxwnoiiszqgm/Build/Intermediates.noindex/sportapp.build/Debug-iphonesimulator/sportapp.build/Objects-normal/arm64/sportapp_dependency_info.dat --stringsdata-file /Users/thakrit.ratchakote/Library/Developer/Xcode/DerivedData/sportapp-dleifjnqlgpdpwgcdxwnoiiszqgm/Build/Intermediates.noindex/sportapp.build/Debug-iphonesimulator/sportapp.build/Objects-normal/arm64/ExtractedAppShortcutsMetadata.stringsdata --source-file-list /Users/thakrit.ratchakote/Library/Developer/Xcode/DerivedData/sportapp-dleifjnqlgpdpwgcdxwnoiiszqgm/Build/Intermediates.noindex/sportapp.build/Debug-iphonesimulator/sportapp.build/Objects-normal/arm64/sportapp.SwiftFileList --metadata-file-list /Users/thakrit.ratchakote/Library/Developer/Xcode/DerivedData/sportapp-dleifjnqlgpdpwgcdxwnoiiszqgm/Build/Intermediates.noindex/sportapp.build/Debug-iphonesimulator/sportapp.build/sportapp.DependencyMetadataFileList --static-metadata-file-list /Users/thakrit.ratchakote/Library/Developer/Xcode/DerivedData/sportapp-dleifjnqlgpdpwgcdxwnoiiszqgm/Build/Intermediates.noindex/sportapp.build/Debug-iphonesimulator/sportapp.build/sportapp.DependencyStaticMetadataFileList --swift-const-vals-list /Users/thakrit.ratchakote/Library/Developer/Xcode/DerivedData/sportapp-dleifjnqlgpdpwgcdxwnoiiszqgm/Build/Intermediates.noindex/sportapp.build/Debug-iphonesimulator/sportapp.build/Objects-normal/arm64/sportapp.SwiftConstValuesFileList --compile-time-extraction --deployment-aware-processing --validate-assistant-intents --no-app-shortcuts-localization
-2026-04-07 22:27:44.399 appintentsmetadataprocessor[36372:15949263] Starting appintentsmetadataprocessor export
-2026-04-07 22:27:44.404 appintentsmetadataprocessor[36372:15949263] warning: Metadata extraction skipped. No AppIntents.framework dependency found.
+2026-04-16 10:52:47.426 appintentsmetadataprocessor[60802:36499599] Starting appintentsmetadataprocessor export
+2026-04-16 10:52:47.432 appintentsmetadataprocessor[60802:36499599] warning: Metadata extraction skipped. No AppIntents.framework dependency found.
 
 CodeSign /Users/thakrit.ratchakote/Library/Developer/Xcode/DerivedData/sportapp-dleifjnqlgpdpwgcdxwnoiiszqgm/Build/Products/Debug-iphonesimulator/sportapp.app/sportapp.debug.dylib (in target 'sportapp' from project 'sportapp')
     cd /Users/thakrit.ratchakote/Documents/my-document/1.MaxIntelligentInnovation/1.Project/sport-hub-fe/fe-sport-hub/ios
