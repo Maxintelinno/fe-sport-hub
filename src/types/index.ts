@@ -13,6 +13,7 @@ export interface User {
     status: string;
   };
   booking_credit?: number;
+  credit_balance?: number;
   credit_expiry_days?: number;
 }
 

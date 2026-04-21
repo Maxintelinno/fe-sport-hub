@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useCallback, ReactNode, use
 import { User } from '../types';
 import { setAuthToken } from '../services/api';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { getUserCredit } from '../services/userService';
 
 interface AuthContextType {
   user: User | null;
@@ -9,6 +10,7 @@ interface AuthContextType {
   login: (userData: User) => Promise<void>;
   register: (userData: User) => Promise<void>;
   logout: () => Promise<void>;
+  refreshCredit: () => Promise<void>;
   loading: boolean;
 }
 
@@ -82,6 +84,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  const refreshCredit = useCallback(async () => {
+    if (!user || !user.accessToken) return;
+
+    try {
+      const response = await getUserCredit();
+      if (response.status === 'success' && response.data) {
+        const updatedUser = {
+          ...user,
+          booking_credit: response.data.balance,
+          credit_balance: response.data.balance // Also update for consistency
+        };
+        setUser(updatedUser);
+        await AsyncStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(updatedUser));
+      }
+    } catch (error) {
+      console.error('Failed to refresh credit:', error);
+    }
+  }, [user]);
+
   return (
     <AuthContext.Provider
       value={{
@@ -90,6 +111,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         login,
         register,
         logout,
+        refreshCredit,
         loading,
       }}
     >

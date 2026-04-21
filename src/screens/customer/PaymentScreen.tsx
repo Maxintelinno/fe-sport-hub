@@ -34,8 +34,6 @@ export default function PaymentScreen({ navigation, route }: Props) {
                 const response = await generateQRCode({
                     booking_id: bookingId,
                     amount: totalPrice.toFixed(2),
-                    reference1: bookingId.substring(0, 8).toUpperCase(),
-                    reference2: 'SPORT-HUB'
                 });
                 
                 setQrCode(response.qrCode);

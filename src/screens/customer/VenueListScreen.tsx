@@ -53,12 +53,12 @@ function VenueCard({ venue, onPress, onImagePress, onBookPress }: { venue: Venue
             <Text style={styles.inactiveBadge}>ปิดให้บริการ</Text>
           </View>
         )}
-      {(venue.price_per_hour || venue.pricePerHour || 0) > 0 && (
-        <View style={styles.priceBadge}>
-          <Text style={styles.priceText}>฿{venue.price_per_hour || venue.pricePerHour}</Text>
-          <Text style={styles.priceUnit}>/ชม.</Text>
-        </View>
-      )}
+        {(venue.price_per_hour || venue.pricePerHour || 0) > 0 && (
+          <View style={styles.priceBadge}>
+            <Text style={styles.priceText}>฿{venue.price_per_hour || venue.pricePerHour}</Text>
+            <Text style={styles.priceUnit}>/ชม.</Text>
+          </View>
+        )}
       </View>
 
       <View style={styles.cardBody}>
@@ -219,7 +219,7 @@ function EquipmentCard({ item, onPress }: { item: typeof MOCK_EQUIPMENT[0]; onPr
 
 function SponsoredVenueCard({ venue, onPress }: { venue: Venue; onPress: () => void }) {
   const imageUrl = venue.imageUrl || (venue.images && venue.images[0]?.image_url);
-  
+
   return (
     <TouchableOpacity style={styles.sponsoredCard} onPress={onPress} activeOpacity={0.9}>
       <Image source={{ uri: imageUrl }} style={styles.sponsoredImage} />
@@ -242,7 +242,7 @@ function SponsoredVenueCard({ venue, onPress }: { venue: Venue; onPress: () => v
 }
 
 export default function VenueListScreen({ navigation }: Props) {
-  const { isLoggedIn, user, loading: authLoading } = useAuth();
+  const { isLoggedIn, user, loading: authLoading, refreshCredit } = useAuth();
   const [selectedCategory, setSelectedCategory] = React.useState('ทั้งหมด');
   const [refreshing, setRefreshing] = React.useState(false);
   const [filteredVenues, setFilteredVenues] = React.useState<Venue[]>([]);
@@ -386,7 +386,7 @@ export default function VenueListScreen({ navigation }: Props) {
         const errorMessage = error.message || '';
         if (errorMessage.includes('SQLSTATE') || errorMessage.includes('cached plan')) {
           Alert.alert(
-            'กำลังปรับปรุงระบบ', 
+            'กำลังปรับปรุงระบบ',
             'ระบบฐานข้อมูลกำลังได้รับการปรับปรุง (Stale Cache) กรุณาลองใหม่อีกครั้งใน 1-2 นาที หรือติดต่อเจ้าหน้าที่หากยังพบปัญหา',
             [{ text: 'ตกลง' }]
           );
@@ -417,6 +417,9 @@ export default function VenueListScreen({ navigation }: Props) {
   React.useEffect(() => {
     if (!authLoading) {
       handleCategoryPress('ทั้งหมด');
+      if (isLoggedIn) {
+        refreshCredit();
+      }
     }
   }, [authLoading]);
 
@@ -513,13 +516,13 @@ export default function VenueListScreen({ navigation }: Props) {
               {isLoggedIn && user && (
                 <View>
                   <Text style={styles.userGreeting}>สวัสดี, {user.name}</Text>
-                  
+
                   {/* Booking Credit Card */}
                   <View style={styles.creditCardContainer}>
                     <View style={styles.creditCardHeader}>
                       <Text style={styles.creditCardIcon}>💳</Text>
                       <Text style={styles.creditCardLabel}>เครดิตการจอง:</Text>
-                      <Text style={styles.creditCardValue}>฿{user.booking_credit ?? 700}</Text>
+                      <Text style={styles.creditCardValue}>฿{user.booking_credit ?? 0}</Text>
                     </View>
                     <Text style={styles.creditCardExpiry}>ใช้ได้ภายใน {user.credit_expiry_days ?? 90} วัน</Text>
                   </View>
@@ -587,9 +590,9 @@ export default function VenueListScreen({ navigation }: Props) {
             horizontal
             showsHorizontalScrollIndicator={false}
             renderItem={({ item }) => (
-              <SponsoredVenueCard 
-                venue={item} 
-                onPress={() => handleBookPress(item)} 
+              <SponsoredVenueCard
+                venue={item}
+                onPress={() => handleBookPress(item)}
               />
             )}
             contentContainerStyle={styles.adsList}
@@ -731,7 +734,7 @@ export default function VenueListScreen({ navigation }: Props) {
               {selectedProduct && (
                 <ScrollView contentContainerStyle={{ padding: 24 }}>
                   <Image source={{ uri: selectedProduct.imageUrl }} style={{ width: '100%', height: 200, borderRadius: 20, marginBottom: 20 }} resizeMode="cover" />
-                  
+
                   <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
                     <Text style={{ fontSize: 24, fontWeight: '900', color: '#1a1a1a', flex: 1 }}>{selectedProduct.title}</Text>
                     <Text style={{ fontSize: 22, fontWeight: '900', color: '#1A5F2A' }}>{selectedProduct.price}</Text>
@@ -790,9 +793,9 @@ export default function VenueListScreen({ navigation }: Props) {
             horizontal
             showsHorizontalScrollIndicator={false}
             renderItem={({ item }) => (
-              <EquipmentCard 
-                item={item} 
-                onPress={() => handleProductPress(item)} 
+              <EquipmentCard
+                item={item}
+                onPress={() => handleProductPress(item)}
               />
             )}
             contentContainerStyle={styles.adsList}
@@ -909,7 +912,7 @@ const styles = StyleSheet.create({
     color: 'rgba(255,255,255,0.7)',
     fontWeight: '600',
   },
-  
+
   // Booking Credit Card Styles
   creditCardContainer: {
     backgroundColor: 'rgba(255, 255, 255, 0.12)',

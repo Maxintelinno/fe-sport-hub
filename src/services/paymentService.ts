@@ -5,8 +5,6 @@ const PAYMENT_API_URL = 'https://sport-hub-payment-staging.up.railway.app';
 export interface QRGenerateRequest {
     booking_id: string;
     amount: string;
-    reference1: string;
-    reference2: string;
 }
 
 export interface QRGenerateResponse {
@@ -16,7 +14,7 @@ export interface QRGenerateResponse {
 }
 
 export async function generateQRCode(data: QRGenerateRequest): Promise<QRGenerateResponse> {
-    const response = await api.post(`${PAYMENT_API_URL}/v1/payment/qr/generate`, data, {
+    const response = await api.post(`${PAYMENT_API_URL}/v1/payment/create-payment`, data, {
         validateStatus: () => true,
     });
 

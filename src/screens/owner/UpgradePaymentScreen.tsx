@@ -30,8 +30,6 @@ export default function UpgradePaymentScreen({ navigation, route }: Props) {
                 const response = await generateQRCode({
                     booking_id: `PLAN-${planName.toUpperCase()}-${Date.now().toString().slice(-6)}`,
                     amount: price.toFixed(2),
-                    reference1: 'UPGRADE',
-                    reference2: planName.toUpperCase()
                 });
                 
                 setQrCode(response.qrCode);
