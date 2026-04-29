@@ -29,7 +29,7 @@ export async function requestOTP(phone: string) {
 }
 
 export async function verifyOTP(phone: string, otp: string) {
-  const response = await fetch(`${API_URL}/otp/request`, {
+  const response = await fetch(`${API_URL}/otp/verify`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
